@@ -7,7 +7,6 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-import os
 import os.path as osp
 
 # ---- Third party imports
@@ -19,8 +18,6 @@ from gwhat.config.ospath import (
 
 
 class SaveFileMixin(object):
-    def __init__(self):
-        self.set_dialog_dir(os.getcwd())
 
     @property
     def dialog_dir(self):

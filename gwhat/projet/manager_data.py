@@ -21,6 +21,7 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QFileDialog, QApplication, QDialog, QGroupBox)
 
 # ---- Local library imports
+from gwhat.config.main import CONF
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
@@ -73,6 +74,14 @@ class DataManager(QWidget):
             pm.currentProjetChanged.connect(self.set_projet)
             self.set_projet(pm.projet)
 
+    def close(self):
+        """Close this data manager."""
+        if self.weather_avg_graph is not None:
+            CONF.set('weather_normals_viewer',
+                     'graphs_labels_language',
+                     self.weather_avg_graph.get_language())
+            self.weather_avg_graph.close()
+
     def setup_manager(self):
         """Setup the layout of the manager."""
         layout = QGridLayout(self)
@@ -105,7 +114,7 @@ class DataManager(QWidget):
         self.well_info_widget = StrSpinBox()
 
         # ---- Setup the main layout.
-        grpbox = QGroupBox('Water Level Dataset : ')
+        grpbox = QGroupBox('Water Level Dataset')
         layout = QGridLayout(grpbox)
         layout.setSpacing(5)
 
@@ -156,7 +165,7 @@ class DataManager(QWidget):
 
         # ---- Main Layout
 
-        grpbox = QGroupBox('Weather Dataset : ')
+        grpbox = QGroupBox('Weather Dataset')
         layout = QGridLayout(grpbox)
         layout.setSpacing(5)
 
@@ -467,8 +476,11 @@ class DataManager(QWidget):
             return
         if self.weather_avg_graph is None:
             self.weather_avg_graph = WeatherViewer()
+            self.weather_avg_graph.set_language(
+                CONF.get('weather_normals_viewer', 'graphs_labels_language'))
         self.weather_avg_graph.set_weather_dataset(self.get_current_wxdset())
         self.weather_avg_graph.show()
+        self.weather_avg_graph.raise_()
 
 
 class NewDatasetDialog(QDialog):

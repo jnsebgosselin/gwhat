@@ -54,8 +54,6 @@ GWHAT_ICONS = {
     'add_point': 'add_point',
     'erase': 'erase',
     'erase2': 'erase2',
-    'findPeak': 'find_peak',
-    'findPeak2': 'find_peak2',
     'showDataDots': 'show_datadots',
     'stratigraphy': 'stratigraphy',
     'recharge': 'recharge',
@@ -109,6 +107,9 @@ FA_ICONS = {
     'commit_changes': [
         ('mdi.check-circle-outline',),
         {'color': GREEN, 'scale_factor': 1.3}],
+    'copy_clipboard': [
+        ('mdi.content-copy',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     'delete_data': [
         ('mdi.delete-forever',),
         {'color': COLOR, 'scale_factor': 1.4}],
@@ -142,6 +143,9 @@ FA_ICONS = {
     'play_start': [
         ('mdi.play',),
         {'color': GREEN, 'scale_factor': 1.5}],
+    'report_bug': [
+        ('mdi.bug',),
+        {'color': COLOR, 'scale_factor': 1.4}],
     'save': [
         ('fa.save',),
         {'color': COLOR, 'scale_factor': 1.3}],
@@ -151,12 +155,6 @@ FA_ICONS = {
     'undo_changes': [
         ('mdi.undo-variant',),
         {'color': COLOR, 'scale_factor': 1.3}],
-    'copy_clipboard': [
-        ('mdi.content-copy',),
-        {'color': COLOR, 'scale_factor': 1.2}],
-    'report_bug': [
-        ('mdi.bug',),
-        {'color': COLOR, 'scale_factor': 1.4}],
     'zoom_in': [
         ('mdi.plus-circle-outline',),
         {'color': COLOR, 'scale_factor': 1.2}],
@@ -169,7 +167,7 @@ FA_ICONS = {
     }
 
 ICON_SIZES = {'large': (32, 32),
-              'normal': (28, 28),
+              'normal': (24, 24),
               'small': (20, 20)}
 
 

@@ -1,43 +1,42 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
-
+import io
 import os
 import os.path as osp
 import datetime
 
 # ---- Imports: third parties
-
 from xlrd.xldate import xldate_from_date_tuple
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure as MplFigure
 
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
-    QGridLayout, QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
+    QGridLayout, QAbstractSpinBox, QApplication, QDoubleSpinBox,
     QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
-    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget, QStyle)
+    QSpinBox, QTabWidget, QWidget, QStyle, QFrame, QMainWindow, QToolBar)
 
 
-# ---- Imports: local
-
-from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
+# ---- Local imports
 from gwhat.common.utils import find_unique_filename
-from gwhat.common.widgets import QFrameLayout
-from gwhat.mplFigViewer3 import ImageViewer
-from gwhat.widgets.buttons import LangToolButton, ToolBarWidget
-from gwhat.widgets.layout import VSep
+from gwhat.utils import icons
+from gwhat.utils.icons import get_iconsize
+from gwhat.utils.qthelpers import create_toolbutton
+from gwhat.widgets.mplfigureviewer import ImageViewer
+from gwhat.widgets.buttons import LangToolButton
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 LOCS = ['left', 'top', 'right', 'bottom']
@@ -57,13 +56,14 @@ COLORS = {'precip': [0/255, 25/255, 51/255],
 
 class FigureStackManager(QWidget):
     def __init__(self, parent=None):
-        super(FigureStackManager, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimumSize(1250, 650)
         self.setWindowTitle('Recharge Results')
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
         self.figmanagers = []
         self.setup()
+        self.set_gluedf(None)
 
     def setup(self):
         """Setup the FigureStackManager withthe provided options."""
@@ -72,30 +72,26 @@ class FigureStackManager(QWidget):
         layout.addWidget(self.stack, 0, 0)
 
     def setup_stack(self):
-        fig_rechg_glue = FigManagerBase(
+        fig_rechg_glue = FigureManager(
             FigYearlyRechgGLUE,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
-        fig_watbudg_glue = FigManagerBase(
+        fig_watbudg_glue = FigureManager(
             FigWaterBudgetGLUE,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
-        fig_avg_yearly_budg = FigManagerBase(
+        fig_avg_yearly_budg = FigureManager(
             FigAvgYearlyBudget,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          TextOptPanel(xlabelsize=False, legendsize=False)])
-        fig_avg_monthly_budg = FigManagerBase(
+        fig_avg_monthly_budg = FigureManager(
             FigAvgMonthlyBudget,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          TextOptPanel(xlabelsize=False, notesize=False)])
 
@@ -149,12 +145,13 @@ class FigureStackManager(QWidget):
             self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
         else:
             self.resize(self.size())
-            super(FigureStackManager, self).show()
+            super().show()
         self.plot_results()
 
 
+# =============================================================================
 # ---- Figure setp panels
-
+# =============================================================================
 class FigSetpPanelManager(QWidget):
     """
     A widget that hold the panels that contains widget to setup the figure
@@ -162,7 +159,7 @@ class FigSetpPanelManager(QWidget):
     """
 
     def __init__(self, figcanvas, parent=None):
-        super(FigSetpPanelManager, self).__init__(parent)
+        super().__init__(parent)
         self.figsetp_panels = []
         self.set_figcanvas(figcanvas)
         self.setup()
@@ -203,7 +200,7 @@ class FigSetpPanelManager(QWidget):
 
 class SetpPanelBase(QWidget):
     def __init__(self, parent=None):
-        super(SetpPanelBase, self).__init__(parent)
+        super().__init__(parent)
         layout = QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -212,72 +209,9 @@ class SetpPanelBase(QWidget):
         figcanvas.sig_newfig_plotted.connect(self.update_from_setp)
 
 
-class MarginSizePanel(SetpPanelBase):
-    def __init__(self, parent=None):
-        super(MarginSizePanel, self).__init__(parent)
-        self.setup()
-
-    def setup(self):
-        """Setup the gui of the panel."""
-        self.layout().addWidget(self._setup_margins_grpbox())
-        self.layout().setRowStretch(self.layout().rowCount(), 100)
-
-    @property
-    def fig_margins(self):
-        return [self._spb_margins[loc].value() for loc in LOCS]
-
-    def _setup_margins_grpbox(self):
-        """
-        Setup a group box with spin boxes that allows to set the figure
-        margins size in inches.
-        """
-        grpbox = QGroupBox("Margins Size :")
-        layout = QGridLayout(grpbox)
-
-        self._spb_margins = {}
-        for row, loc in enumerate(LOCS):
-            self._spb_margins[loc] = QDoubleSpinBox()
-            self._spb_margins[loc].setSingleStep(0.05)
-            self._spb_margins[loc].setMinimum(0)
-            self._spb_margins[loc].setSuffix('  in')
-            self._spb_margins[loc].setAlignment(Qt.AlignCenter)
-            self._spb_margins[loc].setKeyboardTracking(False)
-            self._spb_margins[loc].valueChanged.connect(self._margins_changed)
-
-            layout.addWidget(QLabel("%s :" % loc), row, 0)
-            layout.addWidget(self._spb_margins[loc], row, 2)
-        layout.setColumnStretch(1, 100)
-        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-
-        return grpbox
-
-    @QSlot()
-    def _margins_changed(self):
-        """Handle when one of the margin size is changed by the user."""
-        self.figcanvas.set_axes_margins_inches(self.fig_margins)
-
-    @QSlot(dict)
-    def update_from_setp(self, setp):
-        self._spb_margins['left'].blockSignals(True)
-        self._spb_margins['left'].setValue(setp['left margin'])
-        self._spb_margins['left'].blockSignals(False)
-
-        self._spb_margins['right'].blockSignals(True)
-        self._spb_margins['right'].setValue(setp['right margin'])
-        self._spb_margins['right'].blockSignals(False)
-
-        self._spb_margins['top'].blockSignals(True)
-        self._spb_margins['top'].setValue(setp['top margin'])
-        self._spb_margins['top'].blockSignals(False)
-
-        self._spb_margins['bottom'].blockSignals(True)
-        self._spb_margins['bottom'].setValue(setp['bottom margin'])
-        self._spb_margins['bottom'].blockSignals(False)
-
-
 class TextOptPanel(SetpPanelBase):
     def __init__(self, **kwargs):
-        super(TextOptPanel, self).__init__(parent=None)
+        super().__init__(parent=None)
         self.setup(**kwargs)
 
     def setup(self, xlabelsize=True, xticksize=True, ylabelsize=True,
@@ -414,7 +348,7 @@ class TextOptPanel(SetpPanelBase):
 class FigSizePanel(SetpPanelBase):
 
     def __init__(self, parent=None):
-        super(FigSizePanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -486,7 +420,7 @@ class FigSizePanel(SetpPanelBase):
 class YearLimitsPanel(SetpPanelBase):
 
     def __init__(self, parent=None):
-        super(YearLimitsPanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -542,7 +476,7 @@ class YearLimitsPanel(SetpPanelBase):
 
 class YAxisOptPanel(SetpPanelBase):
     def __init__(self, parent=None):
-        super(YAxisOptPanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -621,71 +555,112 @@ class YAxisOptPanel(SetpPanelBase):
             self._spb_yscl.value(), self._spb_yscl_minor.value())
 
 
+# =============================================================================
 # ---- Figure managers
-
-class FigManagerBase(QWidget):
+# =============================================================================
+class FigureManager(QWidget):
     """
     Abstract manager to show the results from GLUE.
     """
+
     def __init__(self, figure_canvas, setp_panels=[], parent=None):
-        super(FigManagerBase, self).__init__(parent)
+        super().__init__(parent)
         self.savefig_dir = os.getcwd()
+
+        # We do not make FigureManager inherit directly from QMainWindow
+        # because we want to control the margins around the FigureManager
+        # layout and toolbar.
 
         self.figcanvas = figure_canvas(setp={})
         self.figviewer = ImageViewer()
         self.figcanvas.sig_fig_changed.connect(self.figviewer.load_mpl_figure)
 
-        self.setup_toolbar()
         self.figsetp_manager = FigSetpPanelManager(self.figcanvas)
         for setp_panel in setp_panels:
             self.figsetp_manager.add_figsetp_panel(setp_panel)
 
-        layout = QGridLayout(self)
-        layout.addWidget(self.toolbar, 0, 0, 1, 2)
-        layout.addWidget(self.figviewer, 1, 0)
-        layout.addWidget(self.figsetp_manager, 1, 1)
+        central_widget = QWidget()
+        central_widget_layout = QGridLayout(central_widget)
+        central_widget_layout.setContentsMargins(0, 0, 0, 0)
+        central_widget_layout.addWidget(self.figviewer, 0, 0)
+        central_widget_layout.addWidget(self.figsetp_manager, 0, 1)
+        central_widget_layout.setColumnStretch(0, 1)
 
-        layout.setColumnStretch(0, 100)
-        layout.setRowStretch(1, 100)
+        # Setup main widget.
+        self.main_widget = QMainWindow()
+        self.main_widget.setCentralWidget(central_widget)
+        self.main_widget.addToolBar(Qt.TopToolBarArea, self.create_toolbar())
+
+        # Setup main layout.
+        main_layout = QGridLayout(self)
+        main_layout.addWidget(self.main_widget)
 
     def resizeEvent(self, event):
-        super(FigManagerBase, self).resizeEvent(event)
+        super().resizeEvent(event)
         self.figsetp_manager.setMinimumWidth(
             self.figsetp_manager.view.minimumSizeHint().width() +
             2*self.figsetp_manager.scrollarea.frameWidth() +
             QApplication.style().pixelMetric(QStyle.PM_ScrollBarExtent)
             )
 
-    def setup_toolbar(self):
-        """Setup the toolbar of the figure manager."""
+    def create_toolbar(self):
+        """Return the toolbar of the figure manager."""
+        # Create toolbars widgets.
+        self.btn_save = create_toolbutton(
+            parent=self,
+            icon='save',
+            tip='Save current graph as...',
+            triggered=self._select_savefig_path)
 
-        self.btn_save = QToolButtonNormal(icons.get_icon('save'))
-        self.btn_save.setToolTip('Save current graph as...')
-        self.btn_save.clicked.connect(self._select_savefig_path)
+        self.btn_copy_to_clipboard = create_toolbutton(
+            self, icon='copy_clipboard',
+            text="Copy",
+            tip="Put a copy of the figure on the Clipboard.",
+            triggered=self.figcanvas.copy_to_clipboard,
+            shortcut='Ctrl+C')
 
         self.btn_language = LangToolButton()
         self.btn_language.setToolTip(
             "Set the language of the text shown in the graph.")
         self.btn_language.sig_lang_changed.connect(self._language_changed)
-        self.btn_language.setIconSize(icons.get_iconsize('normal'))
+        self.btn_language.setIconSize(get_iconsize('normal'))
 
-        zoom_widget = self._setup_zoom_widget()
+        zoom_widget = self.create_zoom_widget()
 
-        self.toolbar = ToolBarWidget()
-        for btn in [self.btn_save, VSep(), zoom_widget, VSep(),
-                    self.btn_language]:
-            self.toolbar.addWidget(btn)
+        # Setup toolbar.
+        toolbar = QToolBar()
+        toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
+        toolbar.setFloatable(False)
+        toolbar.setMovable(False)
+        toolbar.setIconSize(get_iconsize('normal'))
 
-    def _setup_zoom_widget(self):
-        """Setup a toolbar widget to zoom in and zoom out the figure."""
+        widgets = [self.btn_save, self.btn_copy_to_clipboard, None,
+                   zoom_widget, None, self.btn_language]
+        for widget in widgets:
+            if widget is None:
+                toolbar.addSeparator()
+            else:
+                toolbar.addWidget(widget)
 
-        btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
-        btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
-        btn_zoom_out.clicked.connect(self.figviewer.zoomOut)
+        return toolbar
 
-        btn_zoom_in = QToolButtonSmall(icons.get_icon('zoom_in'))
-        btn_zoom_in.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
-        btn_zoom_in.clicked.connect(self.figviewer.zoomIn)
+    def create_zoom_widget(self):
+        """Return a toolbar widget to zoom in and zoom out the figure."""
+
+        btn_zoom_out = create_toolbutton(
+            parent=self,
+            icon='zoom_out',
+            tip='Zoom out (ctrl + mouse-wheel-down)',
+            iconsize=get_iconsize('normal'),
+            triggered=self.figviewer.zoomOut
+            )
+        btn_zoom_in = create_toolbutton(
+            parent=self,
+            icon='zoom_in',
+            tip='Zoom in (ctrl + mouse-wheel-up)',
+            iconsize=get_iconsize('normal'),
+            triggered=self.figviewer.zoomIn
+            )
 
         self.zoom_disp = QSpinBox()
         self.zoom_disp.setAlignment(Qt.AlignCenter)
@@ -696,12 +671,13 @@ class FigManagerBase(QWidget):
         self.zoom_disp.setValue(100)
         self.figviewer.zoomChanged.connect(self.zoom_disp.setValue)
 
-        zoom_pan = QFrameLayout()
-        zoom_pan.setSpacing(3)
-        zoom_pan.addWidget(btn_zoom_out, 0, 0)
-        zoom_pan.addWidget(btn_zoom_in, 0, 1)
-        zoom_pan.addWidget(self.zoom_disp, 0, 2)
-        zoom_pan.setContentsMargins(5, 0, 5, 0)  # (L, T, R, B)
+        zoom_pan = QFrame()
+        zoom_pan_layout = QGridLayout(zoom_pan)
+        zoom_pan_layout.setContentsMargins(0, 0, 0, 0)
+        zoom_pan_layout.setSpacing(3)
+        zoom_pan_layout.addWidget(btn_zoom_out, 0, 0)
+        zoom_pan_layout.addWidget(btn_zoom_in, 0, 1)
+        zoom_pan_layout.addWidget(self.zoom_disp, 0, 2)
 
         return zoom_pan
 
@@ -721,7 +697,7 @@ class FigManagerBase(QWidget):
         ffmat = "*.pdf;;*.svg;;*.png"
 
         fname, ftype = QFileDialog.getSaveFileName(
-                self, "Save Figure", figname, ffmat)
+            self, "Save Figure", figname, ffmat)
         if fname:
             ftype = ftype.replace('*', '')
             fname = fname if fname.endswith(ftype) else fname + ftype
@@ -738,8 +714,9 @@ class FigManagerBase(QWidget):
             self._select_savefig_path()
 
 
+# =============================================================================
 # ---- Figure canvas
-
+# =============================================================================
 class FigCanvasBase(FigureCanvasQTAgg):
     """
     This is the base figure format to plot GLUE results.
@@ -752,10 +729,9 @@ class FigCanvasBase(FigureCanvasQTAgg):
               'light grey': '0.85'}
 
     FWIDTH, FHEIGHT = 8.5, 5
-    MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
 
     def __init__(self, setp={}):
-        super(FigCanvasBase, self).__init__(MplFigure())
+        super().__init__(MplFigure())
         self.xticklabels = []
         self.notes = []
         self._xticklabels_yt = 0
@@ -774,13 +750,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if 'fheight' not in self.setp.keys():
             self.setp['fheight'] = self.FHEIGHT
         if 'left margin' not in self.setp.keys():
-            self.setp['left margin'] = self.MARGINS[0]
+            self.setp['left margin'] = None
         if 'top margin' not in self.setp.keys():
-            self.setp['top margin'] = self.MARGINS[1]
+            self.setp['top margin'] = None
         if 'right margin' not in self.setp.keys():
-            self.setp['right margin'] = self.MARGINS[2]
+            self.setp['right margin'] = None
         if 'bottom margin' not in self.setp.keys():
-            self.setp['bottom margin'] = self.MARGINS[3]
+            self.setp['bottom margin'] = None
         if 'xlabel size' not in self.setp.keys():
             self.setp['xlabel size'] = 16
         if 'xticks size' not in self.setp.keys():
@@ -796,6 +772,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
         self.figure.set_size_inches(self.setp['fwidth'], self.setp['fheight'])
         self.refresh_margins()
+
+    def copy_to_clipboard(self):
+        """Put a copy of the figure on the clipboard."""
+        buf = io.BytesIO()
+        self.figure.savefig(buf, dpi=300)
+        QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
+        buf.close()
 
     def clear_ax(self, silent=True):
         """Clear the main axe."""
@@ -814,11 +797,27 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
-    def plot(self):
+    def draw(self):
+        """
+        Extend matplotlib canvas class draw method to automatically
+        adjust the figure margins width.
+        """
+        self.refresh_margins(silent=True)
+        super().draw()
+
+    def plot(self, glue_data):
         """Plot the data."""
         if self.ax0 is None:
             self.setup_ax()
         self.clear_ax()
+        self.__plot__(glue_data)
+
+    def __plot__(self, glue_data):
+        """
+        This method needs to be reimplemented in all figure canvas that
+        inherit this base class.
+        """
+        raise NotImplementedError
 
     def set_language(self, language):
         """Set the language of the text shown in the figure."""
@@ -862,12 +861,74 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
     def refresh_margins(self, silent=False):
         """Refresh the axes marings using the values defined in setp."""
-        left = self.setp['left margin']/self.setp['fwidth']
-        top = self.setp['top margin']/self.setp['fheight']
-        right = self.setp['right margin']/self.setp['fwidth']
-        bottom = self.setp['bottom margin']/self.setp['fheight']
+        if self.ax0 is None:
+            return
+        super().draw()
+
+        figheight = self.figure.get_figheight()
+        figwidth = self.figure.get_figwidth()
+        figborderpad = 0.15
+
+        figbbox = self.figure.bbox
+        ax = self.ax0
+        axbbox = self.ax0.bbox
+
+        renderer = self.get_renderer()
+        bbox_xaxis_bottom, bbox_xaxis_top = (
+            ax.xaxis.get_ticklabel_extents(renderer))
+        bbox_yaxis_left, bbox_yaxis_right = (
+            ax.yaxis.get_ticklabel_extents(renderer))
+
+        bbox_yaxis_label = ax.yaxis.label.get_window_extent(renderer)
+        bbox_xaxis_label = ax.xaxis.label.get_window_extent(renderer)
+
+        if self.ax0.get_legend() is not None:
+            legend_bbox = self.ax0.get_legend().get_window_extent(renderer)
+        else:
+            legend_bbox = self.ax0.bbox
+
+        # Calculate left margin width.
+        left_margin = self.setp['left margin']
+        if left_margin is None:
+            left_margin = max(
+                (axbbox.x0 - bbox_yaxis_label.x0) / figbbox.width,
+                0) + figborderpad / figwidth
+
+        # Calculate right margin width.
+        right_margin = self.setp['right margin']
+        if right_margin is None:
+            right_margin = max(
+                (bbox_xaxis_bottom.x1 - axbbox.x1) / figbbox.width,
+                (bbox_xaxis_top.x1 - axbbox.x1) / figbbox.width,
+                0) + figborderpad / figwidth
+
+        # Calculate top margin height.
+        top_margin = self.setp['top margin']
+        if top_margin is None:
+            top_margin = max(
+                (bbox_yaxis_left.y1 - axbbox.y1) / figbbox.height,
+                (bbox_yaxis_right.y1 - axbbox.y1) / figbbox.height,
+                (legend_bbox.y1 - axbbox.y1) / figbbox.height,
+                0) + figborderpad / figheight
+
+        # Calculate bottom margin height.
+        bottom_margin = self.setp['bottom margin']
+        if bottom_margin is None:
+            xticklabels_min_y0 = min(
+                [xticklabel.get_window_extent(renderer).y0 for
+                 xticklabel in self.xticklabels] + [axbbox.y0])
+            bottom_margin = max(
+                (axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
+                (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
+                (axbbox.y0 - xticklabels_min_y0) / figbbox.height,
+                0) + figborderpad / figheight
+
+        # Setup axe position.
         for ax in self.figure.axes:
-            ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
+            ax.set_position([
+                left_margin, bottom_margin,
+                1 - left_margin - right_margin,
+                1 - top_margin - bottom_margin])
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
@@ -964,14 +1025,12 @@ class FigCanvasBase(FigureCanvasQTAgg):
 class FigWaterBudgetGLUE(FigCanvasBase):
     FIGNAME = "water_budget_glue"
     FWIDTH, FHEIGHT = 15, 7
-    MARGINS = [1, 0.15, 0.15, 1.1]
 
     def __init__(self, setp={}):
-        super(FigWaterBudgetGLUE, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 2
 
-    def plot(self, glue_df):
-        super(FigWaterBudgetGLUE, self).plot()
+    def __plot__(self, glue_df):
         ax = self.ax0
 
         glue_yrly = glue_df['hydrol yearly budget']
@@ -1129,7 +1188,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
     def setup_ylimits(self):
         """Setup the limits of the yaxis."""
-        super(FigWaterBudgetGLUE, self).setup_ylimits()
+        super().setup_ylimits()
         self.setup_xticklabels()
 
     def setup_language(self):
@@ -1180,17 +1239,15 @@ class FigYearlyRechgGLUE(FigCanvasBase):
     uncertainty.
     """
 
-    MARGINS = [1, 0.15, 0.15, 0.9]  # left, top, right, bottom
     FIGNAME = "gw_rechg_glue"
 
     def __init__(self, setp={}):
-        super(FigYearlyRechgGLUE, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 4
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
 
-    def plot(self, glue_data):
-        super(FigYearlyRechgGLUE, self).plot()
+    def __plot__(self, glue_data):
         ax0 = self.ax0
         self.ax0.set_axisbelow(True)
 
@@ -1311,7 +1368,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def setup_ylimits(self):
         """Setup the limits of the yaxis"""
-        super(FigYearlyRechgGLUE, self).setup_ylimits()
+        super().setup_ylimits()
         self.setup_xticklabels()
 
     def setup_axes_labels(self):
@@ -1381,10 +1438,9 @@ class FigAvgYearlyBudget(FigCanvasBase):
     """
     FIGNAME = "avg_yearly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
-    MARGINS = [1, 0.15, 0.15, 0.35]
 
     def __init__(self, setp={}):
-        super(FigAvgYearlyBudget, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 5
         self.bar_handles = []
         self.setp['xticks size'] = 12
@@ -1392,9 +1448,7 @@ class FigAvgYearlyBudget(FigCanvasBase):
         self.setp['notes size'] = 12
         self.setp['ylabel size'] = 16
 
-    def plot(self, glue_df):
-        super(FigAvgYearlyBudget, self).plot()
-
+    def __plot__(self, glue_df):
         avg_yrly = {
             'evapo': np.nanmean(glue_df['yearly budget']['evapo']),
             'runoff': np.nanmean(glue_df['yearly budget']['runoff']),
@@ -1460,31 +1514,17 @@ class FigAvgYearlyBudget(FigCanvasBase):
 
     def setup_xticklabels(self):
         """Setup the labels of the xaxis."""
+        self.ax0.tick_params(
+            axis='x', gridOn=False, length=0, pad=5,
+            labelsize=self.setp['xticks size'])
+
         if self.setp['language'] == 'french':
-            labels = ['Évapotranspiration', 'Ruissellement',
-                      'Recharge', 'Précipitations']
+            ticklabels = ['Évapotranspiration', 'Ruissellement',
+                          'Recharge', 'Précipitations']
         else:
-            labels = ['Evapotranspiration', 'Runoff',
-                      'Recharge', 'Precipitation']
-
-        self.ax0.tick_params(axis='x', gridOn=False, length=0)
-        self.ax0.xaxis.set_ticklabels([])
-        for label in self.xticklabels:
-            label.remove()
-        self.xticklabels = []
-
-        # Draw the labels anew.
-        for i, label in enumerate(labels):
-            self.xticklabels.append(self.ax0.text(
-                i+1, self.setp['ymin'], label, rotation=0,
-                va='bottom', ha='center', fontsize=self.setp['xticks size']))
-
-        # Calculate and set the transform of the xticklabels.
-        yt = self._get_xaxis_labelpad()
-        offset = mpl.transforms.ScaledTranslation(
-            0, -yt/72, self.figure.dpi_scale_trans)
-        for xticklabel in self.xticklabels:
-            xticklabel.set_transform(self.ax0.transData + offset)
+            ticklabels = ['Evapotranspiration', 'Runoff',
+                          'Recharge', 'Precipitation']
+        self.ax0.xaxis.set_ticklabels(ticklabels)
 
     def setup_yticklabels(self):
         """Setup the labels of the yaxis."""
@@ -1505,10 +1545,9 @@ class FigAvgMonthlyBudget(FigCanvasBase):
     """
     FIGNAME = "avg_monthly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
-    MARGINS = [1, 0.35, 0.15, 0.35]
 
     def __init__(self, setp={}):
-        super(FigAvgMonthlyBudget, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 5
         self.lg_handles = []
         self.setp['xticks size'] = 14
@@ -1517,9 +1556,8 @@ class FigAvgMonthlyBudget(FigCanvasBase):
         self.setp['ylabel size'] = 16
         self.setp['legend size'] = 12
 
-    def plot(self, glue_df):
+    def __plot__(self, glue_df):
         """Plot the results."""
-        super(FigAvgMonthlyBudget, self).plot()
         avg_mly = {
             'evapo': np.nanmean(
                 glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
@@ -1542,7 +1580,7 @@ class FigAvgMonthlyBudget(FigCanvasBase):
         if 'ymin' not in self.setp.keys():
             self.setp['ymin'] = 0
         if 'ymax' not in self.setp.keys():
-            self.setp['ymax'] = np.max(avg_mly) + 10
+            self.setp['ymax'] = np.max([x for x in avg_mly.values()]) + 10
         if 'yscl' not in self.setp.keys():
             self.setp['yscl'] = 50
         if 'yscl minor' not in self.setp.keys():

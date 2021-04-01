@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
     QMessageBox, QFileDialog, QComboBox, QDialog, QGroupBox, QToolButton,
-    QToolBar, QGroupBox)
+    QToolBar)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -32,10 +32,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 
 # ---- Local imports
-import gwhat.common.widgets as myqt
-from gwhat.widgets.layout import VSep, HSep
-from gwhat.widgets.buttons import LangToolButton
-from gwhat.common import StyleDB
+from gwhat.widgets.layout import HSep
+from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_icon
@@ -49,7 +47,7 @@ from gwhat import __rootdir__
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
-class KGSBRFInstaller(myqt.QFrameLayout):
+class KGSBRFInstaller(QFrame):
     """
     A simple widget to download the kgs_brf program and install it in the
     proper directory.
@@ -60,18 +58,19 @@ class KGSBRFInstaller(myqt.QFrameLayout):
 
     def __init__(self, parent=None):
         super(KGSBRFInstaller, self).__init__(parent)
-
         self.setAutoFillBackground(True)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.install_btn = QPushButton("Install")
         self.install_btn.clicked.connect(self.install_kgsbrf)
 
-        self.addWidget(self.install_btn, 1, 1)
-        self.setRowStretch(0, 100)
-        self.setRowStretch(self.rowCount(), 100)
-        self.setColumnStretch(0, 100)
-        self.setColumnStretch(self.columnCount(), 100)
+        layout = QGridLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.install_btn, 1, 1)
+        layout.setRowStretch(0, 100)
+        layout.setRowStretch(layout.rowCount(), 100)
+        layout.setColumnStretch(0, 100)
+        layout.setColumnStretch(layout.columnCount(), 100)
 
     @property
     def install_dir(self):
@@ -123,7 +122,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
         QApplication.restoreOverrideCursor()
 
 
-class BRFManager(myqt.QFrameLayout):
+class BRFManager(QFrame):
     sig_brfperiod_changed = QSignal(tuple)
     sig_select_brfperiod_requested = QSignal(bool)
 
@@ -164,7 +163,7 @@ class BRFManager(myqt.QFrameLayout):
             lambda value: self._handle_lag_value_changed(
                 self.earthtides_spinbox))
 
-        self.earthtides_cbox = QCheckBox('Nbr of ET lags :')
+        self.earthtides_cbox = QCheckBox('No. of ET lags :')
         self.earthtides_cbox.setChecked(
             CONF.get('brf', 'compute_with_earthtides'))
         self.earthtides_cbox.toggled.connect(
@@ -196,7 +195,7 @@ class BRFManager(myqt.QFrameLayout):
         # Setup options layout.
         options_grpbox = QGroupBox()
         options_layout = QGridLayout(options_grpbox)
-        options_layout.addWidget(QLabel('Nbr of BP lags :'), 0, 0)
+        options_layout.addWidget(QLabel('No. of BP lags :'), 0, 0)
         options_layout.addWidget(self.earthtides_cbox, 1, 0)
         options_layout.addLayout(lags_layout, 0, 1, 2, 1)
         options_layout.addWidget(self.detrend_waterlevels_cbox, 2, 0, 1, 2)
@@ -257,12 +256,13 @@ class BRFManager(myqt.QFrameLayout):
         self._show_brf_results_btn.clicked.connect(self.viewer.show)
 
         # Setup the main Layout.
-        self.addWidget(daterange_grpbox, 0, 0)
-        self.addWidget(options_grpbox, 1, 0)
-        self.setRowMinimumHeight(2, 15)
-        self.setRowStretch(2, 100)
-        self.addWidget(self._show_brf_results_btn, 4, 0)
-        self.addWidget(btn_comp, 5, 0)
+        main_layout = QGridLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(daterange_grpbox, 0, 0)
+        main_layout.addWidget(options_grpbox, 1, 0)
+        main_layout.setRowStretch(2, 100)
+        main_layout.addWidget(self._show_brf_results_btn, 3, 0)
+        main_layout.addWidget(btn_comp, 4, 0)
 
         # Setup the install KGS_BRF panel
         if not KGSBRFInstaller().kgsbrf_is_installed():
@@ -462,8 +462,9 @@ class BRFManager(myqt.QFrameLayout):
         self.kgs_brf_installer = KGSBRFInstaller()
         self.kgs_brf_installer.sig_kgs_brf_installed.connect(
             self.__uninstall_kgs_brf_installer)
-        self.addWidget(
-            self.kgs_brf_installer, 0, 0, self.rowCount(), self.columnCount())
+        self.layout().addWidget(
+            self.kgs_brf_installer,
+            0, 0, self.layout().rowCount(), self.layout().columnCount())
 
     def __uninstall_kgs_brf_installer(self):
         """
@@ -637,7 +638,7 @@ class BRFViewer(QDialog):
         self.brf_canvas = FigureCanvasQTAgg(BRFFigure())
 
         self.fig_frame = QFrame()
-        self.fig_frame.setFrameStyle(StyleDB().frame)
+        self.fig_frame.setFrameStyle(FRAME_SYLE)
         self.fig_frame.setObjectName("figframe")
         self.fig_frame.setStyleSheet("#figframe {background-color:white;}")
 

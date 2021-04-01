@@ -30,7 +30,7 @@ from xlrd import xldate_as_tuple
 # ---- Local imports
 from gwhat.utils.dates import datetimeindex_to_xldates
 from gwhat.common.utils import calc_dist_from_coord
-from gwhat.colors2 import ColorsReader
+from gwhat.config.colors import ColorsManager
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -99,9 +99,7 @@ class Hydrograph(Figure):
         self.language = 'english'
 
         # Database :
-
-        self.colorsDB = ColorsReader()
-        self.colorsDB.load_colors_db()
+        self.colorsDB = ColorsManager()
 
         # Scales :
 
@@ -541,8 +539,9 @@ class Hydrograph(Figure):
                 lg_labels.append(labelDB[2])
 
                 # Missing Data Markers
-                lg_handles.append(self.lmiss_ax4)
-                lg_labels.append(labelDB[3])
+                if len(self.lmiss_ax4.get_xdata()):
+                    lg_handles.append(self.lmiss_ax4)
+                    lg_labels.append(labelDB[3])
 
             # Continuous Line Datalogger
             lg_handles.append(self.l1_ax2)
@@ -589,7 +588,7 @@ class Hydrograph(Figure):
         if not self.__isHydrographExists:
             return
 
-        self.colorsDB.load_colors_db()
+        self.colorsDB.load_colors()
         self.l1_ax2.set_color(self.colorsDB.rgb['WL solid'])
         self.l2_ax2.set_color(self.colorsDB.rgb['WL data'])
         self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])
@@ -862,8 +861,8 @@ class Hydrograph(Figure):
             self._mrc_plt.set_visible(False)
         else:
             self._mrc_plt.set_visible(True)
-            self._mrc_plt.set_data(
-                self.wldset['mrc/time'], self.wldset['mrc/recess'])
+            mrc_data = self.wldset.get_mrc()
+            self._mrc_plt.set_data(mrc_data['time'], mrc_data['recess'])
 
     def draw_waterlvl(self):
         """
@@ -1008,18 +1007,20 @@ class Hydrograph(Figure):
         self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
 
     def setup_xticklabels(self):
-        """Setup the xtick labels."""
+        """
+        Setup the xtick labels.
 
-        # Labels are placed manually because this is around 25% faster than
-        # using the minor ticks.
-
+        Note that labels are placed manually because this is around 25% faster
+        than using the minor ticks.
+        """
         xticks_info = self.make_xticks_info()
         self.ax1.set_xticks(xticks_info[0])
+        self.ax1.set_xticks(xticks_info[3], minor=True)
 
         for i in range(len(self.xlabels)):
             self.xlabels[i].remove()
 
-        padding = ScaledTranslation(0, -5/72, self.dpi_scale_trans)
+        padding = ScaledTranslation(0, -6/72, self.dpi_scale_trans)
 
         self.xlabels = []
         for i in range(len(xticks_info[1])):
@@ -1118,32 +1119,32 @@ class Hydrograph(Figure):
         self.patch.set_linewidth(self._figframe_lw)
 
     def set_gridLines(self):
+        """Setup the grid lines."""
 
         # 0 -> None, 1 -> "-" 2 -> ":"
-
+        grid_color = [0.35, 0.35, 0.35]
         if self.gridLines == 0:
             for ax in self.axes:
                 ax._gridOn = False
-
         elif self.gridLines == 1:
-            self.ax4.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle='-',
-                          linewidth=0.5, which='minor')
-            self.axLow.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle='-',
-                            linewidth=0.5)
-            self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle='-',
-                          linewidth=0.5)
-
+            self.ax4.grid(axis='y', color=grid_color, linestyle='-',
+                          linewidth=0.25, which='minor')
+            self.axLow.grid(axis='y', color=grid_color, linestyle='-',
+                            linewidth=0.25)
+            self.ax1.grid(axis='x', color=grid_color, linestyle='-',
+                          linewidth=0.25)
         else:
-            self.ax4.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
-                          linewidth=0.5, dashes=[0.5, 5], which='minor')
-            self.axLow.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
-                            linewidth=0.5, dashes=[0.5, 5])
-            self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle=':',
-                          linewidth=0.5, dashes=[0.5, 5])
+            self.ax4.grid(
+                axis='y', color=grid_color, linewidth=0.5, dashes=[1, 5],
+                dash_capstyle='butt', which='minor')
+            self.axLow.grid(
+                axis='y', color=grid_color, linewidth=0.5, dashes=[1, 5],
+                dash_capstyle='butt')
+            self.ax1.grid(
+                axis='x', color=grid_color, linewidth=0.5, dashes=[1, 5],
+                dash_capstyle='butt')
 
     def make_xticks_info(self):
-
-        # ---------------------------------------- horizontal text alignment --
 
         # The strategy here is to:
         # 1. render some random text ;
@@ -1171,8 +1172,7 @@ class Hydrograph(Figure):
 
         dx = bbox.height * np.sin(np.radians(45))
 
-        # Scale dx to axe dimension :
-
+        # Scale dx to axe dimension.
         bbox = self.ax1.get_window_extent(renderer)  # in pixels
         bbox = bbox.transformed(self.dpi_scale_trans.inverted())  # in inches
 
@@ -1183,60 +1183,45 @@ class Hydrograph(Figure):
 
         # Transform to data coord :
 
-        n = self.date_labels_pattern
         month_names = LabelDatabase(self.language).month_names
 
         xticks_labels_offset = sdx
 
         xticks_labels = []
-        xticks_position = [self.TIMEmin]
+        xticks_position = []
         xticks_labels_position = []
+        xticks_minor_position = []
 
-        if self.datemode.lower() == 'month':
+        i = 0
+        next_xtick_pos = self.TIMEmin
+        while True:
+            datetuple = xldate_as_tuple(next_xtick_pos, 0)
+            year = datetuple[0]
+            month = datetuple[1]
+            month_range = monthrange(year, month)[1]
 
-            i = 0
-            while xticks_position[i] < self.TIMEmax:
-
-                year = xldate_as_tuple(xticks_position[i], 0)[0]
-                month = xldate_as_tuple(xticks_position[i], 0)[1]
-
-                month_range = monthrange(year, month)[1]
-
-                xticks_position.append(xticks_position[i] + month_range)
-
-                if i % n == 0:
-
-                    xticks_labels_position.append(xticks_position[i] +
-                                                  0.5 * month_range +
-                                                  xticks_labels_offset)
-
-                    xticks_labels.append("%s '%s" % (month_names[month - 1],
-                                                     str(year)[-2:]))
-
-                i += 1
-
-        elif self.datemode.lower() == 'year':
-
-            i = 0
-            year = xldate_as_tuple(xticks_position[i], 0)[0]
-            while xticks_position[i] < self.TIMEmax:
-
-                xticks_position.append(
-                                     xldate_from_date_tuple((year+1, 1, 1), 0))
-                year_range = xticks_position[i+1] - xticks_position[i]
-
-                if i % n == 0:
-
-                    xticks_labels_position.append(xticks_position[i] +
-                                                  0.5 * year_range +
-                                                  xticks_labels_offset)
-
+            xticks_minor_position.append(next_xtick_pos)
+            if i % self.date_labels_pattern == 0:
+                xticks_position.append(next_xtick_pos)
+                xticks_labels_position.append(
+                    next_xtick_pos + xticks_labels_offset)
+                if self.datemode.lower() == 'month':
+                    xticks_labels.append("{} '{}".format(
+                        month_names[month - 1], str(year)[-2:]))
+                elif self.datemode.lower() == 'year':
                     xticks_labels.append("%d" % year)
 
-                year += 1
-                i += 1
+            if self.datemode.lower() == 'month':
+                next_xtick_pos = next_xtick_pos + month_range
+            elif self.datemode.lower() == 'year':
+                next_xtick_pos = xldate_from_date_tuple((year + 1, 1, 1), 0)
 
-        return xticks_position, xticks_labels_position, xticks_labels
+            if next_xtick_pos > self.TIMEmax:
+                break
+            i += 1
+
+        return (xticks_position, xticks_labels_position, xticks_labels,
+                xticks_minor_position)
 
 
 def filt_data(time, waterlvl, N):

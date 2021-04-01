@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright © 2014-2018 GWHAT Project Contributors
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
@@ -9,9 +9,17 @@
 
 """Qt utilities"""
 
+# ---- Standard imports
+import sys
+import platform
+
 # ---- Third party imports
-from PyQt5.QtCore import QByteArray
-from PyQt5.QtWidgets import QWidget, QSizePolicy
+from PyQt5.QtCore import QByteArray, Qt, QSize
+from PyQt5.QtWidgets import (
+    QWidget, QSizePolicy, QToolButton, QApplication, QStyleFactory)
+
+# ---- Local imports
+from gwhat.utils.icons import get_icon
 
 
 def qbytearray_to_hexstate(qba):
@@ -24,8 +32,67 @@ def hexstate_to_qbytearray(hexstate):
     return QByteArray().fromHex(str(hexstate).encode('utf-8'))
 
 
+def create_qapplication():
+    """Create a QApplication instance if it doesn't already exist"""
+    qapp = QApplication.instance()
+    if qapp is None:
+        print('Creating a QApplication...')
+        qapp = QApplication(sys.argv)
+
+        if platform.system() == 'Windows':
+            print('Setting style for Windows OS...')
+            qapp.setStyle(QStyleFactory.create('WindowsVista'))
+
+            ft = qapp.font()
+            ft.setPointSize(10)
+            ft.setFamily('Segoe UI')
+            qapp.setFont(ft)
+    return qapp
+
+
 def create_toolbar_stretcher():
     """Create a stretcher to be used in a toolbar """
     stretcher = QWidget()
     stretcher.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
     return stretcher
+
+
+def create_toolbutton(parent, text=None, shortcut=None, icon=None, tip=None,
+                      toggled=None, triggered=None,
+                      autoraise=True, text_beside_icon=False, iconsize=None):
+    """Create a QToolButton with the provided settings."""
+    button = QToolButton(parent)
+
+    if text is not None:
+        button.setText(text)
+
+    if icon is not None:
+        icon = get_icon(icon) if isinstance(icon, str) else icon
+        button.setIcon(icon)
+
+    if tip is not None:
+        button.setToolTip(tip)
+
+    if text_beside_icon:
+        button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+
+    button.setAutoRaise(autoraise)
+
+    if triggered is not None:
+        button.clicked.connect(triggered)
+
+    if toggled is not None:
+        button.toggled.connect(toggled)
+        button.setCheckable(True)
+
+    if shortcut is not None:
+        if isinstance(shortcut, (list, tuple)):
+            for sc in shortcut:
+                button.setShortcut(sc)
+        else:
+            button.setShortcut(shortcut)
+
+    if iconsize is not None:
+        button.setIconSize(iconsize)
+
+    return button

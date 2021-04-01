@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright © 2014-2018 GWHAT Project Contributors
+# Copyright © 2014-2021 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
@@ -13,41 +13,26 @@
 # moving forward, and remember to keep your UI out of the way.
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
 
-from __future__ import division, unicode_literals, print_function
-
 print('Starting GWHAT...')
 
-import matplotlib as mpl
-mpl.use('Qt5Agg')
-
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QSplitter,
-                             QWidget, QGridLayout, QTextBrowser)
-import sys
-app = QApplication(sys.argv)
-
-from gwhat.widgets.splash import SplashScrn
-splash = SplashScrn()
-
-import platform
-
-ft = app.font()
-ft.setPointSize(11)
-if platform.system() == 'Windows':
-    ft.setFamily('Segoe UI')
-app.setFont(ft)
+from gwhat.utils.qthelpers import create_qapplication
+app = create_qapplication()
 
 from gwhat import __namever__, __appname__
+from gwhat.widgets.splash import SplashScrn
+splash = SplashScrn()
 splash.showMessage("Starting %s..." % __namever__)
 
 # ---- Standard library imports
+import sys
+import platform
 from time import ctime
-import os.path as osp
-
 from multiprocessing import freeze_support
-import tkinter
-import tkinter.filedialog
-import tkinter.messagebox
+
+# ---- Third party imports
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QMainWindow, QTextEdit, QSplitter,
+                             QWidget, QGridLayout, QTextBrowser)
 
 # ---- Local imports
 from gwhat.config.main import CONF
@@ -58,7 +43,6 @@ import gwhat.HydroCalc2 as HydroCalc
 from gwhat.widgets.tabwidget import TabWidget
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
-from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.qthelpers import (
     qbytearray_to_hexstate, hexstate_to_qbytearray)
@@ -87,7 +71,6 @@ class MainWindow(QMainWindow):
 
         # Setup the data manager.
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
-        self.dmanager.setMaximumWidth(250)
         self.dmanager.sig_new_console_msg.connect(self.write2console)
 
         # Generate the GUI.
@@ -114,14 +97,9 @@ class MainWindow(QMainWindow):
         self.main_console.setLineWrapMode(QTextEdit.NoWrap)
         self.main_console.setOpenExternalLinks(True)
 
-        style = 'Regular'
-        family = StyleDB().fontfamily
-        size = CONF.get('main', 'fontsize_console')
-        fontSS = ('font-style: %s;'
-                  'font-size: %s;'
-                  'font-family: %s;'
-                  ) % (style, size, family)
-        self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
+        fontsize = CONF.get('main', 'fontsize_console')
+        self.main_console.setStyleSheet(
+            "QWidget {font-style: Regular; font-size: %s;}" % fontsize)
 
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
@@ -132,7 +110,8 @@ class MainWindow(QMainWindow):
 
         # Setup the tab plot hydrograph.
         splash.showMessage("Initializing plot hydrograph...")
-        self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
+        self.tab_hydrograph = HydroPrint.HydroprintGUI(
+            self.dmanager, parent=self)
         self.tab_hydrograph.ConsoleSignal.connect(self.write2console)
 
         # Setup the tab analyse hydrograph.
@@ -185,12 +164,16 @@ class MainWindow(QMainWindow):
         Move the data manager from tab 'Plot Hydrograph' to tab
         'Analyze Hydrograph' and vice-versa.
         """
-        current = self.tab_widget.tabBar().currentIndex()
-        if current == 0:
-            self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
-        elif current == 1:
-            self.tab_hydrocalc.right_panel.layout().addWidget(
-                self.dmanager, 0, 0)
+        max_width = self.dmanager.sizeHint().width()
+        for i in range(self.tab_widget.count()):
+            max_width = max(
+                max_width,
+                self.tab_widget.widget(i).right_panel.sizeHint().width())
+        for i in range(self.tab_widget.count()):
+            self.tab_widget.widget(i).layout().setColumnMinimumWidth(
+                2, max_width)
+        self.tab_widget.currentWidget().right_panel.layout().addWidget(
+            self.dmanager, 0, 0)
 
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""
@@ -213,16 +196,12 @@ class MainWindow(QMainWindow):
 
         print('Closing projet')
         self.pmanager.close()
+        self.dmanager.close()
 
         print('Closing GWHAT')
         self.tab_hydrocalc.close()
+        self.tab_hydrograph.close()
         event.accept()
-
-    def show(self):
-        """
-        Extend Qt method.
-        """
-        super().show()
 
     # ---- Main window settings
     def _restore_window_geometry(self):
@@ -283,8 +262,6 @@ def except_hook(cls, exception, traceback):
     """
     sys.__excepthook__(cls, exception, traceback)
 
-
-# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     sys.excepthook = except_hook

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 from __future__ import division, unicode_literals
 
@@ -194,11 +195,20 @@ class ProjetReader(object):
 
     def get_last_opened_wldset(self):
         """
-        Return the name of the last opened water level dataset in the project
-        if any.
+        Return the name of the last opened water level dataset if any.
         """
-        name = self.db['wldsets'].attrs['last_opened']
+        try:
+            name = self.db['wldsets'].attrs['last_opened']
+        except OSError:
+            name = 'None'
         return None if name == 'None' else name
+
+    def set_last_opened_wldset(self, name):
+        """
+        Set the name of the last opened water level dataset.
+        """
+        self.db['wldsets'].attrs['last_opened'] = name
+        self.db.flush()
 
     def get_wldset(self, name):
         """
@@ -206,7 +216,7 @@ class ProjetReader(object):
         """
         print("Getting wldset {}...".format(name), end=' ')
         if name in self.wldsets:
-            self.db['wldsets'].attrs['last_opened'] = name
+            self.set_last_opened_wldset(name)
             print('done')
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
@@ -247,17 +257,6 @@ class ProjetReader(object):
             grp.attrs['Elevation'] = df['Elevation']
             grp.attrs['Municipality'] = df['Municipality']
             grp.attrs['Province'] = df['Province']
-
-            # Master Recession Curve
-            mrc = grp.create_group('mrc')
-            mrc.attrs['exists'] = 0
-            mrc.create_dataset('params', data=(0, 0), dtype='float64')
-            mrc.create_dataset('peak_indx', data=np.array([]),
-                               dtype='int16', maxshape=(None,))
-            mrc.create_dataset('recess', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            mrc.create_dataset('time', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
 
             # Barometric Response Function
             grp.create_group('brf')
@@ -313,11 +312,20 @@ class ProjetReader(object):
 
     def get_last_opened_wxdset(self):
         """
-        Return the name of the last opened weather dataset in the project
-        if any.
+        Return the name of the last opened weather dataset if any.
         """
-        name = self.db['wxdsets'].attrs['last_opened']
+        try:
+            name = self.db['wxdsets'].attrs['last_opened']
+        except OSError:
+            name = 'None'
         return None if name == 'None' else name
+
+    def set_last_opened_wxdset(self, name):
+        """
+        Set the name of the last opened weather dataset.
+        """
+        self.db['wxdsets'].attrs['last_opened'] = name
+        self.db.flush()
 
     def get_wxdset(self, name):
         """
@@ -326,7 +334,7 @@ class ProjetReader(object):
         print("Getting wxdset {}...".format(name), end=' ')
         if name in self.wxdsets:
             print('done')
-            self.db['wxdsets'].attrs['last_opened'] = name
+            self.set_last_opened_wxdset(name)
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
             print('failed')
@@ -405,6 +413,20 @@ class WLDataFrameHDF5(WLDataFrameBase):
         columns = tuple(columns)
         self._dataf = WLDataset(data, columns)
 
+        # Setup the structure for the Master Recession Curve
+        if 'mrc' not in list(self.dset.keys()):
+            mrc = self.dset.create_group('mrc')
+            mrc.attrs['exists'] = 0
+            mrc.create_dataset('params', data=(np.nan, np.nan),
+                               dtype='float64')
+            mrc.create_dataset('peak_indx', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('recess', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('time', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            self.dset.file.flush()
+
         # Make older datasets compatible with newer format.
         if isinstance(self.dset['Time'][0], (int, float)):
             # Time needs to be converted from Excel numeric dates
@@ -429,6 +451,24 @@ class WLDataFrameHDF5(WLDataFrameBase):
         if 'glue' not in list(self.dset.keys()):
             # Added in version 0.3.1 (see PR #184)
             self.dset.create_group('glue')
+            self.dset.file.flush()
+        if self.dset['mrc/peak_indx'].dtype != np.dtype('float64'):
+            # We need to convert peak_indx data to the format used in
+            # GWHAT >= 0.5.1. See jnsebgosselin/gwhat#370.
+            print('Convert peak_inx values to the new format '
+                  'used in gwhat >= 0.5.1.')
+            peak_indx = self.dset['mrc/peak_indx'][...].astype(float)
+
+            # The only way to do that in HDF5 is to delete the dataset and
+            # create a new one with the right dtype.
+            del self.dset['mrc/peak_indx']
+            self.dset.file.flush()
+
+            self.dset['mrc'].create_dataset(
+                'peak_indx', data=np.array([]),
+                dtype='float64', maxshape=(None,))
+            self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
+            self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
             self.dset.file.flush()
 
     def __getitem__(self, key):
@@ -474,12 +514,12 @@ class WLDataFrameHDF5(WLDataFrameBase):
         grp = self.dset.require_group('manual')
         return grp['Time'][...], grp['WL'][...]
 
-    # ---- Master recession curve
-
+    # ---- Master Recession Curve
     def set_mrc(self, A, B, peak_indx, time, recess):
         """Save the mrc results to the hdf5 project file."""
         self.dset['mrc/params'][:] = (A, B)
 
+        peak_indx = np.array(peak_indx).flatten()
         self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
         self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
 
@@ -493,18 +533,22 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
         self.dset.file.flush()
 
+    def get_mrc(self):
+        """Return the mrc results stored in the hdf5 project file."""
+        peak_indx = self['mrc/peak_indx'].copy()
+        m = 2
+        n = len(peak_indx) // m
+        peak_indx = list(map(
+            tuple, peak_indx[:n * m].reshape((n, m))
+            ))
+        return {
+            'params': self['mrc/params'].tolist(),
+            'peak_indx': peak_indx,
+            'time': self['mrc/time'].copy(),
+            'recess': self['mrc/recess'].copy()}
+
     def mrc_exists(self):
         """Return whether a mrc results is saved in the hdf5 project file."""
-        if 'mrc' not in list(self.dset.keys()):
-            mrc = self.dset.create_group('mrc')
-            mrc.attrs['exists'] = 0
-            mrc.create_dataset('params', data=(0, 0), dtype='float64')
-            mrc.create_dataset('peak_indx', data=np.array([]),
-                               dtype='int16', maxshape=(None,))
-            mrc.create_dataset('recess', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            mrc.create_dataset('time', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
         return bool(self.dset['mrc'].attrs['exists'])
 
     def save_mrc_tofile(self, filename):
@@ -537,8 +581,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
         save_content_to_file(filename, fcontent)
 
-    # ---- GLUE water budget and water level evaluation
-
+    # ---- GLUE data
     def glue_idnums(self):
         """Return the id numbers of all the previously saved GLUE results"""
         return list(self.dset['glue'].keys())
@@ -927,20 +970,12 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
     """
 
     def __init__(self, data, *args, **kwargs):
-        super(GLUEDataFrameHDF5, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__load_data__(data)
 
     def __getitem__(self, key):
         """Return the value saved in the store at key."""
-        if key not in self.store.keys():
-            raise KeyError(key)
-
-        if isinstance(self.store[key], h5py._hl.dataset.Dataset):
-            return self.store[key][...]
-        elif isinstance(self.store[key], h5py._hl.group.Group):
-            return load_dict_from_h5grp(self.store[key])
-        else:
-            return None
+        return self.store[key]
 
     def __setitem__(self, key, value):
         raise NotImplementedError
@@ -951,9 +986,9 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
     def __len__(self):
         raise NotImplementedError
 
-    def __load_data__(self, data):
+    def __load_data__(self, glue_h5grp):
         """Saves the h5py glue data to the store."""
-        self.store = data
+        self.store = load_dict_from_h5grp(glue_h5grp)
 
 
 def is_dsetname_valid(dsetname):

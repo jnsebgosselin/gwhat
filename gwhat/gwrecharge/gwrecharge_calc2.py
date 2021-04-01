@@ -15,6 +15,7 @@ from time import perf_counter
 
 # ---- Third party imports
 import numpy as np
+import pandas as pd
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 
@@ -44,11 +45,14 @@ class RechgEvalWorker(QObject):
         self.CM = 4
         self.deltat = 0
 
+        # Models parameters space.
         self.Sy = (0, 1)
         self.Cro = (0, 1)
         self.RASmax = (0, 150)
-
         self.glue_pardist_res = 'fine'
+
+        self.rmse_cutoff = 0
+        self.rmse_cutoff_enabled = 0
 
     @property
     def language(self):
@@ -94,11 +98,11 @@ class RechgEvalWorker(QObject):
         # Setup water level data.
 
         self.wldset = wldset
-        self.A, self.B = wldset['mrc/params']
+        self.A, self.B = wldset.get_mrc()['params']
         self.twlvl, self.wlobs = self.make_data_daily(
             wldset.xldates, wldset['WL'])
 
-        if not self.A and not self.B:
+        if pd.isnull(self.A) and pd.isnull(self.B):
             error = ("Groundwater recharge cannot be computed because a"
                      " master recession curve (MRC) must be defined first.")
             return error
@@ -134,7 +138,16 @@ class RechgEvalWorker(QObject):
             if len(indx) > 0:
                 hd[i] = h[indx[-1]]
 
-        return td, hd
+        # We need to remove nan values at the start and the end of the series
+        # to avoid problems when computing synthetic hydrographs.
+        for istart in range(len(hd)):
+            if not np.isnan(hd[istart]):
+                break
+        for iend in reversed(range(len(hd))):
+            if not np.isnan(hd[iend]):
+                break
+
+        return td[istart:iend], hd[istart:iend]
 
     def produce_params_combinations(self):
         """
@@ -183,36 +196,45 @@ class RechgEvalWorker(QObject):
         for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
             rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
             SyOpt, RMSE, wlvlest = self.optimize_specific_yield(
-                    Sy0, self.wlobs*1000, rechg[ts:te])
-            Sy0 = SyOpt
+                Sy0, self.wlobs*1000, rechg[ts:te])
+            if SyOpt is not None:
+                Sy0 = SyOpt
 
-            if SyOpt >= min(self.Sy) and SyOpt <= max(self.Sy):
-                set_RMSE.append(RMSE)
-                set_recharge.append(rechg)
-                sets_waterlevels.append(wlvlest)
-                set_Sy.append(SyOpt)
-                set_RASmax.append(rasmax)
-                set_Cru.append(cro)
-                set_evapo.append(etr)
-                set_runoff.append(ru)
+                # Check if the model respected the cutoff criteria if any.
+                rmse_cutoff_value = (
+                    self.rmse_cutoff if self.rmse_cutoff_enabled else RMSE)
+                if (SyOpt >= self.Sy[0] and
+                        SyOpt <= self.Sy[1] and
+                        RMSE <= rmse_cutoff_value):
+                    set_RMSE.append(RMSE)
+                    set_recharge.append(rechg)
+                    sets_waterlevels.append(wlvlest)
+                    set_Sy.append(SyOpt)
+                    set_RASmax.append(rasmax)
+                    set_Cru.append(cro)
+                    set_evapo.append(etr)
+                    set_runoff.append(ru)
 
             self.sig_glue_progress.emit((it+1)/N*100)
         print("GLUE computed in {:0.1f} sec".format(perf_counter()-time_start))
-        self._print_model_params_summary(set_Sy, set_Cru, set_RASmax)
+        self._print_model_params_summary(set_Sy, set_Cru, set_RASmax, set_RMSE)
 
         # ---- Format results
         glue_rawdata = {}
         glue_rawdata['count'] = len(set_RMSE)
-        glue_rawdata['RMSE'] = set_RMSE
-        glue_rawdata['params'] = {'Sy': set_Sy,
-                                  'RASmax': set_RASmax,
-                                  'Cru': set_Cru,
+        glue_rawdata['RMSE'] = np.array(set_RMSE)
+        glue_rawdata['params'] = {'Sy': np.array(set_Sy),
+                                  'RASmax': np.array(set_RASmax),
+                                  'Cru': np.array(set_Cru),
                                   'tmelt': self.TMELT,
                                   'CM': self.CM,
                                   'deltat': self.deltat}
         glue_rawdata['ranges'] = {'Sy': self.Sy,
                                   'Cro': self.Cro,
                                   'RASmax': self.RASmax}
+        glue_rawdata['cutoff'] = {
+            'rmse_cutoff': self.rmse_cutoff,
+            'rmse_cutoff_enabled': self.rmse_cutoff_enabled}
 
         glue_rawdata['water levels'] = {}
         glue_rawdata['water levels']['time'] = self.twlvl
@@ -227,13 +249,9 @@ class RechgEvalWorker(QObject):
 
         # Save the water levels simulated with the mrc, as well as and values
         # of the parameters that characterized this mrc.
-        glue_rawdata['mrc'] = {}
-        glue_rawdata['mrc']['params'] = self.wldset['mrc/params']
-        glue_rawdata['mrc']['time'] = self.wldset['mrc/time']
-        glue_rawdata['mrc']['levels'] = self.wldset['mrc/recess']
+        glue_rawdata['mrc'] = self.wldset.get_mrc()
 
         # Store the models output that will need to be processed with GLUE.
-
         glue_rawdata['hydrograph'] = sets_waterlevels
         glue_rawdata['recharge'] = set_recharge
         glue_rawdata['etr'] = set_evapo
@@ -267,7 +285,8 @@ class RechgEvalWorker(QObject):
 
         return glue_dataf
 
-    def _print_model_params_summary(self, set_Sy, set_Cru, set_RASmax):
+    def _print_model_params_summary(self, set_Sy, set_Cru, set_RASmax,
+                                    set_rmse):
         """
         Print a summary of the range of parameter values that were used to
         produce the set of behavioural models.
@@ -281,6 +300,9 @@ class RechgEvalWorker(QObject):
             print('range RASmax = %d to %d' % range_rasmax)
             range_cru = (np.min(set_Cru), np.max(set_Cru))
             print('range Cru = %0.3f to %0.3f' % range_cru)
+            range_rmse = (np.min(set_rmse), np.max(set_rmse))
+            print('range RMSE = %0.1f to %0.1f' % range_rmse)
+            print('mean RMSE = %0.1f' % np.mean(set_rmse))
             print('-'*78)
         else:
             print("The number of behavioural model produced is 0.")
@@ -301,8 +323,6 @@ class RechgEvalWorker(QObject):
         """
         nonan_indx = np.where(~np.isnan(wlobs))
 
-        # ---- Gauss-Newton
-
         tolmax = 0.001
         Sy = Sy0
         dSy = 0.01
@@ -315,7 +335,7 @@ class RechgEvalWorker(QObject):
             it += 1
             if it > 100:
                 print('Not converging.')
-                break
+                return None, None, None
 
             # Calculating Jacobian (X) Numerically.
             wlvl = self.calc_hydrograph(rechg, Sy * (1+dSy))
@@ -405,7 +425,10 @@ class RechgEvalWorker(QObject):
         # I should check this out.
 
         A, B = self.A, self.B
-        wlobs = self.wlobs*1000
+        wlobs = self.wlobs.copy() * 1000
+        if np.isnan(wlobs[0]) or np.isnan(wlobs[-1]):
+            raise ValueError('The observed water level time series either '
+                             'starts or ends with a nann value.')
         if nscheme == 'backward':
             wlpre = np.zeros(len(RECHG)+1) * np.nan
             wlpre[0] = wlobs[-1]
@@ -423,7 +446,6 @@ class RechgEvalWorker(QObject):
 
     @staticmethod
     def mrc2rechg(t, hobs, A, B, z, Sy):
-
         """
         Calculate groundwater recharge from the Master Recession Curve (MRC)
         equation defined by the parameters A and B, the water level time series

@@ -5,5 +5,3 @@
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
-
-from gwhat.common.styles import StyleDB

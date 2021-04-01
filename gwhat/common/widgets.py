@@ -14,24 +14,9 @@ from gwhat.utils import icons
 
 from PyQt5.QtCore import Qt, QSize, QPoint, QUrl
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QGridLayout, QLabel, QFrame, QMessageBox,
-                             QComboBox, QDoubleSpinBox, QAbstractSpinBox,
-                             QGroupBox, QWidget, QDialog, QDesktopWidget,
-                             QTextBrowser, QPushButton, QStyle, QScrollArea,
-                             QToolButton)
-
-
-class MyQLineLayout(QGridLayout):
-
-    def __init__(self, widgets, parent=None):
-        super(MyQLineLayout, self).__init__(parent)
-
-        for i, widget in enumerate(widgets):
-            self.addWidget(widget, 0, i)
-
-        self.setContentsMargins(0, 0, 0, 0)  # (l, t, r, b)
-        self.setColumnStretch(self.columnCount(), 100)
+from PyQt5.QtWidgets import (
+    QGridLayout, QMessageBox, QComboBox, QDoubleSpinBox, QAbstractSpinBox,
+    QWidget, QDialog, QDesktopWidget, QPushButton, QStyle, QScrollArea)
 
 
 class MyQComboBox(QComboBox):
@@ -102,106 +87,6 @@ class QDoubleSpinBox(QDoubleSpinBox):
 
     def value(self):
         return self.__value
-
-
-class QFrameLayout(QFrame):
-    def __init__(self, parent=None):
-        super(QFrameLayout, self).__init__(parent)
-
-        self.setLayout(QGridLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
-
-    def addWidget(self, widget, x, y, w=1, h=1):
-        self.layout().addWidget(widget, x, y, w, h)
-
-    def addLayout(self, layout, x, y, w=1, h=1):
-        self.layout().addLayout(layout, x, y, w, h)
-
-    # -------------------------------------------------------------------------
-
-    def setRowMinimumHeight(self, row, height):
-        self.layout().setRowMinimumHeight(row, height)
-
-    # -------------------------------------------------------------------------
-
-    def setRowStretch(self, row, stretch):
-        self.layout().setRowStretch(row, stretch)
-
-    def setColumnStretch(self, column, stretch):
-        self.layout().setColumnStretch(column, stretch)
-
-    # -------------------------------------------------------------------------
-
-    def setContentsMargins(self, left, top, right, bottom):
-        self.layout().setContentsMargins(left, top, right, bottom)
-
-    def setSpacing(self, spacing):
-        self.layout().setSpacing(spacing)
-
-    def setVerticalSpacing(self, spacing):
-        self.layout().setVerticalSpacing(spacing)
-
-    def setHorizontalSpacing(self, spacing):
-        self.layout().setHorizontalSpacing(spacing)
-
-    # -------------------------------------------------------------------------
-
-    def rowCount(self):
-        return self.layout().rowCount()
-
-    def columnCount(self):
-        return self.layout().columnCount()
-
-
-class DialogWindow(QDialog):
-
-    def __init__(self, parent=None, resizable=False, maximize=True):
-        super(DialogWindow, self).__init__(parent)
-
-        self.__firstshow = True
-        if maximize is True:
-            self.__resizable = True
-            self.setWindowFlags(Qt.Window)
-        else:
-            self.__resizable = resizable
-            self.setWindowFlags(Qt.Window |
-                                Qt.WindowMinimizeButtonHint |
-                                Qt.WindowCloseButtonHint)
-
-        self.setWindowIcon(icons.get_icon('master'))
-
-    def emit_warning(self, msg, title='Warning'):
-        btn = QMessageBox.Ok
-        QMessageBox.warning(self, title, msg, btn)
-
-    def show(self):
-        if self.__firstshow is True:
-            self.__firstshow = False
-
-            self.setAttribute(Qt.WA_DontShowOnScreen, True)
-            super(DialogWindow, self).show()
-            super(DialogWindow, self).close()
-            self.setAttribute(Qt.WA_DontShowOnScreen, False)
-
-            qr = self.frameGeometry()
-            if self.parentWidget():
-                parent = self.parentWidget()
-                wp = parent.frameGeometry().width()
-                hp = parent.frameGeometry().height()
-                cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
-            else:
-                cp = QDesktopWidget().availableGeometry().center()
-            qr.moveCenter(cp)
-            self.move(qr.topLeft())
-
-            super(DialogWindow, self).show()
-
-            if self.__resizable is False:
-                self.setFixedSize(self.size())
-        else:
-            super(DialogWindow, self).show()
-
-        self.raise_()
 
 
 class QToolPanel(QWidget):

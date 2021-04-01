@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
 from time import clock
@@ -13,17 +14,19 @@ import os
 import os.path as osp
 import datetime
 
-
 # ---- Third party imports
 import numpy as np
-from PyQt5.QtCore import Qt
+import pandas as pd
+from PyQt5.QtCore import Qt, QObject
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
-    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame)
+    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame,
+    QMessageBox)
 
 import matplotlib as mpl
+from matplotlib.widgets import AxesWidget
 import matplotlib.dates as mdates
 from matplotlib.figure import Figure as MplFigure
 from matplotlib.patches import Rectangle
@@ -34,22 +37,21 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
-
 # ---- Local imports
+from gwhat.brf_mod import BRFManager
+from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-from gwhat.common.widgets import DialogWindow
-from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.widgets.buttons import ToolBarWidget
-from gwhat.brf_mod import BRFManager
 from gwhat.widgets.buttons import OnOffToolButton
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
 
 
-class WLCalc(DialogWindow, SaveFileMixin):
+class WLCalc(QWidget, SaveFileMixin):
     """
     This is the interface where are plotted the water level time series. It is
     possible to dynamically zoom and span the data, change the display,
@@ -59,7 +61,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     sig_new_mrc = QSignal()
 
     def __init__(self, datamanager, parent=None):
-        DialogWindow.__init__(self, parent, maximize=True)
+        QWidget.__init__(self, parent)
         SaveFileMixin.__init__(self)
 
         self._navig_and_select_tools = []
@@ -80,8 +82,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.brf_eval_widget.sig_select_brfperiod_requested.connect(
             self.toggle_brfperiod_selection)
 
-        self.__figbckground = None
-        self.__addPeakVisible = True
+        self._figbckground = None
+        self._axes_widgets = []
         self.__mouse_btn_is_pressed = False
 
         # Calcul the delta between the datum of Excel and Maplotlib numeric
@@ -94,16 +96,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # format.
         self.dformat = 1
 
-        # Recession Curve Parameters :
-        self.peak_indx = np.array([]).astype(int)
-        self.peak_memory = [np.array([]).astype(int)]
-
         # Selected water level data.
         self.wl_selected_i = []
 
         # Soil Profiles :
         self.soilFilename = []
-        self.SOILPROFIL = SoilProfil()
 
         # Initialize the GUI
         self.precip_bwidth = 7
@@ -120,10 +117,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.fig = MplFigure(facecolor='white')
         self.canvas = FigureCanvasQTAgg(self.fig)
 
-        self.canvas.mpl_connect('button_press_event', self.onclick)
+        self.canvas.mpl_connect('button_press_event', self.onpress)
         self.canvas.mpl_connect('button_release_event', self.onrelease)
         self.canvas.mpl_connect('resize_event', self.setup_ax_margins)
-        self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
+        self.canvas.mpl_connect('motion_notify_event', self.onmove)
         self.canvas.mpl_connect('figure_leave_event', self.on_fig_leave)
         self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
         self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
@@ -131,7 +128,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Put figure canvas in a QFrame widget so that it has a frame.
         self.fig_frame_widget = QFrame()
         self.fig_frame_widget.setMinimumSize(200, 200)
-        self.fig_frame_widget.setFrameStyle(StyleDB().frame)
+        self.fig_frame_widget.setFrameStyle(FRAME_SYLE)
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
         fig_frame_layout = QGridLayout(self.fig_frame_widget)
@@ -228,7 +225,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Vertical guide line under cursor.
         self.vguide = ax0.axvline(
-            -1, color='black', zorder=40,  linestyle='--', lw=1, visible=False)
+            -1, color='black', zorder=40, linestyle='--', lw=1, visible=False)
 
         # x and y coorrdinate labels displayed at the right-bottom corner
         # of the graph
@@ -237,15 +234,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
             1, 0, '', ha='right', transform=ax0.transAxes + offset)
         self.xycoord.set_visible(False)
 
-        # Peaks :
-        self._peaks_plt, = ax0.plot(
-            [], [], color='white', clip_on=True, zorder=30, marker='o',
-            linestyle='None', mec='red', mew=1.5)
-
-        # Cross Remove Peaks :
-        self.xcross, = ax0.plot(1, 0, color='red', clip_on=True,
-                                zorder=20, marker='x', linestyle='None',
-                                markersize=15, markeredgewidth=3)
+        # Axes span highlight.
+        self.axvspan_highlight = self.fig.axes[0].axvspan(
+            0, 1, visible=False, color='red', linewidth=1,
+            ls='-', alpha=0.3)
 
     def _setup_toolbar(self):
         """Setup the main toolbar of the water level calc tool."""
@@ -281,11 +273,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_wl_style.setToolTip(
             '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_wl_style.sig_value_changed.connect(self.setup_wl_style)
-
-        self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
-        self.btn_strati.setToolTip('Toggle on and off the display of the soil'
-                                   ' stratigraphic layers')
-        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
 
         self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
         self.btn_dateFormat.setToolTip(
@@ -376,8 +363,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def _setup_mrc_tool(self):
         """Setup the tool to evaluate the MRC."""
 
-        # ---- MRC parameters
+        # Setup the mrc period selector.
+        self.mrc_selector = WLCalcVSpanSelector(self.fig.axes[0])
+        self.install_axeswidget(self.mrc_selector)
+        self.mrc_selector.sig_span_selected.connect(self.add_mrcperiod)
+        self._mrc_period_xdata = []
+        self._mrc_period_axvspans = []
+        self._mrc_period_memory = [[], ]
 
+        # ---- MRC parameters
         self.MRC_type = QComboBox()
         self.MRC_type.addItems(['Linear', 'Exponential'])
         self.MRC_type.setCurrentIndex(1)
@@ -395,31 +389,40 @@ class WLCalc(DialogWindow, SaveFileMixin):
             QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
 
         # Setup the MRC toolbar
-        self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
-        self.btn_undo.setToolTip('Undo')
+        self.btn_undo = create_toolbutton(
+            parent=self,
+            icon='undo',
+            iconsize=get_iconsize('normal'),
+            tip='Undo',
+            triggered=self.undo_mrc_period)
         self.btn_undo.setEnabled(False)
-        self.btn_undo.clicked.connect(self.undo)
 
-        self.btn_clearPeak = QToolButtonNormal(icons.get_icon('clear_search'))
-        self.btn_clearPeak.setToolTip('Clear all extremum from the graph')
-        self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
+        self.btn_clearPeak = create_toolbutton(
+            parent=self,
+            icon='clear_search',
+            iconsize=get_iconsize('normal'),
+            tip='Clear all extremum from the graph',
+            triggered=self.clear_all_mrcperiods)
 
         self.btn_addpeak = OnOffToolButton('add_point', size='normal')
         self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
         self.btn_addpeak.setToolTip(
-            "<p>Toggle edit mode to manually add extremums to the graph</p>")
+            "Left-click on the graph to select the recession periods "
+            "to use for the MRC assessment.")
         self.register_navig_and_select_tool(self.btn_addpeak)
 
         self.btn_delpeak = OnOffToolButton('erase', size='normal')
         self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
         self.btn_delpeak.setToolTip(
-            "<p>Toggle edit mode to manually remove extremums"
-            " from the graph</p>")
+            "Left-click on a selected recession period to remove it.")
         self.register_navig_and_select_tool(self.btn_delpeak)
 
-        self.btn_save_mrc = QToolButtonNormal(icons.get_icon('save'))
-        self.btn_save_mrc.setToolTip('Save calculated MRC to file.')
-        self.btn_save_mrc.clicked.connect(self.save_mrc_tofile)
+        self.btn_save_mrc = create_toolbutton(
+            parent=self,
+            icon='save',
+            iconsize=get_iconsize('normal'),
+            tip='Save calculated MRC to file.',
+            triggered=self.save_mrc_tofile)
 
         self.btn_MRCalc = QPushButton('Compute MRC')
         self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
@@ -447,9 +450,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         mrc_lay.setRowStretch(row, 100)
         row += 1
         mrc_lay.addWidget(self.btn_MRCalc, row, 0, 1, 3)
-
-        mrc_lay.setContentsMargins(10, 10, 10, 10)
-        mrc_lay.setSpacing(5)
         mrc_lay.setColumnStretch(2, 500)
 
         return self.mrc_eval_widget
@@ -505,7 +505,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
-        main_layout.setColumnMinimumWidth(2, 250)
+
+    def install_axeswidget(self, axes_widget):
+        """
+        Install the provided axes widget in the WLCalc.
+        """
+        self._axes_widgets.append(axes_widget)
+
+    def emit_warning(self, message, title='Warning'):
+        QMessageBox.warning(self, title, message, QMessageBox.Ok)
 
     @property
     def water_lvl(self):
@@ -557,6 +565,48 @@ class WLCalc(DialogWindow, SaveFileMixin):
         super().showEvent(event)
 
     # ---- MRC handlers
+    def add_mrcperiod(self, xdata):
+        """
+        Add a a new mrc period using the provided xdata.
+        """
+        try:
+            xmin = min(xdata) - self.dt4xls2mpl * self.dformat
+            xmax = max(xdata) - self.dt4xls2mpl * self.dformat
+        except TypeError:
+            return
+
+        for i in reversed(range(len(self._mrc_period_xdata))):
+            period_xdata = self._mrc_period_xdata[i]
+            if xmin >= period_xdata[0] and xmax <= period_xdata[1]:
+                # This means this mrc period is fully enclosed within
+                # another period previously selected by the user,
+                # so we discard it completely.
+                return
+
+            if period_xdata[0] >= xmin and period_xdata[0] <= xmax:
+                xmax = max(period_xdata[1], xmax)
+                del self._mrc_period_xdata[i]
+            elif period_xdata[1] >= xmin and period_xdata[1] <= xmax:
+                xmin = min(period_xdata[0], xmin)
+                del self._mrc_period_xdata[i]
+
+        self._mrc_period_xdata.append((xmin, xmax))
+        self._mrc_period_memory.append(self._mrc_period_xdata.copy())
+        self.draw_mrc()
+
+    def remove_mrcperiod(self, xdata):
+        """
+        Remove the mrc period at xdata if any.
+        """
+        for i, period_xdata in enumerate(self._mrc_period_xdata):
+            period_xmin = period_xdata[0] + (self.dt4xls2mpl * self.dformat)
+            period_xmax = period_xdata[1] + (self.dt4xls2mpl * self.dformat)
+            if xdata >= period_xmin and xdata <= period_xmax:
+                del self._mrc_period_xdata[i]
+                self._mrc_period_memory.append(self._mrc_period_xdata.copy())
+                self.draw_mrc()
+                break
+
     def btn_show_mrc_isclicked(self):
         """Handle when the button to draw of hide the mrc is clicked."""
         if self.btn_show_mrc.value() is False:
@@ -570,27 +620,28 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx,
-                                  self.MRC_type.currentIndex())
+        A, B, recess, RMSE = calculate_mrc(
+            self.time, self.water_lvl, self._mrc_period_xdata,
+            self.MRC_type.currentIndex())
 
-        print('MRC Parameters: A=%f, B=%f' % (A, B))
-        if A is None:
-            QApplication.restoreOverrideCursor()
-            return
-
-        # Display result :
-
-        txt = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
-        self.MRC_results.setText(txt)
-        txt = '%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
-        self.MRC_results.append(txt)
-        self.MRC_results.append('\nwhere h is the depth to water '
-                                'table in mbgs and ∂h/∂t is the recession '
-                                'rate in mm/d.')
+        print('MRC Parameters: A={}, B={}'
+              .format('None' if pd.isnull(A) else '{:0.3f}'.format(A),
+                      'None' if pd.isnull(B) else '{:0.3f}'.format(B))
+              )
+        if pd.isnull(A):
+            text = ''
+        else:
+            text = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
+            text += '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
+            text += ('\nwhere h is the depth to water '
+                     'table in mbgs and ∂h/∂t is the recession '
+                     'rate in mm/d.')
+        self.MRC_results.setText(text)
 
         # Store and plot the results.
         print('Saving MRC interpretation in dataset...')
-        self.wldset.set_mrc(A, B, self.peak_indx, self.time, hp)
+        self.wldset.set_mrc(
+            A, B, self._mrc_period_xdata, self.time, recess)
         self.btn_save_mrc.setEnabled(True)
         self.draw_mrc()
         self.sig_new_mrc.emit()
@@ -599,13 +650,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def load_mrc_from_wldset(self):
         """Load saved MRC results from the project hdf5 file."""
-        if self.wldset is not None and self.wldset.mrc_exists():
-            self.peak_indx = self.wldset['mrc/peak_indx'].astype(int)
-            self.peak_memory[0] = self.wldset['mrc/peak_indx'].astype(int)
+        if self.wldset is not None:
+            self._mrc_period_xdata = self.wldset.get_mrc()['peak_indx']
+            self._mrc_period_memory[0] = self._mrc_period_xdata.copy()
             self.btn_save_mrc.setEnabled(True)
         else:
-            self.peak_indx = np.array([]).astype(int)
-            self.peak_memory = []
+            self._mrc_period_xdata = []
+            self._mrc_period_memory = [[], ]
             self.btn_save_mrc.setEnabled(False)
         self.draw_mrc()
 
@@ -629,19 +680,22 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 self.save_mrc_tofile(savefilename)
             QApplication.restoreOverrideCursor()
 
-    def btn_mrc2rechg_isClicked(self):
-        if not self.wldset.mrc_exists():
-            print('Need to calculate MRC equation first.')
-            return
-        A, B = self.wldset['mrc/params']
-        if not os.path.exists(self.soilFilename):
-            print('A ".sol" file is needed for the calculation of' +
-                  ' groundwater recharge from the MRC')
-            return
+    def undo_mrc_period(self):
+        """
+        Undo the last operation performed by the user on the selection
+        of mrc periods.
+        """
+        if len(self._mrc_period_memory) > 1:
+            self._mrc_period_xdata = self._mrc_period_memory[-2].copy()
+            del self._mrc_period_memory[-1]
+            self.draw_mrc()
 
-        self.SOILPROFIL.load_info(self.soilFilename)
-        mrc2rechg(self.time, self.water_lvl, A, B,
-                  self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
+    def clear_all_mrcperiods(self):
+        """Clear all mrc periods from the graph."""
+        if len(self._mrc_period_xdata) > 0:
+            self._mrc_period_xdata = []
+            self._mrc_period_memory.append([])
+        self.draw_mrc()
 
     # ---- BRF selection
     def plot_brfperiod(self):
@@ -694,37 +748,18 @@ class WLCalc(DialogWindow, SaveFileMixin):
             brfperiod = [None, None]
             for i in range(2):
                 x = self._selected_brfperiod[i] - (
-                        self.dt4xls2mpl * self.dformat)
+                    self.dt4xls2mpl * self.dformat)
                 brfperiod[i] = self.time[np.argmin(np.abs(x - self.time))]
             self.brf_eval_widget.set_brfperiod(brfperiod)
         self.toggle_brfperiod_selection(False)
 
     # ---- Peaks handlers
-    def find_peak(self):
-
-        n_j, n_add = local_extrema(self.water_lvl, 4 * 5)
-
-        # Removing first and last point if necessary to always start with a
-        # maximum and end with a minimum.
-
-        # WARNING: y axis is inverted. Consequently, the logic needs to be
-        #          inverted also
-
-        if n_j[0] > 0:
-            n_j = np.delete(n_j, 0)
-
-        if n_j[-1] < 0:
-            n_j = np.delete(n_j, -1)
-
-        self.peak_indx = np.abs(n_j).astype(int)
-        self.peak_memory.append(self.peak_indx)
-        self.draw_mrc()
-
     def btn_addpeak_isclicked(self):
         """Handle when the button add_peak is clicked."""
         if self.btn_addpeak.value():
             self.toggle_navig_and_select_tools(self.btn_addpeak)
             self.btn_show_mrc.setValue(True)
+        self.mrc_selector.set_active(self.btn_addpeak.value())
         self.draw()
 
     def btn_delpeak_isclicked(self):
@@ -734,15 +769,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_show_mrc.setValue(True)
         self.draw()
 
-    def clear_all_peaks(self):
-        """Clear all peaks from the graph."""
-        if len(self.peak_indx) > 0:
-            self.peak_indx = np.array([]).astype(int)
-            self.peak_memory.append(self.peak_indx)
-            self.draw_mrc()
-
-    # ---- Navig and selec tools
-
+    # ---- Navigation and selection tools
     def register_navig_and_select_tool(self, tool):
         """
         Add the tool to the list of tools that are available to interactively
@@ -836,12 +863,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
         self.setup_ax_margins()
 
-    def undo(self):
-        if len(self.peak_memory) > 1:
-            self.peak_indx = self.peak_memory[-2]
-            del self.peak_memory[-1]
-            self.draw_mrc()
-
     # ---- Water level edit tools
     def delete_selected_wl(self):
         """Delete the selecte water level data."""
@@ -882,8 +903,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
     # ---- Drawing methods
     def setup_hydrograph(self):
         """Setup the hydrograph after a new wldset has been set."""
-        self.peak_indx = np.array([]).astype(int)
-        self.peak_memory = [np.array([]).astype(int)]
+        self._mrc_period_xdata = []
+        self._mrc_period_memory = [[], ]
         self.btn_undo.setEnabled(False)
 
         self.clear_selected_wl()
@@ -896,9 +917,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.draw_meas_wl()
         self.draw_glue_wl()
         self.draw_weather()
-        if not self.btn_strati.autoRaise():
-            # Plot stratigraphy.
-            self.display_soil_layer()
 
         self.setup_axis_range()
         self.setup_xticklabels_format()
@@ -989,11 +1007,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         elif self.dformat == 0:
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
 
-        # Adjust the water levels, peak, MRC ant weather time frame.
-        if len(self.peak_indx) > 0:  # Peaks
-            self._peaks_plt.set_xdata(
-                self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat)
-
         self._draw_obs_wl()
         self.draw_meas_wl()
         self.draw_mrc()
@@ -1029,86 +1042,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         self.draw()
 
-    def btn_strati_isClicked(self):
-
-        # Attribute Action :
-
-        if self.btn_strati.autoRaise():
-            self.btn_strati.setAutoRaise(False)
-            self.display_soil_layer()
-        else:
-            self.btn_strati.setAutoRaise(True)
-            self.hide_soil_layer()
-
-    def hide_soil_layer(self):
-
-        for i in range(len(self.zlayer)):
-            self.layers[i].remove()
-            self.stratLines[i].remove()
-        self.stratLines[i+1].remove()
-
-        self.draw()
-
-    def display_soil_layer(self):
-
-        # Check :
-
-        if not os.path.exists(self.soilFilename):
-            print('No ".sol" file found for this well.')
-            self.btn_strati.setAutoRaise(True)
-            return
-
-        # Load soil column info :
-
-        with open(self.soilFilename, 'r') as f:
-            reader = list(csv.reader(f, delimiter=','))
-
-        NLayer = len(reader)
-
-        self.zlayer = np.empty(NLayer).astype(float)
-        self.soilName = np.empty(NLayer).astype(str)
-        self.Sy = np.empty(NLayer).astype(float)
-        self.soilColor = np.empty(NLayer).astype(str)
-
-        for i in range(NLayer):
-            self.zlayer[i] = reader[i][0]
-            self.soilName[i] = reader[i][1]
-            self.Sy[i] = reader[i][2]
-            try:
-                self.soilColor[i] = reader[i][3]
-                print(reader[i][3])
-            except Exception:
-                self.soilColor[i] = '#FFFFFF'
-
-        print(self.soilColor)
-
-        # Plot layers and lines :
-
-        self.layers = [0] * len(self.zlayer)
-        self.stratLines = [0] * (len(self.zlayer)+1)
-
-        up = 0
-        self.stratLines[0], = self.ax0.plot([0, 99999], [up, up],
-                                            color="black",
-                                            linewidth=1)
-        for i in range(len(self.zlayer)):
-
-            down = self.zlayer[i]
-
-            self.stratLines[i+1], = self.ax0.plot([0, 99999], [down, down],
-                                                  color="black",
-                                                  linewidth=1)
-            try:
-                self.layers[i] = self.ax0.fill_between(
-                    [0, 99999], up, down, color=self.soilColor[i], zorder=0)
-            except Exception:
-                self.layers[i] = self.ax0.fill_between(
-                    [0, 99999], up, down, color='#FFFFFF', zorder=0)
-
-            up = down
-
-        self.draw()
-
     def setup_wl_style(self):
         """
         Setup the line and marker style of the obeserved water level data.
@@ -1129,9 +1062,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Draw the canvas and save a snapshot of the background figure."""
         self.vguide.set_visible(False)
         self.xycoord.set_visible(False)
-        self.xcross.set_visible(False)
+        self.axvspan_highlight.set_visible(False)
+        for widget in self._axes_widgets:
+            widget.clear()
+
         self.canvas.draw()
-        self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
+        self._figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
+
+        for widget in self._axes_widgets:
+            widget.restore()
 
     def draw_meas_wl(self):
         """Draw the water level measured manually in the well."""
@@ -1252,7 +1191,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         water levels that were predicted with the MRC.
         """
         self._draw_mrc_wl()
-        self._draw_mrc_peaks()
+        self._draw_mrc_periods()
         self.draw()
 
     def _draw_obs_wl(self, draw=True):
@@ -1271,22 +1210,32 @@ class WLCalc(DialogWindow, SaveFileMixin):
         if (self.wldset is not None and self.btn_show_mrc.value() and
                 self.wldset.mrc_exists()):
             self._mrc_plt.set_visible(True)
+            mrc_data = self.wldset.get_mrc()
             self._mrc_plt.set_data(
-                self.wldset['mrc/time'] + self.dt4xls2mpl * self.dformat,
-                self.wldset['mrc/recess'])
+                mrc_data['time'] + self.dt4xls2mpl * self.dformat,
+                mrc_data['recess'])
         else:
             self._mrc_plt.set_visible(False)
 
-    def _draw_mrc_peaks(self):
+    def _draw_mrc_periods(self):
         """Draw the periods that will be used to compute the MRC."""
-        self.btn_undo.setEnabled(len(self.peak_memory) > 1)
+        self.btn_undo.setEnabled(len(self._mrc_period_memory) > 1)
+        for axvspan in self._mrc_period_axvspans:
+            axvspan.set_visible(False)
         if self.wldset is not None and self.btn_show_mrc.value():
-            self._peaks_plt.set_visible(True)
-            self._peaks_plt.set_data(
-                self.time[self.peak_indx] + (self.dt4xls2mpl * self.dformat),
-                self.water_lvl[self.peak_indx])
-        else:
-            self._peaks_plt.set_visible(False)
+            for i, xdata in enumerate(self._mrc_period_xdata):
+                xmin = xdata[0] + (self.dt4xls2mpl * self.dformat)
+                xmax = xdata[1] + (self.dt4xls2mpl * self.dformat)
+                try:
+                    axvspan = self._mrc_period_axvspans[i]
+                    axvspan.set_visible(True)
+                    axvspan.xy = [[xmin, 1], [xmin, 0],
+                                  [xmax, 0], [xmax, 1]]
+                except IndexError:
+                    axvspan = self.fig.axes[0].axvspan(
+                        xmin, xmax, visible=True, color='red', linewidth=1,
+                        ls='-', alpha=0.1)
+                    self._mrc_period_axvspans.append(axvspan)
 
     def _draw_rect_selection(self, x2, y2):
         """Draw the rectangle of the rectangular selection tool."""
@@ -1319,15 +1268,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Draw a vertical and horizontal line at the specified xy position."""
         if not all((x, y)):
             self.vguide.set_visible(False)
-        elif (self.pan_is_active or self.zoom_is_active or
-              self.rect_select_is_active):
-            self.vguide.set_visible(False)
-        else:
+        elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self.vguide.set_visible(True)
             self.vguide.set_xdata(x)
             self.fig.axes[0].draw_artist(self.vguide)
+        else:
+            self.vguide.set_visible(False)
 
-    # ----- Handlers: Mouse events
+    # ----- Mouse Event Handlers
     def is_all_btn_raised(self):
         """
         Return whether all of the tool buttons that can block the panning and
@@ -1374,7 +1322,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 )[0].tolist()
             self.draw_select_wl()
 
-    def on_mouse_move(self, event):
+    def onmove(self, event):
         """
         Draw the vertical mouse guideline and the x and y coordinates of the
         mouse cursor on the graph.
@@ -1384,15 +1332,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
             return
 
         ax0 = self.fig.axes[0]
-        fig = self.fig
-        fig.canvas.restore_region(self.__figbckground)
+        self.canvas.restore_region(self._figbckground)
 
-        # ---- Draw the cursor guide and the xy coordinates on the graph.
-
-        # Trace a red vertical guide (line) that folows the mouse marker :
-
+        # Draw the vertical cursor guide.
         x, y = event.xdata, event.ydata
         self._draw_mouse_cursor(x, y)
+
+        # Draw the xy coordinates on the graph.
         if all((x, y)):
             self.xycoord.set_visible(True)
             if self.dformat == 0:
@@ -1404,7 +1350,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     y, date[2], date[1], date[0]))
             ax0.draw_artist(self.xycoord)
         else:
-            self.vguide.set_visible(False)
             self.xycoord.set_visible(False)
 
         if self.rect_select_is_active and self.__mouse_btn_is_pressed:
@@ -1413,39 +1358,32 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 self.__mouse_btn_is_pressed):
             self._draw_brf_selection(x)
 
-        # ---- Remove Peak Cursor
-        if self.btn_delpeak.value() and len(self.peak_indx) > 0:
-            # For deleting peak in the graph. Will put a cross on top of the
-            # peak to delete if some proximity conditions are met.
-
-            x = event.x
-            y = event.y
-
-            xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
-            ypeak = self.water_lvl[self.peak_indx]
-
-            xt = np.empty(len(xpeak))
-            yt = np.empty(len(ypeak))
-
-            for i, (xp, yp) in enumerate(zip(xpeak, ypeak)):
-                xt[i], yt[i] = ax0.transData.transform((xp, yp))
-
-            d = ((xt - x)**2 + (yt - y)**2)**0.5
-            if np.min(d) < 15:
-                # Put the cross over the nearest peak.
-                indx = np.argmin(d)
-                self.xcross.set_xdata(xpeak[indx])
-                self.xcross.set_ydata(ypeak[indx])
-                self.xcross.set_visible(True)
+        # Draw mrc period highlight.
+        if self.btn_delpeak.value() and len(self._mrc_period_axvspans) > 0:
+            if event.xdata:
+                for xdata in self._mrc_period_xdata:
+                    xdata_min = xdata[0] + (self.dt4xls2mpl * self.dformat)
+                    xdata_max = xdata[1] + (self.dt4xls2mpl * self.dformat)
+                    if event.xdata >= xdata_min and event.xdata <= xdata_max:
+                        self.axvspan_highlight.set_visible(True)
+                        self.axvspan_highlight.xy = [[xdata_min, 1],
+                                                     [xdata_min, 0],
+                                                     [xdata_max, 0],
+                                                     [xdata_max, 1]]
+                        break
+                else:
+                    self.axvspan_highlight.set_visible(False)
             else:
-                self.xcross.set_visible(False)
-        else:
-            self.xcross.set_visible(False)
+                self.axvspan_highlight.set_visible(False)
+            ax0.draw_artist(self.axvspan_highlight)
 
-        ax0.draw_artist(self.xcross)
+        # Update all axes widget.
+        for widget in self._axes_widgets:
+            if widget.get_active():
+                widget.onmove(event)
 
         # Update the canvas
-        self.fig.canvas.blit()
+        self.canvas.blit()
 
     def onrelease(self, event):
         """
@@ -1453,6 +1391,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         been clicked.
         """
         self.__mouse_btn_is_pressed = False
+        self.vguide.set_color('black')
+
         # Disconnect the pan and zoom callback before drawing the canvas again.
         if self.pan_is_active:
             self.toolbar.release_pan(event)
@@ -1467,404 +1407,236 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self._brf_selector.set_visible(False)
             self.on_brf_select()
 
-        if self.is_all_btn_raised():
-            self.draw()
-        else:
-            if event.button != 1:
-                return
-            self.__addPeakVisible = True
-            self.draw_mrc()
-        self.on_mouse_move(event)
+        # Update all axes widget.
+        for widget in self._axes_widgets:
+            if widget.get_active():
+                widget.onrelease(event)
 
-    def onclick(self, event):
+        self.draw()
+
+    def onpress(self, event):
         """Handle when the graph is clicked with the mouse."""
         self.__mouse_btn_is_pressed = True
-        x, y = event.x, event.y
-        if x is None or y is None or self.wldset is None:
+        if event.x is None or event.y is None or self.wldset is None:
             return
 
-        if self.btn_delpeak.value():
-            if len(self.peak_indx) == 0:
-                return
-
-            xt = np.empty(len(self.peak_indx))
-            yt = np.empty(len(self.peak_indx))
-            xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
-            ypeak = self.water_lvl[self.peak_indx]
-
-            ax = self.fig.axes[0]
-            for i in range(len(self.peak_indx)):
-                xt[i], yt[i] = ax.transData.transform((xpeak[i], ypeak[i]))
-
-            r = ((xt - x)**2 + (yt - y)**2)**0.5
-            if np.min(r) < 15:
-                indx = np.argmin(r)
-
-                # Update the plot :
-                self.xcross.set_xdata(xpeak[indx])
-                self.xcross.set_ydata(ypeak[indx])
-
-                # Remove peak from peak index sequence :
-                self.peak_indx = np.delete(self.peak_indx, indx)
-                self.peak_memory.append(self.peak_indx)
-
-                xpeak = np.delete(xpeak, indx)
-                ypeak = np.delete(ypeak, indx)
-
-                # hide the cross outside of the plotting area :
-                self.xcross.set_visible(False)
-                self.draw_mrc()
-        elif not self.btn_addpeak.autoRaise():
-            xclic = event.xdata
-            if xclic is None:
-                return
-
-            # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
-
-            x = self.time + self.dt4xls2mpl * self.dformat
-            y = self.water_lvl
-
-            d = np.abs(xclic - x)
-            indx = np.argmin(d)
-
-            if len(self.peak_indx) > 0:
-                if indx in self.peak_indx:
-                    print('There is already a peak at this time.')
-                    return
-
-                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 1:
-                    print('There is a peak at less than 1 days.')
-                    return
-
-            self.peak_indx = np.append(self.peak_indx, indx)
-            self.peak_memory.append(self.peak_indx)
-
-            self.__addPeakVisible = False
-            self.draw()
+        # Remove mrc period.
+        if self.btn_delpeak.value() and len(self._mrc_period_xdata) > 0:
+            self.axvspan_highlight.set_visible(False)
+            self.remove_mrcperiod(event.xdata)
         elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[0] = event.xdata
+            self.vguide.set_color('red')
+            self.draw()
+            self.onmove(event)
         elif self.rect_select_is_active:
             self._rect_selection[0] = (event.xdata, event.ydata)
-        else:
-            self.draw()
 
-
-def local_extrema(x, Deltan):
-    """
-    Code adapted from a MATLAB script at
-    www.ictp.acad.ro/vamos/trend/local_extrema.htm
-
-    LOCAL_EXTREMA Determines the local extrema of a given temporal scale.
-
-    ---- OUTPUT ----
-
-    n_j = The positions of the local extrema of a partition of scale Deltan
-          as defined at p. 82 in the book [ATE] C. Vamos and M. Craciun,
-          Automatic Trend Estimation, Springer 2012.
-          The positions of the maxima are positive and those of the minima
-          are negative.
-
-    kadd = n_j(kadd) are the local extrema with time scale smaller than Deltan
-           which are added to the partition such that an alternation of maxima
-           and minima is obtained.
-    """
-
-    N = len(x)
-
-    ni = 0
-    nf = N - 1
-
-    # ------------------------------------------------------------ PLATEAU ----
-
-    # Recognize the plateaus of the time series x defined in [ATE] p. 85
-    # [n1[n], n2[n]] is the interval with the constant value equal with x[n]
-    # if x[n] is not contained in a plateau, then n1[n] = n2[n] = n
-    #
-    # Example with a plateau between indices 5 and 8:
-    #  x = [1, 2, 3, 4, 5, 6, 6, 6, 6, 7, 8,  9, 10, 11, 12]
-    # n1 = [0, 1, 2, 3, 4, 5, 5, 5, 5, 9, 10, 11, 12, 13, 14]
-    # n2 = [0, 1, 2, 3, 4, 8, 8, 8, 8, 9, 10, 11, 12, 13, 14]
-
-    n1 = np.arange(N)
-    n2 = np.arange(N)
-
-    dx = np.diff(x)
-    if np.any(dx == 0):
-        print('At least 1 plateau has been detected in the data')
-        for i in range(N-1):
-            if x[i+1] == x[i]:
-                n1[i+1] = n1[i]
-                n2[n1[i+1]:i+1] = i+1
-
-    # ------------------------------------------------------ MAIN FUNCTION ----
-
-    # the iterative algorithm presented in Appendix E of [ATE]
-
-    # Time step up to which the time series has been analyzed ([ATE] p. 127)
-    nc = 0
-
-    Jest = 0  # number of local extrema of the partition of scale DeltaN
-    iadd = 0  # number of additional local extrema
-    flagante = 0
-
-    # order number of the additional local extrema between all the local
-    # extrema
-    kadd = []
-
-    n_j = []   # positions of the local extrema of a partition of scale Deltan
-
-    while nc < nf:
-
-        # the next extremum is searched within the interval [nc, nlim]
-
-        nlim = min(nc + Deltan, nf)
-
-        # ------------------------------------------------- SEARCH FOR MIN ----
-
-        xmin = np.min(x[nc:nlim+1])
-        nmin = np.where(x[nc:nlim+1] == xmin)[0][0] + nc
-
-        nlim1 = max(n1[nmin] - Deltan, ni)
-        nlim2 = min(n2[nmin] + Deltan, nf)
-
-        xminn = np.min(x[nlim1:nlim2+1])
-        nminn = np.where(x[nlim1:nlim2+1] == xminn)[0][0] + nlim1
-
-        # if flagmin = 1 then the minimum at nmin satisfies condition (6.1)
-        if nminn == nmin:
-            flagmin = 1
-        else:
-            flagmin = 0
-
-        # --------------------------------------------------- SEARCH FOR MAX --
-
-        xmax = np.max(x[nc:nlim+1])
-        nmax = np.where(x[nc:nlim+1] == xmax)[0][0] + nc
-
-        nlim1 = max(n1[nmax] - Deltan, ni)
-        nlim2 = min(n2[nmax] + Deltan, nf)
-
-        xmaxx = np.max(x[nlim1:nlim2+1])
-        nmaxx = np.where(x[nlim1:nlim2+1] == xmaxx)[0][0] + nlim1
-
-        # If flagmax = 1 then the maximum at nmax satisfies condition (6.1)
-        if nmaxx == nmax:
-            flagmax = 1
-        else:
-            flagmax = 0
-
-        # ------------------------------------------------------- MIN or MAX --
-
-        # The extremum closest to nc is kept for analysis
-        if flagmin == 1 and flagmax == 1:
-            if nmin < nmax:
-                flagmax = 0
-            else:
-                flagmin = 0
-
-        # ---------------------------------------------- ANTERIOR EXTREMUM ----
-
-        if flagante == 0:  # No ANTERIOR extremum
-
-            if flagmax == 1:  # CURRENT extremum is a MAXIMUM
-
-                nc = n1[nmax] + 1
-                flagante = 1
-                n_j = np.append(n_j, np.floor((n1[nmax] + n2[nmax]) / 2.))
-                Jest += 1
-
-            elif flagmin == 1:  # CURRENT extremum is a MINIMUM
-
-                nc = n1[nmin] + 1
-                flagante = -1
-                n_j = np.append(n_j, -np.floor((n1[nmin] + n2[nmin]) / 2.))
-                Jest += 1
-
-            else:  # No extremum
-
-                nc = nc + Deltan
-
-        elif flagante == -1:  # ANTERIOR extremum is an MINIMUM
-
-            tminante = np.abs(n_j[-1])
-            xminante = x[tminante]
-
-            if flagmax == 1:  # CURRENT extremum is a MAXIMUM
-
-                if xminante < xmax:
-
-                    nc = n1[nmax] + 1
-                    flagante = 1
-                    n_j = np.append(n_j, np.floor((n1[nmax] + n2[nmax]) / 2.))
-                    Jest += 1
-
-                else:
-
-                    # CURRENT MAXIMUM is smaller than the ANTERIOR MINIMUM
-                    # an additional maximum is added ([ATE] p. 82 and 83)
-
-                    xmaxx = np.max(x[tminante:nmax+1])
-                    nmaxx = np.where(x[tminante:nmax+1] == xmaxx)[0][0]
-                    nmaxx += tminante
-
-                    nc = n1[nmaxx] + 1
-                    flagante = 1
-                    n_j = np.append(n_j, np.floor((n1[nmaxx] + n2[nmaxx])/2))
-                    Jest += 1
-
-                    kadd = np.append(kadd, Jest-1)
-                    iadd += 1
-
-            elif flagmin == 1:
-                # CURRENT extremum is also a MINIMUM an additional maximum
-                # is added ([ATE] p. 82)
-
-                nc = n1[nmin]
-                flagante = 1
-
-                xmax = np.max(x[tminante:nc+1])
-                nmax = np.where(x[tminante:nc+1] == xmax)[0][0] + tminante
-
-                n_j = np.append(n_j, np.floor((n1[nmax] + n2[nmax]) / 2.))
-                Jest += 1
-
-                kadd = np.append(kadd, Jest-1)
-                iadd += 1
-
-            else:
-                nc = nc + Deltan
-
-        else:  # ANTERIOR extremum is a MAXIMUM
-
-            tmaxante = np.abs(n_j[-1])
-            xmaxante = x[tmaxante]
-
-            if flagmin == 1:  # CURRENT extremum is a MINIMUM
-
-                if xmaxante > xmin:
-
-                    nc = n1[nmin] + 1
-                    flagante = -1
-
-                    n_j = np.append(n_j, -np.floor((n1[nmin] + n2[nmin])/2))
-                    Jest += 1
-
-                else:
-                    # CURRENT MINIMUM is larger than the ANTERIOR MAXIMUM:
-                    # an additional minimum is added ([ATE] p. 82 and 83)
-
-                    xminn = np.min(x[tmaxante:nmin+1])
-                    nminn = np.where(x[tmaxante:nmin+1] == xminn)[0][0]
-                    nminn += tmaxante
-
-                    nc = n1[nminn] + 1
-                    flagante = -1
-
-                    n_j = np.append(n_j, -np.floor((n1[nminn] + n2[nminn])/2))
-                    Jest = Jest + 1
-
-                    kadd = np.append(kadd, Jest-1)
-                    iadd += 1
-
-            elif flagmax == 1:
-                # CURRENT extremum is also an MAXIMUM:
-                # an additional minimum is added ([ATE] p. 82)
-                nc = n1[nmax]
-                flagante = -1
-
-                xmin = np.min(x[tmaxante:nc+1])
-                nmin = np.where(x[tmaxante:nc+1] == xmin)[0]
-                nmin += tmaxante
-
-                n_j = np.append(n_j, -np.floor((n1[nmin] + n2[nmin]) / 2.))
-                Jest += 1
-
-                kadd = np.append(kadd, Jest-1)
-                iadd += 1
-
-            else:
-                nc = nc + Deltan
-
-#    # x(ni) is not included in the partition of scale Deltan
-#    nj1 = np.abs(n_j[0])
-#    if nj1 > ni:
-#        if n1[nj1] > ni:
-    # the boundary ni is not included in the plateau
-    # containing the first local extremum at n_j[1] and it
-    # is added as an additional local extremum ([ATE] p. 83)
-#            n_j = np.hstack((-np.sign(n_j[0]) * ni, n_j))
-#            Jest += 1
-#
-#            kadd = np.hstack((0, kadd + 1))
-#            iadd += 1
-#
-#        else: # the boundary ni is included in the plateau containing
-#              # the first local extremum at n_j(1) and then the first local
-#              # extremum is moved at the boundary of the plateau
-#            n_j[0] = np.sign(n_j[0]) * ni
-
-
-#    # the same situation as before but for the other boundary nf
-#    njJ = np.abs(n_j[Jest])
-#    if njJ < nf:
-#        if n2[njJ] < nf:
-#            n_j = np.append(n_j, -np.sign(n_j[Jest]) * nf)
-#            Jest += 1
-#
-#            kadd = np.append(kadd, Jest)
-#            iadd += 1
-#        else:
-#            n_j[Jest] = np.sign(n_j[Jest]) * nf
-
-    return n_j, kadd
-
-
-# =============================================================================
-
-
-def mrc_calc(t, h, ipeak, MRCTYPE=1):
+        # Update all axes widget.
+        for widget in self._axes_widgets:
+            if widget.get_active():
+                widget.onpress(event)
+
+        self.draw()
+
+
+class WLCalcVSpanSelector(AxesWidget, QObject):
+    sig_span_selected = QSignal(tuple)
+
+    def __init__(self, ax, useblit=True):
+        AxesWidget.__init__(self, ax)
+        QObject.__init__(self)
+        self.visible = True
+        self.useblit = useblit and self.canvas.supports_blit
+
+        self.axvspan = ax.axvspan(
+            ax.get_xbound()[0], ax.get_xbound()[0], visible=False,
+            color='red', linewidth=1, ls='-', animated=self.useblit,
+            alpha=0.1)
+
+        self.axvline = ax.axvline(
+            ax.get_ybound()[0], visible=False, color='black', linewidth=1,
+            ls='--', animated=self.useblit)
+
+        self._onpress_xdata = []
+        self._onpress_button = None
+        self._onrelease_xdata = []
+        super().set_active(False)
+
+    def set_active(self, active):
+        """
+        Set whether the selector is active.
+        """
+        self._onpress_xdata = []
+        self._onpress_button = None
+        self._onrelease_xdata = []
+        super().set_active(active)
+
+    def clear(self):
+        """
+        Clear the selector.
+
+        This method must be called by the canvas BEFORE making a copy of
+        the canvas background.
+        """
+        self.__axvspan_visible = self.axvspan.get_visible()
+        self.__axvline_visible = self.axvline.get_visible()
+        self.axvspan.set_visible(False)
+        self.axvline.set_visible(False)
+
+    def restore(self):
+        """
+        Restore the selector.
+
+        This method must be called by the canvas AFTER a copy has been made
+        of the canvas background.
+        """
+        self.axvspan.set_visible(self.__axvspan_visible)
+        self.ax.draw_artist(self.axvspan)
+
+        self.axvline.set_visible(self.__axvline_visible)
+        self.ax.draw_artist(self.axvline)
+
+    def onpress(self, event):
+        """Handler for the button_press_event event."""
+        if event.button == 1 and event.xdata:
+            if self._onpress_button in [None, event.button]:
+                self._onpress_button = event.button
+                self._onpress_xdata.append(event.xdata)
+                self.axvline.set_visible(False)
+                self.axvspan.set_visible(True)
+                if len(self._onpress_xdata) == 1:
+                    self.axvspan.xy = [[self._onpress_xdata[0], 1],
+                                       [self._onpress_xdata[0], 0],
+                                       [self._onpress_xdata[0], 0],
+                                       [self._onpress_xdata[0], 1]]
+                elif len(self._onpress_xdata) == 2:
+                    self.axvspan.xy = [[self._onpress_xdata[0], 1],
+                                       [self._onpress_xdata[0], 0],
+                                       [self._onpress_xdata[1], 0],
+                                       [self._onpress_xdata[1], 1]]
+        self._update()
+
+    def onrelease(self, event):
+        if event.button == self._onpress_button:
+            self._onrelease_xdata = self._onpress_xdata.copy()
+            if len(self._onrelease_xdata) == 1:
+                self.axvline.set_visible(True)
+                self.axvspan.set_visible(True)
+                if event.xdata:
+                    self.axvline.set_xdata((event.xdata, event.xdata))
+                    self.axvspan.xy = [[self._onrelease_xdata[0], 1],
+                                       [self._onrelease_xdata[0], 0],
+                                       [event.xdata, 0],
+                                       [event.xdata, 1]]
+            elif len(self._onrelease_xdata) == 2:
+                self.axvline.set_visible(True)
+                self.axvspan.set_visible(False)
+                if event.xdata:
+                    self.axvline.set_xdata((event.xdata, event.xdata))
+
+                onrelease_xdata = tuple(self._onrelease_xdata)
+                self._onpress_button = None
+                self._onpress_xdata = []
+                self._onrelease_xdata = []
+                self.sig_span_selected.emit(onrelease_xdata)
+        self._update()
+
+    def onmove(self, event):
+        """Handler to draw the selector when the mouse cursor moves."""
+        if self.ignore(event):
+            return
+        if not self.canvas.widgetlock.available(self):
+            return
+        if not self.visible:
+            return
+
+        if event.xdata is None:
+            self.axvline.set_visible(False)
+            self.axvspan.set_visible(False)
+        elif len(self._onpress_xdata) == 0 and len(self._onrelease_xdata) == 0:
+            self.axvline.set_visible(True)
+            self.axvline.set_xdata((event.xdata, event.xdata))
+            self.axvspan.set_visible(False)
+        elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 0:
+            self.axvline.set_visible(False)
+            self.axvspan.set_visible(True)
+        elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 1:
+            self.axvline.set_visible(True)
+            self.axvline.set_xdata((event.xdata, event.xdata))
+            self.axvspan.set_visible(True)
+            self.axvspan.xy = [[self._onrelease_xdata[0], 1],
+                               [self._onrelease_xdata[0], 0],
+                               [event.xdata, 0],
+                               [event.xdata, 1]]
+        elif len(self._onpress_xdata) == 2 and len(self._onrelease_xdata) == 1:
+            self.axvline.set_visible(False)
+            self.axvspan.set_visible(True)
+        elif len(self._onpress_xdata) == 2 and len(self._onrelease_xdata) == 2:
+            self.axvline.set_visible(False)
+            self.axvspan.set_visible(False)
+        self._update()
+
+    def _update(self):
+        self.ax.draw_artist(self.axvline)
+        self.ax.draw_artist(self.axvspan)
+        return False
+
+
+def calculate_mrc(t, h, periods, mrctype=1):
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
     the aquifer from the water level time series using a modified Gauss-Newton
     optimization method.
 
-    INPUTS
-    ------
+    Parameters
+    ----------
     h : water level time series in mbgs
     t : time in days
-    ipeak: sequence of indices where the maxima and minima are located in h
+    periods: sequence of tuples containing the boundaries, in XLS numerical
+             date format, of the periods selected by the user to evaluate
+             the MRC.
 
-    MRCTYPE: MRC equation type
+    mrctype: MRC equation type
              MODE = 0 -> linear (dh/dt = b)
              MODE = 1 -> exponential (dh/dt = -a*h + b)
 
     """
+    A = np.nan
+    B = np.nan
+    hp = t.copy() * np.nan
+    RMSE = np.nan
 
-    A, B, hp, RMSE = None, None, None, None
+    # Convert xlsdate periods into index periods.
+    ipeak = []
+    minpeak = []
+    maxpeak = []
+    for period in periods:
+        indx0 = np.argmin(np.abs(t - period[0]))
+        indx1 = np.argmin(np.abs(t - period[1]))
+        if np.abs(indx1 - indx0) < 2:
+            continue
+        minpeak.append(max(indx0, indx1))
+        maxpeak.append(min(indx0, indx1))
+        ipeak.extend([maxpeak[-1], minpeak[-1]])
 
-    # ---- Check Min/Max
-
-    if len(ipeak) == 0:
-        print('No extremum selected')
+    # Check Min/Max
+    if len(minpeak) == 0:
+        print('No valid mrc period is currently selected')
         return A, B, hp, RMSE
 
-    ipeak = np.sort(ipeak)
-    maxpeak = ipeak[:-1:2]
-    minpeak = ipeak[1::2]
     dpeak = (h[maxpeak] - h[minpeak]) * -1  # WARNING: Don't forget it is mbgs
-
     if np.any(dpeak < 0):
         print('There is a problem with the pair-ditribution of min-max')
         return A, B, hp, RMSE
 
     # ---- Optimization
-
-    print('\n---- MRC calculation started ----\n')
-    print('MRCTYPE = %s' % (['Linear', 'Exponential'][MRCTYPE]))
+    print('---- MRC calculation started ----')
+    print('mrctype = %s' % (['Linear', 'Exponential'][mrctype]))
 
     tstart = clock()
 
-    # If MRCTYPE is 0, then the parameter A is kept to a value of 0 throughout
+    # If mrctype is 0, then the parameter A is kept to a value of 0 throughout
     # the entire optimization process and only paramter B is optimized.
 
     dt = np.diff(t)
@@ -1881,34 +1653,31 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
     print('A = %0.3f ; B= %0.3f; RMSE = %f' % (A, B, RMSE))
 
     # NP: number of parameters
-    if MRCTYPE == 0:
+    if mrctype == 0:
         NP = 1
-    elif MRCTYPE == 1:
+    elif mrctype == 1:
         NP = 2
 
-    while 1:
-        # Calculating Jacobian (X) Numerically :
-
+    while True:
+        # Calculating Jacobian (X) Numerically.
         hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
         XB = (hdB[tindx] - hp[tindx]) / tolmax
 
-        if MRCTYPE == 1:
+        if mrctype == 1:
             hdA = calc_synth_hydrograph(A + tolmax, B, h, dt, ipeak)
             XA = (hdA[tindx] - hp[tindx]) / tolmax
             Xt = np.vstack((XA, XB))
-        elif MRCTYPE == 0:
+        elif mrctype == 0:
             Xt = XB
 
         X = Xt.transpose()
 
-        # Solving Linear System :
-
+        # Solving Linear System.
         dh = h[tindx] - hp[tindx]
         XtX = np.dot(Xt, X)
         Xtdh = np.dot(Xt, dh)
 
-        # Scaling :
-
+        # Scaling.
         C = np.dot(Xt, X) * np.identity(NP)
         for j in range(NP):
             C[j, j] = C[j, j] ** -0.5
@@ -1916,29 +1685,25 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
         Ct = C.transpose()
         Cinv = np.linalg.inv(C)
 
-        # Constructing right hand side :
-
+        # Constructing right hand side.
         CtXtdh = np.dot(Ct, Xtdh)
 
-        # Constructing left hand side :
-
+        # Constructing left hand side.
         CtXtX = np.dot(Ct, XtX)
         CtXtXC = np.dot(CtXtX, C)
 
+        # Loop for the Marquardt parameter (m)
         m = 0
-        while 1:  # loop for the Marquardt parameter (m)
+        while True:
 
-            # Constructing left hand side (continued) :
-
+            # Constructing left hand side (continued).
             CtXtXCImr = CtXtXC + np.identity(NP) * m
             CtXtXCImrCinv = np.dot(CtXtXCImr, Cinv)
 
-            # Calculating parameter change vector :
-
+            # Calculating parameter change vector.
             dr = np.linalg.tensorsolve(CtXtXCImrCinv, CtXtdh, axes=None)
 
-            # Checking Marquardt condition :
-
+            # Checking Marquardt condition.
             NUM = np.dot(dr.transpose(), CtXtdh)
             DEN1 = np.dot(dr.transpose(), dr)
             DEN2 = np.dot(CtXtdh.transpose(), CtXtdh)
@@ -1949,40 +1714,34 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             else:
                 break
 
-        # Storing old parameter values :
-
+        # Storing old parameter values.
         Aold = np.copy(A)
         Bold = np.copy(B)
         RMSEold = np.copy(RMSE)
 
-        while 1:  # Loop for Damping (to prevent overshoot)
-
-            # Calculating new parameter values :
-
-            if MRCTYPE == 1:
+        # Loop for Damping (to prevent overshoot).
+        while True:
+            # Calculating new parameter values.
+            if mrctype == 1:
                 A = Aold + dr[0]
                 B = Bold + dr[1]
-            elif MRCTYPE == 0:
+            elif mrctype == 0:
                 B = Bold + dr[0, 0]
 
-            # Applying parameter bound-constraints :
+            # Applying parameter lower bound-constraints.
+            A = np.max((A, 0))
 
-            A = np.max((A, 0))  # lower bound
-
-            # Solving for new parameter values :
-
+            # Solving for new parameter values.
             hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
             RMSE = np.sqrt(np.mean((h[tindx]-hp[tindx])**2))
 
-            # Checking overshoot :
-
+            # Checking overshoot.
             if (RMSE - RMSEold) > 0.001:
                 dr = dr * 0.5
             else:
                 break
 
-        # Checking tolerance :
-
+        # Checking tolerance.
         tolA = np.abs(A - Aold)
         tolB = np.abs(B - Bold)
         tol = np.max((tolA, tolB))
@@ -1991,7 +1750,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
 
     tend = clock()
     print('TIME = %0.3f sec' % (tend-tstart))
-    print('\n---- FIN ----\n')
+    print('---- FIN ----')
 
     return A, B, hp, RMSE
 
@@ -2024,52 +1783,6 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
             hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
 
     return hp
-
-
-# =============================================================================
-
-
-class SoilProfil():
-    """
-    zlayer = Position of the layer boundaries in mbgs where 0 is the ground
-             surface. There is one more element in zlayer than the total number
-             of layer.
-
-    soilName = Soil texture description.
-
-    Sy = Soil specific yield.
-    """
-
-    def __init__(self):
-
-        self.zlayer = []
-        self.soilName = []
-        self.Sy = []
-        self.color = []
-
-    def load_info(self, filename):
-
-        # ---- load soil column info ----
-
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter=','))
-
-        NLayer = len(reader)
-
-        self.zlayer = np.empty(NLayer+1).astype(float)
-        self.soilName = np.empty(NLayer).astype(str)
-        self.Sy = np.empty(NLayer).astype(float)
-        self.color = np.empty(NLayer).astype(str)
-
-        self.zlayer[0] = 0
-        for i in range(NLayer):
-            self.zlayer[i+1] = reader[i][0]
-            self.soilName[i] = reader[i][1]
-            self.Sy[i] = reader[i][2]
-            try:
-                self.color[i] = reader[i][3]
-            except Exception:
-                self.color[i] = '#FFFFFF'
 
 
 def mrc2rechg(t, ho, A, B, z, Sy):
@@ -2149,20 +1862,14 @@ def mrc2rechg(t, ho, A, B, z, Sy):
     return RECHG
 
 
-# %% if __name__ == '__main__'
-
 if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
     from gwhat import __rootdir__
+    from gwhat.utils.qthelpers import create_qapplication
 
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(11)
-    app.setFont(ft)
+    app = create_qapplication()
 
     pf = osp.join(__rootdir__, '../Projects/Example/Example.gwt')
     pr = ProjetReader(pf)
