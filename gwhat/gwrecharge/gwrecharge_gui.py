@@ -183,46 +183,9 @@ class RechgEvalWidget(QFrame):
                 super(QLabelCentered, self).__init__(text)
                 self.setAlignment(Qt.AlignCenter)
 
-        # ---- Parameters
-        params_group = QFrame()
-        params_group.setObjectName("viewport")
-        params_group.setStyleSheet("#viewport {background-color:transparent;}")
-
-        params_group_layout = QGridLayout(params_group)
-        params_group_layout.setContentsMargins(10, 5, 10, 0)
         row = 0
-        params_group_layout.addWidget(QLabel('Sy :'), row, 0)
-        params_group_layout.addWidget(self.QSy_min, row, 1)
-        params_group_layout.addWidget(QLabelCentered('to'), row, 2)
-        params_group_layout.addWidget(self.QSy_max, row, 3)
         row += 1
-        params_group_layout.addWidget(QLabel('RAS<sub>max</sub> :'), row, 0)
-        params_group_layout.addWidget(self.QRAS_min, row, 1)
-        params_group_layout.addWidget(QLabelCentered('to'), row, 2)
-        params_group_layout.addWidget(self.QRAS_max, row, 3)
-        params_group_layout.addWidget(QLabel('mm'), row, 4)
         row += 1
-        params_group_layout.addWidget(QLabel('Cro :'), row, 0)
-        params_group_layout.addWidget(self.CRO_min, row, 1)
-        params_group_layout.addWidget(QLabelCentered('to'), row, 2)
-        params_group_layout.addWidget(self.CRO_max, row, 3)
-        row += 1
-        params_group_layout.setRowMinimumHeight(row, 10)
-        row += 1
-        params_group_layout.addWidget(QLabel('Tmelt :'), row, 0)
-        params_group_layout.addWidget(self._Tmelt, row, 1)
-        params_group_layout.addWidget(QLabel('°C'), row, 2, 1, 3)
-        row += 1
-        params_group_layout.addWidget(QLabel('CM :'), row, 0)
-        params_group_layout.addWidget(self._CM, row, 1)
-        params_group_layout.addWidget(QLabel('mm/°C'), row, 2, 1, 3)
-        row += 1
-        params_group_layout.addWidget(QLabel('deltaT :'), row, 0)
-        params_group_layout.addWidget(self._deltaT, row, 1)
-        params_group_layout.addWidget(QLabel('days'), row, 2, 1, 3)
-        row += 1
-        params_group_layout.setRowStretch(row, 100)
-        params_group_layout.setColumnStretch(5, 100)
 
         # ---- Layout ----
 
