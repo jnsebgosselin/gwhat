@@ -1,6 +1,6 @@
 ![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_banner_lowres(150).png)
 ====
-Copyright 2014-2019 © GWHAT Project Contributors.<br>
+Copyright 2014-2021 © GWHAT Project Contributors.<br>
 Licensed under the terms of the GNU-GPLv3
 
 # Project details and build status
@@ -12,20 +12,40 @@ Licensed under the terms of the GNU-GPLv3
 
 # About GWHAT
 
-GWHAT (Ground-Water Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
-* the generation of various publication-quality figures from the weather and water level data;
+GWHAT (Ground-Water Hydrograph Analysis Toolbox) is a free and open source
+application whose main objective is to support the interpretation of
+water levels measured in observation wells (hydrographs) to estimate
+groundwater recharge with a method combining a daily soil moisture balance
+and an aquifer water budget applicable to unconfined aquifers.
+The method is described in detail in the PhD thesis of Jean-Sébastien Gosselin
+available [here](http://espace.inrs.ca/id/eprint/5122/). Application of the
+recharge assessment method requires a well hydrograph and weather data
+measured daily. A long-duration hydrograph (more than 5 years) provides
+more constraints on recharge assessment. Recharge is assessed for the
+period for which weather data are available and it is not limited to
+the period of available water levels. Results are produced in tabular
+and graphical formats.
 
-* the exploration, manipulation, and validation of the data within a user-friendly dynamic graphical environment;
+Furthermore, GWHAT includes a tool to easily calculate the barometric
+response function (BRF) of wells, provided that barometric and
+earth tide data are available along with the water level data.
+BRF calculations are performed with the
+[KGS Barometric Response Function Software (KGS_BRF)](http://www.kgs.ku.edu/HighPlains/OHP/index_program/brf.html),
+which implements the method described by
+[Butler et al. (2010)](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.2010.00768.x).
+The calculated BRF can be used to determine the type of aquifer
+(unconfined, semi-confined, or confined) in which wells are installed
+([Rasmussen and Crawford, 1997](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.1997.tb00111.x),
+[Spane, 2002](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2001wr000701))
+and thus provides a reliable way to identify wells that are under unconfined
+conditions and which can be used to assess groundwater recharge with the
+method implemented in GWHAT.
 
-* the calculation of the master recession curve (MRC) of the well hydrograph (experimental);
+GWHAT is written in the Python 3 programming language and is currently
+maintained and developed by Jean-Sébastien Gosselin at
+[INRS-ETE](http://ete.inrs.ca/). If you encounter any problems or
+errors during program execution, have any questions, or have specific
+suggestions on how to improve GWHAT, please open an issue in our
+[issues tracker](https://github.com/jnsebgosselin/gwhat/issues).
 
-* the estimation of groundwater recharge at the local scale in unconfined conditions with a method combining the daily meteorological data and the water level time series (will be available in a future release).
-
-* the calculation of the barometric response function of the well that can be used to assess the level of confinement of the aquifer at the well location (will be available in a future release).
-
-GWHAT is written in the Python 3 programming language and is currently maintained and developed by [Jean-Sébastien Gosselin](http://www.liamg.ca/en/about-us/jean-sebastien-gosselin/) at [INRS-ETE](http://ete.inrs.ca/).
-
-If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve GWHAT, please contact Jean-Sébastien Gosselin at [jean-sebastien.gosselin@ete.inrs.ca](mailto:jean-sebastien.gosselin@ete.inrs.ca) or open an issue in our issues tracker [here](https://github.com/jnsebgosselin/gwhat/issues).
-
-
-Last edited: 07/10/2019
+Last edited: 01/04/2021
