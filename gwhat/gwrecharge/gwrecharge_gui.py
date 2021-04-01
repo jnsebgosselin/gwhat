@@ -181,10 +181,28 @@ class RechgEvalWidget(QFrame):
         self._Tmelt = QDoubleSpinBox(0, 1)
         self._Tmelt.setRange(-25, 25)
 
+        cm_tooltip = (
+            """
+            <b>Degree-day Melt Coefficient (CM)</b>
+            <p>The <i>degree-day melt coefficient</i> is a coefficient
+            relating the amount of total daily melt in mm to the difference,
+            in °C, between the main daily temperature and a base temperature
+            (assumed to be 0°C in GWHAT).</p>
+            <p>The degree-day melt coefficient varies geographically and
+            seasonally, with typical values ranging between 1.6&nbsp;mm/°C to
+            6.0&nbsp;mm/°C. When information is lacking, a constant value of
+            2.7&nbsp;mm/°C can be used as suggested by USDA NRCS (2004).
+            <p>In GWHAT, CM is assumed to be constant.</p>
+            """
+            )
         cm_label = QLabel('CM:')
+        cm_label.setToolTip(cm_tooltip)
         cm_label2 = QLabel('mm/°C')
+        cm_label2.setToolTip(cm_tooltip)
         self._CM = QDoubleSpinBox(4, 1, 0.1)
+        self._CM.setToolTip(cm_tooltip)
         self._CM.setRange(0.1, 100)
+        self._CM.setToolTip(cm_tooltip)
 
         # units=' days'
         deltat_label = QLabel('deltaT :')
@@ -211,7 +229,6 @@ class RechgEvalWidget(QFrame):
 
         secondary_layout.setColumnStretch(
             secondary_layout.columnCount() + 1, 1)
-
 
         # Setup the scroll area.
         scroll_area_widget = QFrame()
