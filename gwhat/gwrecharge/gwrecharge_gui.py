@@ -50,7 +50,6 @@ class RechgEvalWidget(QFrame):
         self.__initUI__()
 
         # Set the worker and thread mechanics
-
         self.rechg_worker = RechgEvalWorker()
         self.rechg_worker.sig_glue_finished.connect(self.receive_glue_calcul)
         self.rechg_worker.sig_glue_progress.connect(self.progressbar.setValue)
@@ -166,27 +165,43 @@ class RechgEvalWidget(QFrame):
         params_space_layout.setColumnStretch(
             params_space_layout.columnCount() + 1, 1)
 
+        # Setup the snowmelt parameters (°C).
+        tmelt_label = QLabel('Tmelt:')
+        tmelt_label2 = QLabel('°C')
         self._Tmelt = QDoubleSpinBox(0, 1)
         self._Tmelt.setRange(-25, 25)
 
-        # units=' mm/°C'
-
-        self._CM = QDoubleSpinBox(4, 1, 0.1, )
+        cm_label = QLabel('CM:')
+        cm_label2 = QLabel('mm/°C')
+        self._CM = QDoubleSpinBox(4, 1, 0.1)
         self._CM.setRange(0.1, 100)
 
         # units=' days'
-
-        self._deltaT = QDoubleSpinBox(0, 0, )
+        deltat_label = QLabel('deltaT :')
+        deltat_label2 = QLabel('days')
+        self._deltaT = QDoubleSpinBox(0, 0)
         self._deltaT.setRange(0, 999)
 
-        class QLabelCentered(QLabel):
-            def __init__(self, text):
-                super(QLabelCentered, self).__init__(text)
-                self.setAlignment(Qt.AlignCenter)
+        # Setup the secondary models parameters groupbox.
+        secondary_group = QGroupBox('Secondary models parameters')
+        secondary_layout = QGridLayout(secondary_group)
 
         row = 0
+        secondary_layout.addWidget(tmelt_label, row, 0)
+        secondary_layout.addWidget(self._Tmelt, row, 1)
+        secondary_layout.addWidget(tmelt_label2, row, 3)
         row += 1
+        secondary_layout.addWidget(cm_label, row, 0)
+        secondary_layout.addWidget(self._CM, row, 1)
+        secondary_layout.addWidget(cm_label2, row, 3)
         row += 1
+        secondary_layout.addWidget(deltat_label, row, 0)
+        secondary_layout.addWidget(self._deltaT, row, 1)
+        secondary_layout.addWidget(deltat_label2, row, 3)
+
+        secondary_layout.setColumnStretch(
+            secondary_layout.columnCount() + 1, 1)
+
 
         # ---- Layout ----
 
