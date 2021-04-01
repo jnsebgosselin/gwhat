@@ -38,7 +38,7 @@ The calculated BRF can be used to determine the type of aquifer
 ([Rasmussen and Crawford, 1997](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.1997.tb00111.x),
 [Spane, 2002](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2001wr000701))
 and thus provides a reliable way to identify wells that are under unconfined
-conditions thus can be used to assess groundwater recharge with the
+conditions and which can be used to assess groundwater recharge with the
 method implemented in GWHAT.
 
 GWHAT is written in the Python 3 programming language and is currently
