@@ -223,11 +223,25 @@ class RechgEvalWidget(QFrame):
         self._CM.setRange(0.1, 100)
         self._CM.setToolTip(cm_tooltip)
 
-        # units=' days'
-        deltat_label = QLabel('deltaT :')
+        # Setup the recharge delay widgets.
+        deltat_tooltip = (
+            """
+            <b>Recharge delay (deltaT)</b>
+            <p>The <i>recharge delay</i> relates to time required, on average,
+            for the infiltrated water to percolate downward through
+            the unsaturated zone and reach the water table.</p>
+            <p>The value of this parameter is strongly related to the hydraulic
+            properties and average water content of the unstaturated zone.
+            </p>
+            """
+            )
+        deltat_label = QLabel('deltaT:')
+        deltat_label.setToolTip(deltat_tooltip)
         deltat_label2 = QLabel('days')
+        deltat_label2.setToolTip(deltat_tooltip)
         self._deltaT = QDoubleSpinBox(0, 0)
         self._deltaT.setRange(0, 999)
+        self._deltaT.setToolTip(deltat_tooltip)
 
         # Setup the secondary models parameters groupbox.
         secondary_group = QGroupBox('Secondary models parameters')
