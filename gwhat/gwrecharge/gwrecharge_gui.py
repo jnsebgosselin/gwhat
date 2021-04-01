@@ -65,22 +65,42 @@ class RechgEvalWidget(QFrame):
                 self.setAlignment(Qt.AlignCenter)
 
         # Setup the maximum readily available water range (RASmax).
+        rasmax_tooltip = (
+            """
+            <b>Maximum Readily Available Storage (RASmax)</b>
+            <p>The <i>maximum readily available storage</i> corresponds
+            to the maximum capacity of a soil to retain water which can then be
+            evaporated or extracted by the roots of plants.
+            The value of this parameter is mainly related to the type of
+            vegetation on the surface and the capillary properties of
+            the soil.</p>
+            <p>Groudwater recharge will be evaluated for a set of evenly
+            spaced RASmax values within the specified range using an
+            increment of 1 mm.</p>
+            """
+            )
+
         rasmax_label = QLabel('RASmax:')
+        rasmax_label.setToolTip(rasmax_tooltip)
 
         self.QRAS_min = QDoubleSpinBox(5)
         self.QRAS_min.setRange(0, 999)
+        self.QRAS_min.setToolTip(rasmax_tooltip)
 
         rasmax_label2 = QLabelCentered('to')
+        rasmax_label2.setToolTip(rasmax_tooltip)
 
         self.QRAS_max = QDoubleSpinBox(40)
         self.QRAS_max.setRange(0, 999)
+        self.QRAS_max.setToolTip(rasmax_tooltip)
 
         rasmax_label3 = QLabel('mm')
+        rasmax_label3.setToolTip(rasmax_tooltip)
 
         # Setup the Specific yield cutoff range.
         syrange_tooltip = (
             """
-            <b>Specific yield (Sy) range</b>
+            <b>Specific Yield (Sy)</b>
             <p>According to Meinzer (1923), the <i>specific yield</i> is the
             ratio of the volume of water a rock or soil yield by gravity
             after being saturated to its own volume.</p>
@@ -106,7 +126,7 @@ class RechgEvalWidget(QFrame):
         # Setup the runoff coefficient (Cro) range.
         cro_tooltip = (
             """
-            <b>Runoff coefficient (Cro) range</b>
+            <b>Runoff Coefficient (Cro)</b>
             <p>The <i>runoff coefficient</i> is a dimensionless coefficient
             relating the amount of runoff to the amount of precipitation
             received. It is a larger value for areas with low infiltration
