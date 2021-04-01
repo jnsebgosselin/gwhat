@@ -262,6 +262,35 @@ class RechgEvalWidget(QFrame):
         secondary_layout.setColumnStretch(
             secondary_layout.columnCount() + 1, 1)
 
+        # Setup the RMSE cutoff.
+        rmsecutoff_tooltip = (
+            "<b>RMSE cutoff value</b><br><br>"
+            "All models whose RMSE falls above this RMSE cutoff value "
+            "are discarded as non-behavioural.")
+
+        self.rmsecutoff_cbox = QCheckBox('RMSE:')
+        self.rmsecutoff_cbox.setToolTip(rmsecutoff_tooltip)
+        self.rmsecutoff_cbox.toggled.connect(self.rmsecutoff_sbox.setEnabled)
+
+        self.rmsecutoff_sbox = QDoubleSpinBox(0, 1)
+        self.rmsecutoff_sbox.setRange(0, 99999)
+        self.rmsecutoff_sbox.setEnabled(False)
+        self.rmsecutoff_sbox.setToolTip(rmsecutoff_tooltip)
+
+        rmsecutoff_label = QLabel('mm')
+        rmsecutoff_label.setToolTip(rmsecutoff_tooltip)
+
+        # Setup the cutoff criteria group widget.
+        cutoff_group = QGroupBox('Models Cutoff Criteria')
+        cutoff_layout = QGridLayout(cutoff_group)
+
+        row += 0
+        cutoff_layout.addWidget(self.rmsecutoff_cbox, row, 0)
+        cutoff_layout.addWidget(self.rmsecutoff_sbox, row, 1)
+        cutoff_layout.addWidget(rmsecutoff_label, row, 2, 1, 2)
+
+        cutoff_layout.setColumnStretch(cutoff_layout.columnCount() + 1, 1)
+
         # Setup the scroll area.
         scroll_area_widget = QFrame()
         scroll_area_widget.setObjectName("viewport")
@@ -273,6 +302,7 @@ class RechgEvalWidget(QFrame):
 
         scroll_area_layout.addWidget(params_space_group, 0, 0)
         scroll_area_layout.addWidget(secondary_group, 1, 0)
+        scroll_area_layout.addWidget(cutoff_group, 2, 0)
         scroll_area_layout.setRowStretch(3, 100)
 
         qtitle = QLabel('Parameter Range')
