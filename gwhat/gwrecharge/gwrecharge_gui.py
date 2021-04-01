@@ -15,14 +15,13 @@ import os.path as osp
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
-                             QLabel, QSizePolicy, QScrollArea, QApplication,
-                             QMessageBox, QFrame, QCheckBox, QGroupBox)
+from PyQt5.QtWidgets import (
+    QWidget, QGridLayout, QPushButton, QProgressBar, QLabel, QScrollArea,
+    QApplication, QMessageBox, QFrame, QCheckBox, QGroupBox)
 
 # ---- Local imports
 from gwhat.widgets.buttons import ExportDataButton
 from gwhat.common.widgets import QDoubleSpinBox
-from gwhat.widgets.layout import HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
@@ -263,6 +262,35 @@ class RechgEvalWidget(QFrame):
         secondary_layout.setColumnStretch(
             secondary_layout.columnCount() + 1, 1)
 
+        # Setup the RMSE cutoff.
+        rmsecutoff_tooltip = (
+            "<b>RMSE Cutoff Value</b>"
+            "<p>All models whose RMSE falls above this RMSE cutoff value "
+            "are discarded as non-behavioural.</p>")
+
+        self.rmsecutoff_sbox = QDoubleSpinBox(0, 1)
+        self.rmsecutoff_sbox.setRange(0, 99999)
+        self.rmsecutoff_sbox.setEnabled(False)
+        self.rmsecutoff_sbox.setToolTip(rmsecutoff_tooltip)
+
+        self.rmsecutoff_cbox = QCheckBox('RMSE:')
+        self.rmsecutoff_cbox.setToolTip(rmsecutoff_tooltip)
+        self.rmsecutoff_cbox.toggled.connect(self.rmsecutoff_sbox.setEnabled)
+
+        rmsecutoff_label = QLabel('mm')
+        rmsecutoff_label.setToolTip(rmsecutoff_tooltip)
+
+        # Setup the cutoff criteria group widget.
+        cutoff_group = QGroupBox('Models Cutoff Criteria')
+        cutoff_layout = QGridLayout(cutoff_group)
+
+        row += 0
+        cutoff_layout.addWidget(self.rmsecutoff_cbox, row, 0)
+        cutoff_layout.addWidget(self.rmsecutoff_sbox, row, 1)
+        cutoff_layout.addWidget(rmsecutoff_label, row, 2, 1, 2)
+
+        cutoff_layout.setColumnStretch(cutoff_layout.columnCount() + 1, 1)
+
         # Setup the scroll area.
         scroll_area_widget = QFrame()
         scroll_area_widget.setObjectName("viewport")
@@ -274,6 +302,7 @@ class RechgEvalWidget(QFrame):
 
         scroll_area_layout.addWidget(params_space_group, 0, 0)
         scroll_area_layout.addWidget(secondary_group, 1, 0)
+        scroll_area_layout.addWidget(cutoff_group, 2, 0)
         scroll_area_layout.setRowStretch(3, 100)
 
         qtitle = QLabel('Parameter Range')
@@ -335,6 +364,13 @@ class RechgEvalWidget(QFrame):
         to produce the last GLUE results saved into the project.
         """
         if gluedf is not None:
+            try:
+                # This was introduced in gwhat 0.5.1.
+                self.rmsecutoff_sbox.setValue(gluedf['cutoff']['rmse_cutoff'])
+                self.rmsecutoff_cbox.setChecked(
+                    gluedf['cutoff']['rmse_cutoff_enabled'])
+            except KeyError:
+                pass
             try:
                 self.QSy_min.setValue(min(gluedf['ranges']['Sy']))
                 self.QSy_max.setValue(max(gluedf['ranges']['Sy']))
@@ -404,6 +440,10 @@ class RechgEvalWidget(QFrame):
         self.rechg_worker.TMELT = self.Tmelt
         self.rechg_worker.CM = self.CM
         self.rechg_worker.deltat = self.deltaT
+
+        self.rechg_worker.rmse_cutoff = self.rmsecutoff_sbox.value()
+        self.rechg_worker.rmse_cutoff_enabled = int(
+            self.rmsecutoff_cbox.isChecked())
 
         # Set the data and check for errors.
         error = self.rechg_worker.load_data(self.wxdset, self.wldset)
