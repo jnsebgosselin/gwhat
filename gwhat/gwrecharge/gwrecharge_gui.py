@@ -60,17 +60,6 @@ class RechgEvalWidget(QFrame):
 
     def __initUI__(self):
 
-        class QRowLayout(QWidget):
-            def __init__(self, items, parent=None):
-                super(QRowLayout, self).__init__(parent)
-
-                layout = QGridLayout()
-                for col, item in enumerate(items):
-                    layout.addWidget(item, 0, col)
-                layout.setContentsMargins(0, 0, 0, 0)
-                layout.setColumnStretch(0, 100)
-                self.setLayout(layout)
-
         class QLabelCentered(QLabel):
             def __init__(self, text):
                 super(QLabelCentered, self).__init__(text)
