@@ -176,18 +176,37 @@ class RechgEvalWidget(QFrame):
             params_space_layout.columnCount() + 1, 1)
 
         # Setup the snowmelt parameters (°C).
+        tmelt_tooltip = (
+            """
+            <b>Base Air Temperature of Melting (Tmelt)</b>
+
+            <p>In the degree-day method, the daily snowmelt potential
+            in mm/°C is assumed to be directly proportional to the
+            difference, in °C, between the mean daily temperature and
+            the <i>base air temperature of melting.
+            The daily melt potential is assumed to be zero
+            if the air temperature is lower than the base temperature.</p>
+            <p>Typically, the base temperature should be 0°C.
+            Adjusting the value of this parameter can be used to
+            indirectly reflect the different energy dynamics and snowpack
+            conditions which are too complex to be represented directly
+            by the simple degree-day approach used in GWHAT.</p>
+            """)
         tmelt_label = QLabel('Tmelt:')
+        tmelt_label.setToolTip(tmelt_tooltip)
         tmelt_label2 = QLabel('°C')
+        tmelt_label2.setToolTip(tmelt_tooltip)
         self._Tmelt = QDoubleSpinBox(0, 1)
         self._Tmelt.setRange(-25, 25)
+        self._Tmelt.setToolTip(tmelt_tooltip)
 
         cm_tooltip = (
             """
             <b>Degree-day Melt Coefficient (CM)</b>
             <p>The <i>degree-day melt coefficient</i> is a coefficient
-            relating the amount of total daily melt in mm to the difference,
-            in °C, between the main daily temperature and a base temperature
-            (assumed to be 0°C in GWHAT).</p>
+            relating the amount of total daily melt potential in mm to the
+            difference, in °C, between the main daily temperature and the base
+            air temperature of melting (Tmelt).</p>
             <p>The degree-day melt coefficient varies geographically and
             seasonally, with typical values ranging between 1.6&nbsp;mm/°C to
             6.0&nbsp;mm/°C. When information is lacking, a constant value of
@@ -371,7 +390,6 @@ class RechgEvalWidget(QFrame):
         self.rechg_worker.TMELT = self.Tmelt
         self.rechg_worker.CM = self.CM
         self.rechg_worker.deltat = self.deltaT
-
 
         # Set the data and check for errors.
         error = self.rechg_worker.load_data(self.wxdset, self.wldset)
