@@ -152,7 +152,7 @@ class RechgEvalWidget(QFrame):
         self.CRO_max.setToolTip(cro_tooltip)
 
         # Setup the models parameters space groupbox.
-        params_space_group = QGroupBox('Models parameters space')
+        params_space_group = QGroupBox('Models Parameters Space')
         params_space_layout = QGridLayout(params_space_group)
 
         row = 0
@@ -244,7 +244,7 @@ class RechgEvalWidget(QFrame):
         self._deltaT.setToolTip(deltat_tooltip)
 
         # Setup the secondary models parameters groupbox.
-        secondary_group = QGroupBox('Secondary models parameters')
+        secondary_group = QGroupBox('Secondary Models Parameters')
         secondary_layout = QGridLayout(secondary_group)
 
         row = 0
