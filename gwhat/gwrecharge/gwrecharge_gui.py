@@ -71,27 +71,51 @@ class RechgEvalWidget(QFrame):
                 layout.setColumnStretch(0, 100)
                 self.setLayout(layout)
 
-        # ---- Parameters
+        class QLabelCentered(QLabel):
+            def __init__(self, text):
+                super(QLabelCentered, self).__init__(text)
+                self.setAlignment(Qt.AlignCenter)
 
-        # Specific yield (Sy) :
-
-        self.QSy_min = QDoubleSpinBox(0.05, 3)
-        self.QSy_min.setRange(0.001, 1)
-
-        self.QSy_max = QDoubleSpinBox(0.2, 3)
-        self.QSy_max.setRange(0.001, 1)
-
-        # Maximum readily available water (RASmax) :
-
-        # units=' mm'
+        # Setup the maximum readily available water range (RASmax).
+        rasmax_label = QLabel('RASmax:')
 
         self.QRAS_min = QDoubleSpinBox(5)
         self.QRAS_min.setRange(0, 999)
 
+        rasmax_label2 = QLabelCentered('to')
+
         self.QRAS_max = QDoubleSpinBox(40)
         self.QRAS_max.setRange(0, 999)
 
-        # Runoff coefficient (Cro) :
+        rasmax_label3 = QLabel('mm')
+
+        # Setup the Specific yield cutoff range.
+        syrange_tooltip = (
+            """
+            <b>Specific yield (Sy) range</b>
+            <br><br>
+            Only models with an estimated specific yield  that falls inside
+            this range of values are retained as behavioural.
+            <br><br>
+            According to Meinzer (1923), the <b>specific yield</b> is the
+            ratio of the volume of water a rock or soil yield by gravity
+            after being saturated to its own volume.
+            """
+            )
+
+        self.sy_label = QLabel('Sy:')
+        self.sy_label.setToolTip(syrange_tooltip)
+
+        self.QSy_min = QDoubleSpinBox(0.05, 3)
+        self.QSy_min.setRange(0.001, 1)
+        self.QSy_min.setToolTip(syrange_tooltip)
+
+        sy_range_label2 = QLabelCentered('to')
+        sy_range_label2.setToolTip(syrange_tooltip)
+
+        self.QSy_max = QDoubleSpinBox(0.2, 3)
+        self.QSy_max.setRange(0.001, 1)
+        self.QSy_max.setToolTip(syrange_tooltip)
 
         # Setup the runoff coefficient (Cro) range.
         cro_tooltip = (
@@ -103,17 +127,43 @@ class RechgEvalWidget(QFrame):
             permeable, well vegetated areas (forest, flat land).
             """
             )
+        cro_label = QLabel('Cro:')
+        cro_label.setToolTip(cro_tooltip)
+
         self.CRO_min = QDoubleSpinBox(0.1, 2)
         self.CRO_min.setRange(0, 1)
         self.CRO_min.setToolTip(cro_tooltip)
+
+        cro_label2 = QLabelCentered('to')
+        cro_label2.setToolTip(cro_tooltip)
 
         self.CRO_max = QDoubleSpinBox(0.3, 2)
         self.CRO_max.setRange(0, 1)
         self.CRO_max.setToolTip(cro_tooltip)
 
-        # Snowmelt parameters :
+        # Setup the models parameters space groupbox.
+        params_space_group = QGroupBox('Models parameters space')
+        params_space_layout = QGridLayout(params_space_group)
 
-        # units=' °C'
+        row = 0
+        params_space_layout.addWidget(rasmax_label, row, 0)
+        params_space_layout.addWidget(self.QRAS_min, row, 1)
+        params_space_layout.addWidget(rasmax_label2, row, 2)
+        params_space_layout.addWidget(self.QRAS_max, row, 3)
+        params_space_layout.addWidget(rasmax_label3, row, 4)
+        row += 1
+        params_space_layout.addWidget(cro_label, row, 0)
+        params_space_layout.addWidget(self.CRO_min, row, 1)
+        params_space_layout.addWidget(cro_label2, row, 2)
+        params_space_layout.addWidget(self.CRO_max, row, 3)
+        row += 1
+        params_space_layout.addWidget(self.sy_label, row, 0)
+        params_space_layout.addWidget(self.QSy_min, row, 1)
+        params_space_layout.addWidget(sy_range_label2, row, 2)
+        params_space_layout.addWidget(self.QSy_max, row, 3)
+
+        params_space_layout.setColumnStretch(
+            params_space_layout.columnCount() + 1, 1)
 
         self._Tmelt = QDoubleSpinBox(0, 1)
         self._Tmelt.setRange(-25, 25)
