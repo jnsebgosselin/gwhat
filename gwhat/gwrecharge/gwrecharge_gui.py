@@ -203,7 +203,6 @@ class RechgEvalWidget(QFrame):
             secondary_layout.columnCount() + 1, 1)
 
 
-        # ---- Layout ----
         # Setup the scroll area.
         scroll_area_widget = QFrame()
         scroll_area_widget.setObjectName("viewport")
@@ -242,7 +241,7 @@ class RechgEvalWidget(QFrame):
         btn_calib = QPushButton('Compute Recharge')
         btn_calib.clicked.connect(self.btn_calibrate_isClicked)
 
-        self.btn_show_result = QToolButtonSmall(icons.get_icon('search'))
+        self.btn_show_result = QToolButtonSmall(get_icon('search'))
         self.btn_show_result.clicked.connect(self.figstack.show)
         self.btn_show_result.setToolTip("Show GLUE results.")
 
@@ -251,8 +250,8 @@ class RechgEvalWidget(QFrame):
         layout = QGridLayout(toolbar)
         layout.addWidget(btn_calib, 0, 0)
         layout.addWidget(self.btn_show_result, 0, 1)
-        layout.addWidget(self.btn_save_glue, 0, 2)
-        layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
+        layout.addWidget(self.btn_save_glue, 0, 3)
+        layout.setContentsMargins(10, 0, 10, 0)
 
         return toolbar
 
@@ -318,6 +317,7 @@ class RechgEvalWidget(QFrame):
         else:
             raise ValueError('Name must be either Sy, Rasmax or Cro.')
 
+    # ---- Properties.
     @property
     def Tmelt(self):
         return self._Tmelt.value()
@@ -352,7 +352,6 @@ class RechgEvalWidget(QFrame):
         self.rechg_worker.CM = self.CM
         self.rechg_worker.deltat = self.deltaT
 
-        # Set the data and check for errors.
 
         # Set the data and check for errors.
         error = self.rechg_worker.load_data(self.wxdset, self.wldset)
