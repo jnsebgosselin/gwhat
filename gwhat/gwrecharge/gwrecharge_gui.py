@@ -264,9 +264,9 @@ class RechgEvalWidget(QFrame):
 
         # Setup the RMSE cutoff.
         rmsecutoff_tooltip = (
-            "<b>RMSE cutoff value</b><br><br>"
-            "All models whose RMSE falls above this RMSE cutoff value "
-            "are discarded as non-behavioural.")
+            "<b>RMSE Cutoff Value</b>"
+            "<p>All models whose RMSE falls above this RMSE cutoff value "
+            "are discarded as non-behavioural.</p>")
 
         self.rmsecutoff_sbox = QDoubleSpinBox(0, 1)
         self.rmsecutoff_sbox.setRange(0, 99999)
