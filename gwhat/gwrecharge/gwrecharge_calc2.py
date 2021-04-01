@@ -213,10 +213,10 @@ class RechgEvalWorker(QObject):
         # ---- Format results
         glue_rawdata = {}
         glue_rawdata['count'] = len(set_RMSE)
-        glue_rawdata['RMSE'] = set_RMSE
-        glue_rawdata['params'] = {'Sy': set_Sy,
-                                  'RASmax': set_RASmax,
-                                  'Cru': set_Cru,
+        glue_rawdata['RMSE'] = np.array(set_RMSE)
+        glue_rawdata['params'] = {'Sy': np.array(set_Sy),
+                                  'RASmax': np.array(set_RASmax),
+                                  'Cru': np.array(set_Cru),
                                   'tmelt': self.TMELT,
                                   'CM': self.CM,
                                   'deltat': self.deltat}
