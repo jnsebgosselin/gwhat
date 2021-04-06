@@ -453,18 +453,24 @@ def test_mrc_backward_compatibility(project, testfile):
     # is why the 33000 was clipped to 32767.
 
     # Fetch the test waterlevel dataset again from the project and make sure
-    # that the peak_indx data were converted as expected to float64.
+    # that the peak_indx data were converted as expected to float64 and as
+    # xls numerical dates instead of time indexes of the time series.
     wldset = project.get_wldset('dataset_test')
     assert wldset['mrc/peak_indx'].dtype == np.dtype('float64')
-    assert wldset['mrc/peak_indx'].tolist() == [2, 17, 100, 30000, 32767]
+    assert wldset['mrc/peak_indx'].tolist() == wldset.xldates[
+        [2, 17, 100, 30000, 32767]].tolist()
 
     # Make sure the data are formatted as expected when fetched.
     mrc_data = wldset.get_mrc()
     assert np.isnan(mrc_data['params']).tolist() == [True, True]
-    assert mrc_data['peak_indx'] == [(2, 17), (100, 30000)]
+    assert mrc_data['peak_indx'] == [
+        (wldset.xldates[2], wldset.xldates[17]),
+        (wldset.xldates[100], wldset.xldates[30000])]
+
     assert mrc_data['time'].tolist() == []
     assert mrc_data['recess'].tolist() == []
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', __file__, '-v', '-rw'])
+    pytest.main(['-x', __file__, '-v', '-rw',
+                 '-k', 'test_mrc_backward_compatibility'])
