@@ -145,6 +145,17 @@ def test_save_hydrograph_fig(hydroprint, mocker, qtbot, fext, tmp_path):
     qtbot.waitUntil(lambda: osp.exists(fname))
 
 
+def test_copy_to_clipboard(hydroprint, qtbot):
+    """
+    Test that puting a copy of the hydrograph figure on the clipboard is
+    working as expected.
+    """
+    QApplication.clipboard().clear()
+    assert QApplication.clipboard().text() == ''
+    assert QApplication.clipboard().image().isNull()
+    qtbot.mouseClick(hydroprint.btn_copy_to_clipboard, Qt.LeftButton)
+    assert not QApplication.clipboard().image().isNull()
+
 
 def test_graph_layout(hydroprint, mocker, qtbot):
     """Test saving and loading hydrograph layout to and from the project."""
