@@ -76,8 +76,8 @@ class LabelDatabase():
 
 
 class Hydrograph(Figure):
-    def __init__(self, *args, **kargs):
-        super(Hydrograph, self).__init__(*args, **kargs)
+    def __init__(self):
+        super().__init__(facecolor='white', frameon=True, edgecolor='black')
 
         # set canvas and renderer :
 
@@ -219,7 +219,7 @@ class Hydrograph(Figure):
         Set the line thickness of the frame that encloses the entire figure.
         """
         self._figframe_lw = x
-        self.setup_figure_frame()
+        self.patch.set_linewidth(self._figframe_lw)
 
     @property
     def language(self):
@@ -255,10 +255,9 @@ class Hydrograph(Figure):
         self.__isHydrographExists = False
         super(Hydrograph, self).clf(*args, **kargs)
 
-    def savefig(self, fname):
+    def savefig(self, fname, dpi=300):
         """Matplotlib override to set frameon when saving."""
-        super(Hydrograph, self).savefig(fname, frameon=True, facecolor='white',
-                                        edgecolor='black')
+        super().savefig(fname, facecolor='white', edgecolor='black', dpi=dpi)
 
     def generate_hydrograph(self, wxdset=None, wldset=None):
         wxdset = self.wxdset if wxdset is None else wxdset
@@ -267,7 +266,7 @@ class Hydrograph(Figure):
         # Reinit the figure.
         self.clf()
         self.set_size_inches(self.fwidth, self.fheight, forward=True)
-        self.setup_figure_frame()
+        self.patch.set_linewidth(self._figframe_lw)
 
         # Assign Weather Data.
         if self.wxdset is None:
@@ -1111,13 +1110,6 @@ class Hydrograph(Figure):
         self.ax3.set_yticks(np.arange(0, yticksmax, self.RAINscale))
         self.ax3.invert_yaxis()
 
-    def setup_figure_frame(self):
-        """Draw a frame around the figure."""
-        self.set_frameon(self._figframe_lw > 0)
-        self.set_facecolor('white')
-        self.set_edgecolor('black')
-        self.patch.set_linewidth(self._figframe_lw)
-
     def set_gridLines(self):
         """Setup the grid lines."""
 
@@ -1248,7 +1240,7 @@ def filt_data(time, waterlvl, N):
 if __name__ == '__main__':
     from PyQt5.QtWidgets import QApplication
     import sys
-    from mplFigViewer3 import ImageViewer
+    from gwhat.widgets.mplfigureviewer import ImageViewer
     from gwhat.meteo.weather_reader import WXDataFrame
     from gwhat.projet.reader_projet import ProjetReader
 
