@@ -425,6 +425,7 @@ def test_mrc_backward_compatibility(project, testfile):
     with GWHAT version 0.5.0 and older.
 
     See jnsebgosselin/gwhat#370.
+    See jnsebgosselin/gwhat#377.
     """
     # Add the dataset to the test project.
     project.add_wldset('dataset_test', WLDataFrame(testfile))
