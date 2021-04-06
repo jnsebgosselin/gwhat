@@ -391,6 +391,11 @@ class HydroprintGUI(QWidget):
         return self.dmngr.workdir
 
     # ---- Utilities
+    def save_figure(self, fname):
+        """Save the hydrograph figure in a file."""
+        self.hydrograph.generate_hydrograph()
+        self.hydrograph.savefig(fname)
+
     def zoom_in(self):
         self.hydrograph_scrollarea.zoomIn()
 
@@ -680,13 +685,7 @@ class HydroprintGUI(QWidget):
                 QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
                 self.select_save_path()
 
-    def save_figure(self, fname):
-        """Save the hydrograph figure in a file."""
-        self.hydrograph.generate_hydrograph()
-        self.hydrograph.savefig(fname)
-
     # ---- Graph Layout Handlers
-
     def load_layout_isClicked(self):
         """Handle when the button to load the graph layout is clicked."""
         if self.wldset is None:
