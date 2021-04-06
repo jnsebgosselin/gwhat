@@ -396,6 +396,14 @@ class HydroprintGUI(QWidget):
         self.hydrograph.generate_hydrograph()
         self.hydrograph.savefig(fname)
 
+    def copyfig_to_clipboard(self):
+        """Saves the current BRF figure to the clipboard."""
+        buf = io.BytesIO()
+        self.hydrograph.generate_hydrograph()
+        self.hydrograph.savefig(buf)
+        QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
+        buf.close()
+
     def zoom_in(self):
         self.hydrograph_scrollarea.zoomIn()
 
