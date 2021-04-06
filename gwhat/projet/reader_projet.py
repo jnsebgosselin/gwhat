@@ -454,10 +454,13 @@ class WLDataFrameHDF5(WLDataFrameBase):
             self.dset.file.flush()
         if self.dset['mrc/peak_indx'].dtype != np.dtype('float64'):
             # We need to convert peak_indx data to the format used in
-            # GWHAT >= 0.5.1. See jnsebgosselin/gwhat#370.
+            # gwhat >= 0.5.1, where we store the mrc periods as a series of
+            # xldates instead of time indexes. See jnsebgosselin/gwhat#370.
             print('Convert peak_inx values to the new format '
                   'used in gwhat >= 0.5.1.')
-            peak_indx = self.dset['mrc/peak_indx'][...].astype(float)
+
+            peak_indx = self.dset['mrc/peak_indx'][...].astype(int)
+            peak_indx = self.xldates[peak_indx]
 
             # The only way to do that in HDF5 is to delete the dataset and
             # create a new one with the right dtype.
