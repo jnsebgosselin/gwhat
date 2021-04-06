@@ -130,7 +130,7 @@ def test_zoomin_zoomout(hydroprint):
         hydroprint.zoom_out()
 
 
-@pytest.mark.parametrize('fext', ['.png', '.jpg', '.jpeg', '.tif', '.pdf'])
+@pytest.mark.parametrize('fext', ['.png', '.pdf', '.svg'])
 def test_save_hydrograph_fig(hydroprint, mocker, qtbot, fext, tmp_path):
     """
     Test that saving the hydrograph figure to disk is working as
