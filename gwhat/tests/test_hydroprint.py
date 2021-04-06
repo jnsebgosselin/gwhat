@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard Libraries Imports
 import os
@@ -13,6 +14,8 @@ import os.path as osp
 # ---- Third Party Libraries Imports
 import pytest
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
+
 
 # ---- Local Libraries Imports
 from gwhat.meteo.weather_reader import WXDataFrame
@@ -127,17 +130,31 @@ def test_zoomin_zoomout(hydroprint):
         hydroprint.zoom_out()
 
 
-def test_save_hydrograph_fig(hydroprint, mocker, qtbot, projectpath):
-    """Test saving the hydrograph figure to disk."""
-    # Save the hydrograph in the pdf and svg format.
-    for fformat in ['pdf', 'svg']:
-        fname = os.path.join(projectpath, "test_hydrograph." + fformat)
-        mocker.patch.object(
-            QFileDialog,
-            'getSaveFileName',
-            return_value=(fname, '*.' + fformat))
-        qtbot.mouseClick(hydroprint.btn_save, Qt.LeftButton)
-        qtbot.waitUntil(lambda: os.path.exists(fname))
+@pytest.mark.parametrize('fext', ['.png', '.pdf', '.svg'])
+def test_save_hydrograph_fig(hydroprint, mocker, qtbot, fext, tmp_path):
+    """
+    Test that saving the hydrograph figure to disk is working as
+    expected.
+    """
+    fname = osp.join(tmp_path, "test_hydrograph" + fext)
+    mocker.patch.object(
+        QFileDialog,
+        'getSaveFileName',
+        return_value=(fname, '*{}'.format(fext)))
+    qtbot.mouseClick(hydroprint.btn_save, Qt.LeftButton)
+    qtbot.waitUntil(lambda: osp.exists(fname))
+
+
+def test_copy_to_clipboard(hydroprint, qtbot):
+    """
+    Test that puting a copy of the hydrograph figure on the clipboard is
+    working as expected.
+    """
+    QApplication.clipboard().clear()
+    assert QApplication.clipboard().text() == ''
+    assert QApplication.clipboard().image().isNull()
+    qtbot.mouseClick(hydroprint.btn_copy_to_clipboard, Qt.LeftButton)
+    assert not QApplication.clipboard().image().isNull()
 
 
 def test_graph_layout(hydroprint, mocker, qtbot):
@@ -311,5 +328,4 @@ def test_pagesetup_ok(pagesetup, qtbot):
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-#     pytest.main()
+    pytest.main(['-x', __file__, '-v', '-rw'])
