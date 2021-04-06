@@ -7,13 +7,13 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-
+import io
 import sys
 import os
 import os.path as osp
 
 # ---- Third party imports
-
+from PyQt5.QtGui import QImage
 from PyQt5.QtCore import Qt, QDate, QCoreApplication, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
@@ -71,6 +71,11 @@ class HydroprintGUI(QWidget):
         # =====================================================================
         left_widget = QMainWindow()
 
+        # Setup the hydrograph frame.
+        self.hydrograph = Hydrograph()
+        self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
+        left_widget.setCentralWidget(self.hydrograph_scrollarea)
+
         # Setup the toolbar buttons.
         self.btn_save = btn_save = create_toolbutton(
             parent=self,
@@ -78,6 +83,12 @@ class HydroprintGUI(QWidget):
             tip='Save the well hydrograph',
             triggered=self.select_save_path
             )
+        self.btn_copy_to_clipboard = create_toolbutton(
+            self, icon='copy_clipboard',
+            text="Copy",
+            tip="Put a copy of the figure on the Clipboard.",
+            triggered=self.copyfig_to_clipboard,
+            shortcut='Ctrl+C')
         # The button draw is usefull for debugging purposes
         btn_draw = create_toolbutton(
             parent=self,
@@ -151,6 +162,7 @@ class HydroprintGUI(QWidget):
         self.zoom_disp.setSuffix(' %')
         self.zoom_disp.setRange(0, 9999)
         self.zoom_disp.setValue(100)
+        self.hydrograph_scrollarea.zoomChanged.connect(self.zoom_disp.setValue)
 
         zoom_pan = QFrame()
         zoom_pan_layout = QGridLayout(zoom_pan)
@@ -169,7 +181,8 @@ class HydroprintGUI(QWidget):
         left_widget.addToolBar(Qt.TopToolBarArea, toolbar)
 
         btn_list = [
-            btn_save, btn_draw, self.btn_load_layout, self.btn_save_layout,
+            btn_save, self.btn_copy_to_clipboard, btn_draw,
+            self.btn_load_layout, self.btn_save_layout,
             None, btn_bestfit_waterlvl, btn_bestfit_time, None,
             self.btn_page_setup, btn_color_pick, self.btn_language,
             None, zoom_pan]
@@ -178,13 +191,6 @@ class HydroprintGUI(QWidget):
                 toolbar.addSeparator()
             else:
                 toolbar.addWidget(widget)
-
-        # Setup the hydrograph frame.
-        self.hydrograph = Hydrograph()
-        self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
-        self.hydrograph_scrollarea.zoomChanged.connect(self.zoom_disp.setValue)
-
-        left_widget.setCentralWidget(self.hydrograph_scrollarea)
 
         # =====================================================================
         # Setup the right side layout.
