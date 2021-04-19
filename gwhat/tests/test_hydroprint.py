@@ -118,13 +118,13 @@ def test_autoplot_hydroprint(hydroprint):
 def test_zoomin_zoomout(hydroprint):
     """Test zooming in and out the graph."""
     # Test zoom in.
-    expected_values = [100, 120, 144, 172, 172]
+    expected_values = [100, 120, 144, 173, 173]
     for expected_value in expected_values:
         assert hydroprint.zoom_disp.value() == expected_value
         hydroprint.zoom_in()
 
     # Test zoom out.
-    expected_values = [172, 144, 120, 100, 83, 69, 57, 57]
+    expected_values = [173, 144, 120, 100, 83, 69, 58, 58]
     for expected_value in expected_values:
         assert hydroprint.zoom_disp.value() == expected_value
         hydroprint.zoom_out()
