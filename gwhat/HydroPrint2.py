@@ -1046,7 +1046,7 @@ class PageSetupWin(QWidget):
 
             wp = parent.frameGeometry().width()
             hp = parent.frameGeometry().height()
-            cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
+            cp = parent.mapToGlobal(QPoint(wp // 2, hp // 2))
         else:
             cp = QDesktopWidget().availableGeometry().center()
 
