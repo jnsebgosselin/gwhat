@@ -65,11 +65,9 @@ def hydrocalc(datamanager, qtbot):
 
 
 # ---- Test WLCalc
-@pytest.mark.run(order=9)
 def test_hydrocalc_init(hydrocalc, mocker):
     assert hydrocalc
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-    # pytest.main()
+    pytest.main(['-x', __file__, '-v', '-rw'])
