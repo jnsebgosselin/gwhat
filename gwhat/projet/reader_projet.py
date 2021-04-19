@@ -1036,7 +1036,7 @@ def load_dict_from_h5grp(h5grp):
             try:
                 len(values)
             except TypeError:
-                values = np.asscalar(values)
+                values = values.item()
             dic[key] = values
         elif isinstance(item, h5py._hl.group.Group):
             dic[key] = load_dict_from_h5grp(item)

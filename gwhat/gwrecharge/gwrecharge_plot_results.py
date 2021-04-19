@@ -662,13 +662,14 @@ class FigureManager(QWidget):
             triggered=self.figviewer.zoomIn
             )
 
-        self.zoom_disp = QSpinBox()
+        self.zoom_disp = QDoubleSpinBox()
         self.zoom_disp.setAlignment(Qt.AlignCenter)
         self.zoom_disp.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.zoom_disp.setReadOnly(True)
         self.zoom_disp.setSuffix(' %')
         self.zoom_disp.setRange(0, 9999)
         self.zoom_disp.setValue(100)
+        self.zoom_disp.setDecimals(0)
         self.figviewer.zoomChanged.connect(self.zoom_disp.setValue)
 
         zoom_pan = QFrame()

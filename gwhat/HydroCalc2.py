@@ -8,7 +8,7 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard library imports
-from time import clock
+from time import perf_counter
 import csv
 import os
 import os.path as osp
@@ -1634,7 +1634,7 @@ def calculate_mrc(t, h, periods, mrctype=1):
     print('---- MRC calculation started ----')
     print('mrctype = %s' % (['Linear', 'Exponential'][mrctype]))
 
-    tstart = clock()
+    tstart = perf_counter()
 
     # If mrctype is 0, then the parameter A is kept to a value of 0 throughout
     # the entire optimization process and only paramter B is optimized.
@@ -1748,7 +1748,7 @@ def calculate_mrc(t, h, periods, mrctype=1):
         if tol < tolmax:
             break
 
-    tend = clock()
+    tend = perf_counter()
     print('TIME = %0.3f sec' % (tend-tstart))
     print('---- FIN ----')
 
