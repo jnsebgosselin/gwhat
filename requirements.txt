@@ -1,10 +1,10 @@
 appconfigs
-pyqt5 == 5.12.*
+pyqt5 == 5.15.*
 xlsxwriter
 xlrd == 1.*
 xlwt
 cython>=0.25.2
-numpy == 1.16.*
+numpy == 1.19.*
 matplotlib == 3.1.*
 requests
 h5py == 2.10.*
