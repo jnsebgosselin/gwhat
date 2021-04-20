@@ -287,26 +287,30 @@ class WLCalc(QWidget, SaveFileMixin):
         self.btn_show_glue.setToolTip(
             "Show or hide GLUE water level 05/95 envelope.")
         self.btn_show_glue.sig_value_changed.connect(self.draw_glue_wl)
-        self.btn_show_glue.setValue(True, silent=True)
+        self.btn_show_glue.setValue(
+            CONF.get('hydrocalc', 'show_glue', True), silent=True)
 
         self.btn_show_weather = OnOffToolButton('show_meteo', size='normal')
         self.btn_show_weather.setToolTip("""Show or hide weather data.""")
         self.btn_show_weather.sig_value_changed.connect(self.draw_weather)
-        self.btn_show_weather.setValue(True, silent=True)
+        self.btn_show_weather.setValue(
+            CONF.get('hydrocalc', 'show_weather', True), silent=True)
 
         self.btn_show_mrc = OnOffToolButton('mrc_calc', size='normal')
         self.btn_show_mrc.setToolTip(
             "Show or hide water levels predicted with the MRC.")
         self.btn_show_mrc.sig_value_changed.connect(
             self.btn_show_mrc_isclicked)
-        self.btn_show_mrc.setValue(True, silent=True)
+        self.btn_show_mrc.setValue(
+            CONF.get('hydrocalc', 'show_mrc', True), silent=True)
 
         self.btn_show_meas_wl = OnOffToolButton(
             'manual_measures', size='normal')
         self.btn_show_meas_wl.setToolTip(
             "Show or hide water levels measured manually in the well.")
-        self.btn_show_meas_wl.setValue(True, silent=True)
         self.btn_show_meas_wl.sig_value_changed.connect(self.draw_meas_wl)
+        self.btn_show_meas_wl.setValue(
+            CONF.get('hydrocalc', 'show_meas_wl', True), silent=True)
 
         # ---- Select and transform data.
         self.btn_rect_select = OnOffToolButton('rect_select', size='normal')
