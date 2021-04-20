@@ -390,27 +390,24 @@ class OnOffToolButton(QToolButtonBase):
         self._icon = icons.get_icon(icon) if isinstance(icon, str) else icon
         self._icon_raised = (icons.get_icon(icon_raised) if
                              isinstance(icon_raised, str) else icon_raised)
-        super(OnOffToolButton, self).__init__(self._icon, parent)
+        super().__init__(self._icon, parent)
         self.installEventFilter(self)
+        self.setCheckable(True)
         if size is not None:
             self.setIconSize(icons.get_iconsize(size))
-
-    def eventFilter(self, widget, event):
-        if event.type() == QEvent.MouseButtonPress and self.isEnabled():
-            self.setValue(not self.value())
-        return super(OnOffToolButton, self).eventFilter(widget, event)
+        self.toggled.connect(self.sig_value_changed.emit)
 
     def value(self):
         """Return True if autoRaise is False and False if True."""
-        return not self.autoRaise()
+        return self.isChecked()
 
     def setValue(self, value, silent=False):
         """Set autoRaise to False if value is True and to True if False."""
         if value != self.value():
-            self.setAutoRaise(not bool(value))
+            self.blockSignals(silent)
+            self.setChecked(value)
+            self.blockSignals(False)
             self._setup_icon()
-            if silent is False:
-                self.sig_value_changed.emit(self.value())
 
     def _setup_icon(self):
         """Setup the icon of the button according to its auto raise state."""
