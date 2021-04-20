@@ -59,6 +59,7 @@ __appname__ = 'GWHAT'
 __namever__ = __appname__ + " " + __version__
 __date__ = '07/10/2020'
 __project_url__ = "https://github.com/jnsebgosselin/gwhat"
+__issues_url__ = __project_url__ + "/issues"
 __releases_url__ = __project_url__ + "/releases"
 __releases_api__ = "https://api.github.com/repos/jnsebgosselin/gwhat/releases"
 
@@ -71,6 +72,37 @@ def is_frozen():
     See: https://stackoverflow.com/a/42615559/4481445
     """
     return getattr(sys, 'frozen', False)
+
+
+def get_versions(reporev=True):
+    """
+    Return version information for components used by GWHAT
+
+    This function is derived from code that was borrowed from the Spyder
+    project, licensed under the terms of the MIT license.
+    https://github.com/spyder-ide
+    """
+    import sys
+    import platform
+
+    import qtpy
+    import qtpy.QtCore
+
+    # To avoid a crash with Mac app
+    if not sys.platform == 'darwin':
+        system = platform.system()
+    else:
+        system = 'Darwin'
+
+    return {
+        'version': __version__,
+        'python': platform.python_version(),
+        'bitness': 64 if sys.maxsize > 2**32 else 32,
+        'qt': qtpy.QtCore.__version__,
+        'qt_api': qtpy.API_NAME,
+        'qt_api_ver': qtpy.PYQT_VERSION,
+        'system': system,
+        'release': platform.release()}
 
 
 if is_frozen():

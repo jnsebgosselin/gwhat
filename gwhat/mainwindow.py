@@ -24,15 +24,16 @@ splash = SplashScrn()
 splash.showMessage("Starting %s..." % __namever__)
 
 # ---- Standard library imports
-import sys
 import platform
+import sys
+import traceback
 from time import ctime
 from multiprocessing import freeze_support
 
 # ---- Third party imports
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QMainWindow, QTextEdit, QSplitter,
-                             QWidget, QGridLayout, QTextBrowser)
+from qtpy.QtCore import Qt, QObject, Signal
+from qtpy.QtWidgets import (
+    QMainWindow, QTextEdit, QSplitter, QWidget, QGridLayout, QTextBrowser)
 
 # ---- Local imports
 from gwhat.config.main import CONF
@@ -52,8 +53,10 @@ freeze_support()
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
+    def __init__(self, except_hook=None):
+        super().__init__()
+        if except_hook is not None:
+            except_hook.sig_except_caught.connect(self._handle_except)
 
         self.setWindowTitle(__namever__)
         self.setWindowIcon(icons.get_icon('master'))
@@ -251,6 +254,35 @@ class MainWindow(QMainWindow):
         hexstate = qbytearray_to_hexstate(self._splitter.saveState())
         CONF.set('main', 'splitter/state', hexstate)
 
+    # ---- Handlers
+    def _handle_except(self, log_msg):
+        """
+        Handle raised exceptions that have not been handled properly
+        internally and need to be reported for bug fixing.
+        """
+        from gwhat.widgets.dialogs import ExceptDialog
+        except_dialog = ExceptDialog(log_msg)
+        except_dialog.exec_()
+
+
+class ExceptHook(QObject):
+    """
+    A Qt object to caught exceptions and emit a formatted string of the error.
+    """
+    sig_except_caught = Signal(str)
+
+    def __init__(self):
+        super().__init__()
+        sys.excepthook = self.excepthook
+
+    def excepthook(self, exc_type, exc_value, exc_traceback):
+        """Handle uncaught exceptions."""
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        if not issubclass(exc_type, SystemExit):
+            log_msg = ''.join(traceback.format_exception(
+                exc_type, exc_value, exc_traceback))
+            self.sig_except_caught.emit(log_msg)
+
 
 def except_hook(cls, exception, traceback):
     """
@@ -265,6 +297,7 @@ def except_hook(cls, exception, traceback):
 
 if __name__ == '__main__':
     sys.excepthook = except_hook
-    main = MainWindow()
+    except_hook = ExceptHook()
+    main = MainWindow(except_hook)
     main.show()
     sys.exit(app.exec_())
