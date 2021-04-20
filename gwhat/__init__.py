@@ -59,6 +59,7 @@ __appname__ = 'GWHAT'
 __namever__ = __appname__ + " " + __version__
 __date__ = '07/10/2020'
 __project_url__ = "https://github.com/jnsebgosselin/gwhat"
+__issues_url__ = __project_url__ + "/issues"
 __releases_url__ = __project_url__ + "/releases"
 __releases_api__ = "https://api.github.com/repos/jnsebgosselin/gwhat/releases"
 
