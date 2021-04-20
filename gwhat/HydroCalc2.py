@@ -554,6 +554,12 @@ class WLCalc(QWidget, SaveFileMixin):
         """Close this groundwater level calc window."""
         CONF.set('hydrocalc', 'current_tool_index',
                  self.tools_tabwidget.currentIndex())
+
+        CONF.set('hydrocalc', 'show_mrc', self.btn_show_mrc.value())
+        CONF.set('hydrocalc', 'show_weather', self.btn_show_weather.value())
+        CONF.set('hydrocalc', 'show_glue', self.btn_show_glue.value())
+        CONF.set('hydrocalc', 'show_meas_wl', self.btn_show_meas_wl.value())
+        
         self.brf_eval_widget.close()
         super().close()
 
