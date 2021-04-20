@@ -390,7 +390,7 @@ class OnOffToolButton(QToolButtonBase):
         self._icon = icons.get_icon(icon) if isinstance(icon, str) else icon
         self._icon_raised = (icons.get_icon(icon_raised) if
                              isinstance(icon_raised, str) else icon_raised)
-        super(OnOffToolButton, self).__init__(self._icon, parent)
+        super().__init__(self._icon, parent)
         self.installEventFilter(self)
         if size is not None:
             self.setIconSize(icons.get_iconsize(size))
