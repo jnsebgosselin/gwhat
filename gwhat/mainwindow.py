@@ -24,15 +24,16 @@ splash = SplashScrn()
 splash.showMessage("Starting %s..." % __namever__)
 
 # ---- Standard library imports
-import sys
 import platform
+import sys
+import traceback
 from time import ctime
 from multiprocessing import freeze_support
 
 # ---- Third party imports
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QMainWindow, QTextEdit, QSplitter,
-                             QWidget, QGridLayout, QTextBrowser)
+from qtpy.QtCore import Qt, QObject, Signal
+from qtpy.QtWidgets import (
+    QMainWindow, QTextEdit, QSplitter, QWidget, QGridLayout, QTextBrowser)
 
 # ---- Local imports
 from gwhat.config.main import CONF
