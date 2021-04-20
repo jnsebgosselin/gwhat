@@ -53,8 +53,10 @@ freeze_support()
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
+    def __init__(self, except_hook=None):
+        super().__init__()
+        if except_hook is not None:
+            except_hook.sig_except_caught.connect(self._handle_except)
 
         self.setWindowTitle(__namever__)
         self.setWindowIcon(icons.get_icon('master'))
@@ -252,6 +254,17 @@ class MainWindow(QMainWindow):
         hexstate = qbytearray_to_hexstate(self._splitter.saveState())
         CONF.set('main', 'splitter/state', hexstate)
 
+    # ---- Handlers
+    def _handle_except(self, log_msg):
+        """
+        Handle raised exceptions that have not been handled properly
+        internally and need to be reported for bug fixing.
+        """
+        from gwhat.widgets.dialogs import ExceptDialog
+        except_dialog = ExceptDialog(log_msg)
+        except_dialog.exec_()
+
+
 class ExceptHook(QObject):
     """
     A Qt object to caught exceptions and emit a formatted string of the error.
@@ -284,6 +297,7 @@ def except_hook(cls, exception, traceback):
 
 if __name__ == '__main__':
     sys.excepthook = except_hook
-    main = MainWindow()
+    except_hook = ExceptHook()
+    main = MainWindow(except_hook)
     main.show()
     sys.exit(app.exec_())
