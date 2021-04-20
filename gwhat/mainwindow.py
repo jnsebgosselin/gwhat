@@ -252,6 +252,24 @@ class MainWindow(QMainWindow):
         hexstate = qbytearray_to_hexstate(self._splitter.saveState())
         CONF.set('main', 'splitter/state', hexstate)
 
+class ExceptHook(QObject):
+    """
+    A Qt object to caught exceptions and emit a formatted string of the error.
+    """
+    sig_except_caught = Signal(str)
+
+    def __init__(self):
+        super().__init__()
+        sys.excepthook = self.excepthook
+
+    def excepthook(self, exc_type, exc_value, exc_traceback):
+        """Handle uncaught exceptions."""
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        if not issubclass(exc_type, SystemExit):
+            log_msg = ''.join(traceback.format_exception(
+                exc_type, exc_value, exc_traceback))
+            self.sig_except_caught.emit(log_msg)
+
 
 def except_hook(cls, exception, traceback):
     """
