@@ -563,7 +563,7 @@ class WLCalc(QWidget, SaveFileMixin):
         CONF.set('hydrocalc', 'show_weather', self.btn_show_weather.value())
         CONF.set('hydrocalc', 'show_glue', self.btn_show_glue.value())
         CONF.set('hydrocalc', 'show_meas_wl', self.btn_show_meas_wl.value())
-        
+
         self.brf_eval_widget.close()
         super().close()
 
