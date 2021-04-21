@@ -10,3 +10,4 @@ requests
 h5py == 2.10.*
 qtawesome
 pandas == 0.25.*
+qtpy
