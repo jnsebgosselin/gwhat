@@ -298,11 +298,11 @@ class ModelsDistplotWidget(QMainWindow):
 
     def show(self):
         """Qt method override."""
-        if self.isMinimized():
-            self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
-        else:
-            self.resize(self.size())
-            super().show()
+        if self.windowState() == Qt.WindowMinimized:
+            self.setWindowState(Qt.WindowNoState)
+        super().show()
+        self.activateWindow()
+        self.raise_()
 
 
 class ModelsDistplotCanvas(FigureCanvasQTAgg):
