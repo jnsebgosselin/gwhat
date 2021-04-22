@@ -347,7 +347,7 @@ class ModelsDistplotCursor(AxesWidget):
     def __init__(self, ax, useblit=True):
         super().__init__(ax)
         self.infotextpad = 3
-        self.infotextheight = 10
+        self.infotextheight = 11
 
         self._selected_rmse_treshold = None
         self._cleared_rmse_treshold = False
@@ -482,8 +482,10 @@ class ModelsDistplotFigure(Figure):
         self.set_facecolor('white')
         self.set_tight_layout(True)
         self.setp = {
-            'xlabel_size': 14,
-            'ylabel_size': 14,
+            'xlabel_size': 16,
+            'ylabel_size': 16,
+            'xtickslabel_size': 12,
+            'ytickslabel_size': 12,
             'left_margin': None,
             'right_margin': None,
             'top_margin': None,
@@ -506,6 +508,12 @@ class ModelsDistplotFigure(Figure):
         self.ax0.patch.set_visible(False)
         for axis in ['top', 'bottom', 'left', 'right']:
             self.ax0.spines[axis].set_linewidth(0.75)
+
+        # Setup axe tick parameters.
+        self.ax0.tick_params(
+            axis='x', which='major', labelsize=self.setp['xtickslabel_size'])
+        self.ax0.tick_params(
+            axis='y', which='major', labelsize=self.setp['ytickslabel_size'])
 
         # Setup axes labels.
         self.ax0.set_xlabel(
