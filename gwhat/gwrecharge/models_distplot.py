@@ -8,6 +8,7 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard library imports
+import io
 import os
 import os.path as osp
 
@@ -19,18 +20,19 @@ from matplotlib.figure import Figure
 from matplotlib.widgets import AxesWidget
 from matplotlib.transforms import ScaledTranslation
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import pyqtSlot as QSlot
-from PyQt5.QtCore import pyqtSignal as Signal
-from PyQt5.QtWidgets import (
+from qtpy.QtGui import QImage
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QDoubleSpinBox,
-    QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
+    QFileDialog, QLabel, QMessageBox, QScrollArea, QScrollBar,
     QSpinBox, QTabWidget, QWidget, QStyle, QFrame, QMainWindow,
     QGroupBox, QToolBar, QDoubleSpinBox)
 
 
 # ---- Local imports
 from gwhat.utils.icons import get_icon
+from gwhat.utils.qthelpers import create_toolbutton
+
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 LOCS = ['left', 'top', 'right', 'bottom']
@@ -144,6 +146,14 @@ class ModelsDistplotWidget(QMainWindow):
         toolbar.setStyleSheet(
             "QToolBar {spacing:1px; padding: 5px;}")
         self.addToolBar(Qt.TopToolBarArea, toolbar)
+
+        self.btn_copy_to_clipboard = create_toolbutton(
+            self, icon='copy_clipboard',
+            text="Copy",
+            tip="Put a copy of the figure on the Clipboard.",
+            triggered=self.figcanvas.copy_to_clipboard,
+            shortcut='Ctrl+C')
+        toolbar.addWidget(self.btn_copy_to_clipboard)
 
         # Setup the bins widget.
         self.bins_sbox = QDoubleSpinBox()
@@ -340,6 +350,13 @@ class ModelsDistplotCanvas(FigureCanvasQTAgg):
         """Set the value of the RMSE treshold in the figure cursor."""
         if self.figure.cursor:
             self.figure.cursor.set_rmse_treshold(rmse_treshold)
+
+    def copy_to_clipboard(self):
+        """Put a copy of the figure on the clipboard."""
+        buf = io.BytesIO()
+        self.figure.savefig(buf, dpi=300)
+        QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
+        buf.close()
 
 
 class ModelsDistplotCursor(AxesWidget):
