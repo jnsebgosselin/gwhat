@@ -18,6 +18,7 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from matplotlib.widgets import AxesWidget
+from matplotlib.ticker import MaxNLocator
 from matplotlib.transforms import ScaledTranslation
 
 from qtpy.QtGui import QImage
@@ -531,6 +532,7 @@ class ModelsDistplotFigure(Figure):
             axis='x', which='major', labelsize=self.setp['xtickslabel_size'])
         self.ax0.tick_params(
             axis='y', which='major', labelsize=self.setp['ytickslabel_size'])
+        self.ax0.yaxis.set_major_locator(MaxNLocator(integer=True))
 
         # Setup axes labels.
         self.ax0.set_xlabel(
