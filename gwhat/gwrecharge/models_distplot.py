@@ -546,7 +546,7 @@ class ModelsDistplotFigure(Figure):
         """Setup the margins of the figure."""
         if self.ax0 is None:
             return
-        figborderpad = self.setp['figure_border']
+        figborderpad = self.setp['figure_border'] / 72 * self.dpi
 
         try:
             # This is required when saving the figure in some format like
@@ -574,7 +574,7 @@ class ModelsDistplotFigure(Figure):
             yaxis_width = axbbox.x0 - bbox_yaxis_left.x0
             ylabel_width = bbox_yaxis_label.width + self.ylabelpad
             left_margin = (
-                yaxis_width + ylabel_width + figborderpad
+                yaxis_width + ylabel_width + (figborderpad)
                 ) / figbbox.width
 
         # Calculate right margin width.
