@@ -981,7 +981,8 @@ class WLCalc(QWidget, SaveFileMixin):
         fwidth = self.fig.get_figwidth()
 
         left_margin = 1 / fwidth
-        right_margin = 1 / fwidth
+        right_margin = (
+            1 / fwidth if self.btn_show_weather.value() else 0.2 / fwidth)
         bottom_margin = 0.75 / fheight
         top_margin = 0.2 / fheight
 
@@ -1211,7 +1212,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 time_bar, 0, ptot_bar, color=[165/255, 165/255, 165/255],
                 zorder=50, linestyle='None', alpha=0.65, lw=0)
             self.h_etp.set_data(time_bin, etp_bin)
-        self.draw()
+        self.setup_ax_margins()
 
     def draw_mrc(self):
         """
