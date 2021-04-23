@@ -8,6 +8,7 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard library imports
+import io
 from time import perf_counter
 import csv
 import os
@@ -17,6 +18,7 @@ import datetime
 # ---- Third party imports
 import numpy as np
 import pandas as pd
+from qtpy.QtGui import QImage
 from PyQt5.QtCore import Qt, QObject
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -242,6 +244,14 @@ class WLCalc(QWidget, SaveFileMixin):
     def _setup_toolbar(self):
         """Setup the main toolbar of the water level calc tool."""
 
+        # Save and copy.
+        self.btn_copy_to_clipboard = create_toolbutton(
+            self, icon='copy_clipboard',
+            text="Copy",
+            tip="Put a copy of the figure on the Clipboard.",
+            triggered=self.copy_to_clipboard,
+            shortcut='Ctrl+C')
+
         # ---- Navigate data.
         self.toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self.toolbar.hide()
@@ -350,7 +360,8 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Setup the layout.
         toolbar = QToolBar()
-        for btn in [self.btn_home, self.btn_fit_waterlevels, self.btn_pan,
+        for btn in [self.btn_copy_to_clipboard, None,
+                    self.btn_home, self.btn_fit_waterlevels, self.btn_pan,
                     self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
@@ -573,6 +584,13 @@ class WLCalc(QWidget, SaveFileMixin):
         # restart.
         self.plot_brfperiod()
         super().showEvent(event)
+
+    def copy_to_clipboard(self):
+        """Put a copy of the figure on the clipboard."""
+        buf = io.BytesIO()
+        self.fig.savefig(buf, dpi=300)
+        QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
+        buf.close()
 
     # ---- MRC handlers
     def add_mrcperiod(self, xdata):
@@ -963,7 +981,8 @@ class WLCalc(QWidget, SaveFileMixin):
         fwidth = self.fig.get_figwidth()
 
         left_margin = 1 / fwidth
-        right_margin = 1 / fwidth
+        right_margin = (
+            1 / fwidth if self.btn_show_weather.value() else 0.2 / fwidth)
         bottom_margin = 0.75 / fheight
         top_margin = 0.2 / fheight
 
@@ -1193,7 +1212,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 time_bar, 0, ptot_bar, color=[165/255, 165/255, 165/255],
                 zorder=50, linestyle='None', alpha=0.65, lw=0)
             self.h_etp.set_data(time_bin, etp_bin)
-        self.draw()
+        self.setup_ax_margins()
 
     def draw_mrc(self):
         """
