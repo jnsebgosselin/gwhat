@@ -338,6 +338,9 @@ class ModelsDistplotCanvas(FigureCanvasQTAgg):
         self.figure.plot(glue_data)
 
     def draw(self):
+        """
+        Override matplotlib method to handle the blitting of the cursors.
+        """
         if self.figure.cursor is not None:
             self.figure.cursor.clear()
 
