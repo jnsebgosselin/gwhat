@@ -188,10 +188,6 @@ class WLCalc(QWidget, SaveFileMixin):
             [], [], clip_on=True, ls='none', zorder=10, marker='+', ms=8,
             mec='red', mew=2, mfc='red')
 
-        # Predicted water levels.
-        self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
-                                   ls='-', zorder=10, marker='None')
-
         # Recession.
         self._mrc_plt, = ax0.plot([], [], color='red', clip_on=True,
                                   zorder=15, marker='None', linestyle='--')
@@ -940,8 +936,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Plot observed and predicted water levels
         self._draw_obs_wl()
-        self.plt_wlpre.set_data([], [])
-
         self.draw_meas_wl()
         self.draw_glue_wl()
         self.draw_weather()
@@ -1041,34 +1035,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.draw_mrc()
         self.draw_weather()
         self.draw_glue_wl()
-        self.draw()
-
-    def plot_synth_hydro(self, parameters):
-        print(parameters)
-        Cro = parameters['Cro']
-        RASmax = parameters['RASmax']
-        Sy = parameters['Sy']
-
-        # ----------------------------------------------- compute recharge ----
-
-        rechg, _, _, _, _ = \
-            self.synth_hydrograph.surf_water_budget(Cro, RASmax)
-
-        # ------------------------------------------- compute water levels ----
-
-        # We introduce the time lag here.
-        tweatr = self.wxdset.get_xldates() + 0
-        twlvl = self.time
-
-        ts = np.where(twlvl[0] == tweatr)[0][0]
-        te = np.where(twlvl[-1] == tweatr)[0][0]
-
-        WLpre = self.synth_hydrograph.calc_hydrograph(rechg[ts:te], Sy)
-
-        # ---------------------------------------------- plot water levels ----
-
-        self.plt_wlpre.set_data(self.synth_hydrograph.DATE, WLpre/1000.)
-
         self.draw()
 
     def setup_wl_style(self):
