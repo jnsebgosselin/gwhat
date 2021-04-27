@@ -226,6 +226,7 @@ class TextOptPanel(SetpPanelBase):
             spinbox.setMinimum(1)
             spinbox.setAlignment(Qt.AlignCenter)
             spinbox.setKeyboardTracking(False)
+            spinbox.setSuffix('  pt')
             spinbox.valueChanged.connect(self._axes_labels_changed)
             return spinbox
 
