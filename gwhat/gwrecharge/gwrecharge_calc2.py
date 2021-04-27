@@ -123,7 +123,7 @@ class RechgEvalWorker(QObject):
         self.wlobs = self.wlobs[istart:iend]
 
         if len(self.twlvl) == 0:
-            # The wldset and wxdset are not mutually exclusive.
+            # The wldset and wxdset are mutually exclusive.
             error = ("Groundwater recharge cannot be computed because the"
                      " water level and weather datasets are mutually"
                      " exclusive in time.")
@@ -429,7 +429,7 @@ class RechgEvalWorker(QObject):
         wlobs = self.wlobs.copy() * 1000
         if np.isnan(wlobs[0]) or np.isnan(wlobs[-1]):
             raise ValueError('The observed water level time series either '
-                             'starts or ends with a nann value.')
+                             'starts or ends with a nan value.')
         if nscheme == 'backward':
             wlpre = np.zeros(len(RECHG)+1) * np.nan
             wlpre[0] = wlobs[-1]
