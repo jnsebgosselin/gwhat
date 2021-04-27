@@ -220,47 +220,21 @@ class TextOptPanel(SetpPanelBase):
         Setup a group box with widgets that allows to set the figure
         text properties.
         """
-        self._spb_xlabelsize = QSpinBox()
-        self._spb_xlabelsize.setSingleStep(1)
-        self._spb_xlabelsize.setMinimum(1)
-        self._spb_xlabelsize.setAlignment(Qt.AlignCenter)
-        self._spb_xlabelsize.setKeyboardTracking(False)
-        self._spb_xlabelsize.valueChanged.connect(self._axes_labels_changed)
+        def create_textsize_spinbox():
+            spinbox = QSpinBox()
+            spinbox.setSingleStep(1)
+            spinbox.setMinimum(1)
+            spinbox.setAlignment(Qt.AlignCenter)
+            spinbox.setKeyboardTracking(False)
+            spinbox.valueChanged.connect(self._axes_labels_changed)
+            return spinbox
 
-        self._spb_xticksize = QSpinBox()
-        self._spb_xticksize.setSingleStep(1)
-        self._spb_xticksize.setMinimum(1)
-        self._spb_xticksize.setAlignment(Qt.AlignCenter)
-        self._spb_xticksize.setKeyboardTracking(False)
-        self._spb_xticksize.valueChanged.connect(self._ticks_changed)
-
-        self._spb_ylabelsize = QSpinBox()
-        self._spb_ylabelsize.setSingleStep(1)
-        self._spb_ylabelsize.setMinimum(1)
-        self._spb_ylabelsize.setAlignment(Qt.AlignCenter)
-        self._spb_ylabelsize.setKeyboardTracking(False)
-        self._spb_ylabelsize.valueChanged.connect(self._axes_labels_changed)
-
-        self._spb_yticksize = QSpinBox()
-        self._spb_yticksize.setSingleStep(1)
-        self._spb_yticksize.setMinimum(1)
-        self._spb_yticksize.setAlignment(Qt.AlignCenter)
-        self._spb_yticksize.setKeyboardTracking(False)
-        self._spb_yticksize.valueChanged.connect(self._ticks_changed)
-
-        self._spb_legendsize = QSpinBox()
-        self._spb_legendsize.setSingleStep(1)
-        self._spb_legendsize.setMinimum(1)
-        self._spb_legendsize.setAlignment(Qt.AlignCenter)
-        self._spb_legendsize.setKeyboardTracking(False)
-        self._spb_legendsize.valueChanged.connect(self._legend_changed)
-
-        self._spb_notesize = QSpinBox()
-        self._spb_notesize.setSingleStep(1)
-        self._spb_notesize.setMinimum(1)
-        self._spb_notesize.setAlignment(Qt.AlignCenter)
-        self._spb_notesize.setKeyboardTracking(False)
-        self._spb_notesize.valueChanged.connect(self._notes_changed)
+        self._spb_xlabelsize = create_textsize_spinbox()
+        self._spb_xticksize = create_textsize_spinbox()
+        self._spb_ylabelsize = create_textsize_spinbox()
+        self._spb_yticksize = create_textsize_spinbox()
+        self._spb_legendsize = create_textsize_spinbox()
+        self._spb_notesize = create_textsize_spinbox()
 
         grpbox = QGroupBox("Text Properties :")
         layout = QGridLayout(grpbox)
