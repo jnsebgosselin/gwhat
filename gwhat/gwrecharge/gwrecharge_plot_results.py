@@ -221,9 +221,10 @@ class TextOptPanel(SetpPanelBase):
         text properties.
         """
         def create_textsize_spinbox():
-            spinbox = QSpinBox()
+            spinbox = QDoubleSpinBox()
             spinbox.setSingleStep(1)
             spinbox.setMinimum(1)
+            spinbox.setDecimals(0)
             spinbox.setAlignment(Qt.AlignCenter)
             spinbox.setKeyboardTracking(False)
             spinbox.setSuffix('  pt')
