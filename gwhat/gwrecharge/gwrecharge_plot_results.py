@@ -1426,23 +1426,29 @@ class FigAvgYearlyBudget(FigCanvasBase):
         self.setp['ylabel size'] = 16
 
     def __plot__(self, glue_df):
-        avg_yrly = {
-            'evapo': np.nanmean(glue_df['yearly budget']['evapo']),
-            'runoff': np.nanmean(glue_df['yearly budget']['runoff']),
-            'recharge': np.nanmean(glue_df['yearly budget']['recharge']),
-            'precip': np.nanmean(glue_df['yearly budget']['precip'])}
+        glue50_avg_yrly = {
+            'evapo': np.nanmean(
+                glue_df['hydrol yearly budget']['evapo'][:, 2]),
+            'runoff': np.nanmean(
+                glue_df['hydrol yearly budget']['runoff'][:, 2]),
+            'recharge': np.nanmean(
+                glue_df['hydrol yearly budget']['recharge'][:, 2]),
+            'precip': np.nanmean(glue_df['hydrol yearly budget']['precip'])
+            }
 
         # Plot the results.
         offset = mpl.transforms.ScaledTranslation(
             0, 3/72, self.figure.dpi_scale_trans)
         self.bar_handles = []
         self.notes = []
-        for i, varname in enumerate(avg_yrly.keys()):
-            l, = self.ax0.bar(i+1, avg_yrly[varname], 0.65, align='center',
-                              color=COLORS[varname])
+        for i, varname in enumerate(glue50_avg_yrly.keys()):
+            l, = self.ax0.bar(
+                i + 1, glue50_avg_yrly[varname], 0.65, align='center',
+                color=COLORS[varname])
             self.bar_handles.append(l)
             self.notes.append(self.ax0.text(
-                i+1, avg_yrly[varname], "%d" % avg_yrly[varname],
+                i + 1, glue50_avg_yrly[varname],
+                "%d" % glue50_avg_yrly[varname],
                 ha='center', va='bottom',
                 transform=self.ax0.transData + offset,
                 fontsize=self.setp['notes size']))
@@ -1452,8 +1458,8 @@ class FigAvgYearlyBudget(FigCanvasBase):
             self.setp['ymin'] = 0
         if 'ymax' not in self.setp.keys():
             self.setp['ymax'] = np.max([
-                avg_yrly['recharge'], avg_yrly['evapo'],
-                avg_yrly['runoff'], avg_yrly['precip']
+                glue50_avg_yrly['recharge'], glue50_avg_yrly['evapo'],
+                glue50_avg_yrly['runoff'], glue50_avg_yrly['precip']
                 ]) + 100
         if 'yscl' not in self.setp.keys():
             self.setp['yscl'] = 250
@@ -1535,7 +1541,7 @@ class FigAvgMonthlyBudget(FigCanvasBase):
 
     def __plot__(self, glue_df):
         """Plot the results."""
-        avg_mly = {
+        glue50_avg_mly = {
             'evapo': np.nanmean(
                 glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
             'runoff': np.nanmean(
@@ -1547,9 +1553,9 @@ class FigAvgMonthlyBudget(FigCanvasBase):
 
         # Plot the results.
         months = np.arange(1, 13)
-        for i, varname in enumerate(avg_mly.keys()):
+        for i, varname in enumerate(glue50_avg_mly.keys()):
             hl, = self.ax0.plot(
-                months, avg_mly[varname], marker='o', mec='white',
+                months, glue50_avg_mly[varname], marker='o', mec='white',
                 clip_on=False, lw=2, color=COLORS[varname], zorder=3)
             self.lg_handles.append(hl)
 
@@ -1557,7 +1563,8 @@ class FigAvgMonthlyBudget(FigCanvasBase):
         if 'ymin' not in self.setp.keys():
             self.setp['ymin'] = 0
         if 'ymax' not in self.setp.keys():
-            self.setp['ymax'] = np.max([x for x in avg_mly.values()]) + 10
+            self.setp['ymax'] = np.max(
+                [x for x in glue50_avg_mly.values()]) + 10
         if 'yscl' not in self.setp.keys():
             self.setp['yscl'] = 50
         if 'yscl minor' not in self.setp.keys():
@@ -1629,8 +1636,6 @@ class FigAvgMonthlyBudget(FigCanvasBase):
             ncol=4, mode="expand", fontsize=self.setp['legend size'])
         legend.draw_frame(False)
 
-
-# %% ---- if __name__ == '__main__'
 
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
