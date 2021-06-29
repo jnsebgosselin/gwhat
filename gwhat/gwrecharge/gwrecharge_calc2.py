@@ -111,8 +111,19 @@ class RechgEvalWorker(QObject):
         self.twlvl, self.wlobs = clip_time_series(
             self.tweatr, self.twlvl, self.wlobs)
 
+        # We need to remove nan values at the start and the end of the series
+        # to avoid problems when computing synthetic hydrographs.
+        for istart in range(len(self.wlobs)):
+            if not np.isnan(self.wlobs[istart]):
+                break
+        for iend in reversed(range(len(self.wlobs))):
+            if not np.isnan(self.wlobs[iend]):
+                break
+        self.twlvl = self.twlvl[istart:iend]
+        self.wlobs = self.wlobs[istart:iend]
+
         if len(self.twlvl) == 0:
-            # The wldset and wxdset are not mutually exclusive.
+            # The wldset and wxdset are mutually exclusive.
             error = ("Groundwater recharge cannot be computed because the"
                      " water level and weather datasets are mutually"
                      " exclusive in time.")
@@ -137,17 +148,7 @@ class RechgEvalWorker(QObject):
             indx = np.where(t == td[i])[0]
             if len(indx) > 0:
                 hd[i] = h[indx[-1]]
-
-        # We need to remove nan values at the start and the end of the series
-        # to avoid problems when computing synthetic hydrographs.
-        for istart in range(len(hd)):
-            if not np.isnan(hd[istart]):
-                break
-        for iend in reversed(range(len(hd))):
-            if not np.isnan(hd[iend]):
-                break
-
-        return td[istart:iend], hd[istart:iend]
+        return td, hd
 
     def produce_params_combinations(self):
         """
@@ -428,7 +429,7 @@ class RechgEvalWorker(QObject):
         wlobs = self.wlobs.copy() * 1000
         if np.isnan(wlobs[0]) or np.isnan(wlobs[-1]):
             raise ValueError('The observed water level time series either '
-                             'starts or ends with a nann value.')
+                             'starts or ends with a nan value.')
         if nscheme == 'backward':
             wlpre = np.zeros(len(RECHG)+1) * np.nan
             wlpre[0] = wlobs[-1]
