@@ -101,9 +101,9 @@ class FigureStackManager(QWidget):
 
         self.stack = QTabWidget()
         self.stack.addTab(fig_rechg_glue, 'Recharge')
-        self.stack.addTab(fig_watbudg_glue, 'Yearly Budget')
-        self.stack.addTab(fig_avg_yearly_budg, 'Yearly Avg. Budget')
-        self.stack.addTab(fig_avg_monthly_budg, 'Monthly Avg. Budget')
+        self.stack.addTab(fig_watbudg_glue, 'Yearly Budget (GLUE50)')
+        self.stack.addTab(fig_avg_yearly_budg, 'Yearly Avg. Budget (GLUE50)')
+        self.stack.addTab(fig_avg_monthly_budg, 'Monthly Avg. Budget (GLUE50)')
         self.stack.currentChanged.connect(self.plot_results)
 
     def set_gluedf(self, gluedf):
