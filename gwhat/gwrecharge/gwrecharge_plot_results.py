@@ -14,6 +14,7 @@ import os.path as osp
 import datetime
 
 # ---- Imports: third parties
+import pandas as pd
 from xlrd.xldate import xldate_from_date_tuple
 import numpy as np
 import matplotlib as mpl
@@ -1310,18 +1311,22 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # Draw the labels anew.
         year_range = np.arange(
-            self.setp['xmin'], self.setp['xmax']+1).astype(int)
+            self.setp['xmin'], self.setp['xmax'] + 1).astype(int)
         xlabels = ["'%s - '%s" % (str(y)[-2:], str(y+1)[-2:])
                    for y in year_range]
 
-        xt = self._get_xlabel_xt(self.setp['xticks size'], 45)
         offset = mpl.transforms.ScaledTranslation(
-            xt, -self._xticklabels_yt/72, self.figure.dpi_scale_trans)
+            self._get_xlabel_xt(self.setp['xticks size'], 45),
+            -self._xticklabels_yt/72,
+            self.figure.dpi_scale_trans)
+        trans = mpl.transforms.blended_transform_factory(
+            self.ax0.transData + offset, self.ax0.transAxes + offset)
         for i in range(len(year_range)):
             self.xticklabels.append(self.ax0.text(
-                year_range[i], self.setp['ymin'], xlabels[i], rotation=45,
+                year_range[i], 0, xlabels[i], rotation=45,
                 va='top', ha='right', fontsize=self.setp['xticks size'],
-                transform=self.ax0.transData + offset))
+                transform=trans
+                ))
         self.setup_axes_labels()
 
     def setup_yticklabels(self):
