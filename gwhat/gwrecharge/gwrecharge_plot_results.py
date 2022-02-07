@@ -915,8 +915,10 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
     def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
         """Set the limits of the yaxis to the provided values."""
-        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
-        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
+        self.setp['ymin'] = ymin
+        self.setp['ymax'] = ymax
+        self.setp['yscl'] = yscl
+        self.setp['yscl minor'] = yscl_minor
         if self.ax0 is not None:
             self.setup_ylimits()
             self.sig_fig_changed.emit(self.figure)
@@ -1275,16 +1277,16 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         # Plot results.
 
         yerr = [glue50_yr-glue05_yr, glue95_yr-glue50_yr]
-        self.g0595 = ax0.errorbar(year_range, glue50_yr, yerr=yerr,
-                                  fmt='none', capthick=1, capsize=4,
-                                  ecolor='0', elinewidth=1, zorder=200)
+        self.g0595 = ax0.errorbar(
+            year_range, glue50_yr, yerr=yerr, fmt='none', capthick=1,
+            capsize=4, ecolor='0', elinewidth=1, zorder=200)
 
-        self.g2575 = ax0.fill_between(year_range, glue25_yr, glue75_yr,
-                                      color="#FFCCCC")
 
         # Setup axes labels.
         self.setup_yticklabels()
         self.setup_xticklabels()
+        self.g2575 = ax0.fill_between(
+            year_range, glue25_yr, glue75_yr, color="#FFCCCC")
 
         # Setup legend.
         self.setup_legend()
@@ -1331,8 +1333,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def set_xlimits(self, xmin, xmax):
         """Set the limits of the xaxis to the provided values."""
-        self.setp['xmin'] = xmin
-        self.setp['xmax'] = xmax
+        self.setp['xmin'] = int(xmin)
+        self.setp['xmax'] = int(xmax)
         if self.ax0 is not None:
             self.setup_xticklabels()
             self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
