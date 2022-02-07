@@ -1331,7 +1331,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def set_xlimits(self, xmin, xmax):
         """Set the limits of the xaxis to the provided values."""
-        self.setp['xmin'], self.setp['xmax'] = xmin, xmax
+        self.setp['xmin'] = xmin
+        self.setp['xmax'] = xmax
         if self.ax0 is not None:
             self.setup_xticklabels()
             self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
