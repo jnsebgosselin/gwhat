@@ -1221,8 +1221,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     FIGNAME = "gw_rechg_glue"
 
-    def __init__(self, setp={}):
-        super().__init__(setp)
+    def __init__(self, setp=None):
+        super().__init__({} if setp is None else setp)
         self._xticklabels_yt = 4
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
