@@ -1227,6 +1227,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
 
+        self.glue_rechg_yr = None
+
     def __plot__(self, glue_data):
         ax0 = self.ax0
         self.ax0.set_axisbelow(True)
@@ -1370,22 +1372,30 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def refresh_yearly_avg_legend_text(self):
         """Set the text and position of for the yearly averages results."""
+        glue_year_rechg_avg = self.glue_rechg_yr[
+            (self.glue_rechg_yr.index >= self.setp['xmin']) &
+            (self.glue_rechg_yr.index <= self.setp['xmax'])
+            ].mean().values.tolist()
         if self.setp['language'] == 'french':
-            text = ("Recharge annuelle moyenne :\n"
-                    "(GLUE 5) %d mm/a ; "
-                    "(GLUE 25) %d mm/a ; "
-                    "(GLUE 50) %d mm/a ; "
-                    "(GLUE 75) %d mm/a ; "
-                    "(GLUE 95) %d mm/a"
-                    ) % self.glue_year_rechg_avg
+            text = ("Recharge annuelle moyenne (01 oct. {} au 30 sep. {}):\n"
+                    "(GLUE 5){:0.0f} mm/a ; "
+                    "(GLUE 25) {:0.0f} mm/a ; "
+                    "(GLUE 50) {:0.0f} mm/a ; "
+                    "(GLUE 75) {:0.0f} mm/a ; "
+                    "(GLUE 95) {:0.0f} mm/a"
+                    ).format(self.setp['xmin'],
+                             self.setp['xmax'] + 1,
+                             *glue_year_rechg_avg)
         else:
-            text = ("Mean annual recharge :\n"
-                    "(GLUE 5) %d mm/y ; "
-                    "(GLUE 25) %d mm/y ; "
-                    "(GLUE 50) %d mm/y ; "
-                    "(GLUE 75) %d mm/y ; "
-                    "(GLUE 95) %d mm/y"
-                    ) % self.glue_year_rechg_avg
+            text = ("Mean annual recharge (01 Oct {} to 30 Sep {}):\n"
+                    "(GLUE 5) {:0.0f} mm/y ; "
+                    "(GLUE 25) {:0.0f} mm/y ; "
+                    "(GLUE 50) {:0.0f} mm/y ; "
+                    "(GLUE 75) {:0.0f} mm/y ; "
+                    "(GLUE 95) {:0.0f} mm/y"
+                    ).format(self.setp['xmin'],
+                             self.setp['xmax'] + 1,
+                             *glue_year_rechg_avg)
         self.txt_yearly_avg.set_text(text)
 
     def setup_legend(self,):
