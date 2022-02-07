@@ -1367,7 +1367,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
             5/72, 5/72, self.figure.dpi_scale_trans)
         self.txt_yearly_avg = self.ax0.text(
             0, 0, '', va='bottom', ha='left', fontsize=self.setp['notes size'],
-            transform=self.ax0.transAxes + padding)
+            transform=self.ax0.transAxes + padding,
+            linespacing=1.5)
         self.notes.append(self.txt_yearly_avg)
 
     def refresh_yearly_avg_legend_text(self):
