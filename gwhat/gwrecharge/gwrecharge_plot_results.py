@@ -1240,14 +1240,12 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.glue_year_rechg_avg = tuple(
             np.mean(glue_rechg_yr[:, i]) for i in range(5))
 
-        # ---- Xticks format
-
+        # Setup xticks.
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out', length=4)
         ax0.set_xticks(year_range)
 
-        # ----- ticks format
-
+        # Setup yticks.
         ymax0 = np.ceil(np.max(glue95_yr)/10)*10 + 50
         ymin0 = 0
         scale_yticks = 50 if np.max(glue95_yr) < 250 else 250
@@ -1257,8 +1255,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         ax0.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
                  linewidth=0.5, dashes=[0.5, 5])
 
-        # ---- Axis range
-
+        # Setup axis range.
         self.setp['xmin'] = min(year_range)
         self.setp['xmax'] = max(year_range)
         self.setp['ymin'] = ymin0
@@ -1270,13 +1267,12 @@ class FigYearlyRechgGLUE(FigCanvasBase):
                          self.setp['yscl'], self.setp['yscl minor'])
         self.set_xlimits(self.setp['xmin'], self.setp['xmax'])
 
-        # ---- Plot results
-
         ax0.plot(year_range, glue50_yr, ls='-', lw=1, marker=None,
                  color='black', zorder=300)
         self.g50, = ax0.plot(year_range, glue50_yr, ls='none', marker='o',
                              color='black', mew=1, mfc='White', mec='black',
                              ms=6, zorder=300)
+        # Plot results.
 
         yerr = [glue50_yr-glue05_yr, glue95_yr-glue50_yr]
         self.g0595 = ax0.errorbar(year_range, glue50_yr, yerr=yerr,
@@ -1286,13 +1282,11 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.g2575 = ax0.fill_between(year_range, glue25_yr, glue75_yr,
                                       color="#FFCCCC")
 
-        # ---- Axes labels
-
+        # Setup axes labels.
         self.setup_yticklabels()
         self.setup_xticklabels()
 
-        # ----- Legend
-
+        # Setup legend.
         self.setup_legend()
         self.setup_yearly_avg_legend()
 
@@ -1629,8 +1623,6 @@ class FigAvgMonthlyBudget(FigCanvasBase):
             ncol=4, mode="expand", fontsize=self.setp['legend size'])
         legend.draw_frame(False)
 
-
-# %% ---- if __name__ == '__main__'
 
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
