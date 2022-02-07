@@ -483,14 +483,14 @@ class YAxisOptPanel(SetpPanelBase):
         self._spb_ymin = QDoubleSpinBox()
         self._spb_ymin.setDecimals(0)
         self._spb_ymin.setSingleStep(50)
-        self._spb_ymin.setRange(0, 10000)
+        self._spb_ymin.setRange(-1000, 10000)
         self._spb_ymin.setKeyboardTracking(False)
         self._spb_ymin.valueChanged.connect(self._yaxis_changed)
 
         self._spb_ymax = QDoubleSpinBox()
         self._spb_ymax.setDecimals(0)
         self._spb_ymax.setSingleStep(50)
-        self._spb_ymax.setRange(0, 10000)
+        self._spb_ymax.setRange(-1000, 10000)
         self._spb_ymax.setKeyboardTracking(False)
         self._spb_ymax.valueChanged.connect(self._yaxis_changed)
 
