@@ -692,7 +692,8 @@ class WLCalc(QWidget, SaveFileMixin):
                 "Well_{}_mrc_results.csv".format(self.wldset['Well']))
 
         filename, filetype = QFileDialog.getSaveFileName(
-            "Save MRC results", filename, 'Text CSV (*.csv)')
+            self, "Save MRC results", filename, 'Text CSV (*.csv)')
+
         if filename:
             QApplication.setOverrideCursor(Qt.WaitCursor)
             QApplication.processEvents()
