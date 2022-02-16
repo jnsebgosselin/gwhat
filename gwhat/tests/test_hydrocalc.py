@@ -120,8 +120,8 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
     hydrocalc.btn_MRCalc_isClicked()
 
     mrc_data = hydrocalc.wldset.get_mrc()
-    assert abs(mrc_data['params'][0] - 0.06950756951801638) < 10**-5
-    assert abs(mrc_data['params'][1] - 0.2552602547974224) < 10**-5
+    assert abs(mrc_data['params'][0] - 0.07084190743598762) < 10**-5
+    assert abs(mrc_data['params'][1] - 0.25980409812537747) < 10**-5
     assert len(mrc_data['peak_indx']) == 7
     assert len(mrc_data['recess']) == 343
     assert len(mrc_data['time']) == 343
