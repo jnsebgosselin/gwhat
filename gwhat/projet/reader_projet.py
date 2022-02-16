@@ -10,6 +10,7 @@
 from __future__ import division, unicode_literals
 
 # ---- Standard library imports
+import csv
 import os
 import os.path as osp
 from shutil import copyfile
@@ -556,33 +557,41 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
     def save_mrc_tofile(self, filename):
         """Save the master recession curve results to a file."""
-        fcontent = []
+        if not filename.lower().endswith('.csv'):
+            filename += '.csv'
 
-        # Format the file header.
+        # Prepare the file header.
+        fheader = []
         keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
                 'Elevation', 'Municipality']
         for key in keys:
-            fcontent.append([key, self[key]])
+            fheader.append([key, self[key]])
 
-        # Format the mrc results summary.
         A, B = self['mrc/params']
-        fcontent.extend([
+        fheader.extend([
             [''],
-            ['dh/dt(mm/d) = -%f*h(mbgs) + %f' % (A, B)],
-            ['A (1/d)', A],
-            ['B (m/d)', B],
+            ['∂h/∂t = -A * h + B'],
+            ['A (1/day)', A],
+            ['B (m/day)', B],
             ['RMSE (m)', calcul_rmse(self['WL'], self['mrc/recess'])],
             [''],
             ['Observed and Predicted Water Level'],
-            ['Time', 'hrecess(mbgs)', 'hobs(mbgs)']
             ])
 
-        # Format the observed and simulated data.
-        data = np.vstack([self['Time'], self['WL'], self['mrc/recess']])
-        data = nan_as_text_tolist(np.array(data).transpose())
-        fcontent.extend(data)
+        # Save the observed and simulated data to the CSV file.
+        df = pd.DataFrame(
+            np.vstack([self['WL'], self['mrc/recess']]).transpose(),
+            columns=['h_obs(mbgs)', 'h_sim(mbgs)'],
+            index=pd.to_datetime(self['Time']))
+        df.index.name = 'Time'
+        df.to_csv(filename)
 
-        save_content_to_file(filename, fcontent)
+        # Add the header to the CSV file.
+        with open(filename, 'r') as csvfile:
+            fdata = list(csv.reader(csvfile))
+        with open(filename, 'w', encoding='utf8') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', lineterminator='\n')
+            writer.writerows(fheader + fdata)
 
     # ---- GLUE data
     def glue_idnums(self):

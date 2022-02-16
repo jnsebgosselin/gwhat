@@ -25,7 +25,7 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
     QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame,
-    QMessageBox)
+    QMessageBox, QFileDialog)
 
 import matplotlib as mpl
 from matplotlib.widgets import AxesWidget
@@ -433,7 +433,7 @@ class WLCalc(QWidget, SaveFileMixin):
             icon='save',
             iconsize=get_iconsize('normal'),
             tip='Save calculated MRC to file.',
-            triggered=self.save_mrc_tofile)
+            triggered=lambda: self.save_mrc_tofile())
 
         self.btn_MRCalc = QPushButton('Compute MRC')
         self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
@@ -684,24 +684,24 @@ class WLCalc(QWidget, SaveFileMixin):
             self.btn_save_mrc.setEnabled(False)
         self.draw_mrc()
 
-    def save_mrc_tofile(self, savefilename=None):
+    def save_mrc_tofile(self, filename=None):
         """Save the master recession curve results to a file."""
-        if savefilename is None:
-            savefilename = osp.join(
+        if filename is None:
+            filename = osp.join(
                 self.dialog_dir,
-                "Well_%s_mrc_results.xlsx" % self.wldset['Well'])
+                "Well_{}_mrc_results.csv".format(self.wldset['Well']))
 
-        savefilename = self.select_savefilename(
-            "Save MRC results", savefilename, "*.xlsx;;*.xls;;*.csv")
+        filename, filetype = QFileDialog.getSaveFileName(
+            self, "Save MRC results", filename, 'Text CSV (*.csv)')
 
-        if savefilename:
+        if filename:
             QApplication.setOverrideCursor(Qt.WaitCursor)
             QApplication.processEvents()
             try:
-                self.wldset.save_mrc_tofile(savefilename)
+                self.wldset.save_mrc_tofile(filename)
             except PermissionError:
                 self.show_permission_error()
-                self.save_mrc_tofile(savefilename)
+                self.save_mrc_tofile(filename)
             QApplication.restoreOverrideCursor()
 
     def undo_mrc_period(self):
