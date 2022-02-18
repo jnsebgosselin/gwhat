@@ -212,48 +212,30 @@ def load_waterlvl_measures(filename, well):
     resource file for the specified well.
     """
     print('Loading manual water level measures for well %s...' % well, end=" ")
-    time_mes, wl_mes = np.array([]), np.array([])
     # Determine the extension of the file.
     root, ext = os.path.splitext(filename)
     exts = [ext] if ext in FILE_EXTS else FILE_EXTS
     for ext in exts:
-        filename = root+ext
-        if os.path.exists(root+ext):
+        filename = root + ext
+        if os.path.exists(root + ext):
             break
     else:
         # The file does not exists, so we generate an empty file with
         # a header.
-        print("none")
+        print("done")
         init_waterlvl_measures(os.path.dirname(root))
-        return time_mes, wl_mes
+        return np.array([]), np.array([])
 
     # Open and read the file.
+    dtypes = {'Well_ID': 'str', 'Time (days)': 'float', 'Obs. (mbgs)': 'float'}
     if ext == '.csv':
-        with open(filename, 'r') as f:
-            reader = np.array(list(csv.reader(f, delimiter=',')))
-            data = np.array(reader[1:])
-
-            well_name = np.array(data[:, 0]).astype('str')
-            time = np.array(data[:, 1]).astype('float')
-            wl = np.array(data[:, 2]).astype('float')
-
+        data = pd.read_csv(filename, dtype=dtypes)
     elif ext in ['.xlsx', '.xls']:
-        with xlrd.open_workbook(filename) as wb:
-            sheet = wb.sheet_by_index(0)
+        data = pd.read_excel(filename, dtype=dtypes)
 
-            well_name = sheet.col_values(0, start_rowx=1, end_rowx=None)
-            time = sheet.col_values(1, start_rowx=1, end_rowx=None)
-            wl = sheet.col_values(2, start_rowx=1, end_rowx=None)
-
-            well_name = np.array(well_name).astype('str')
-            time = np.array(time).astype('float')
-            wl = np.array(wl).astype('float')
-
-    if len(well_name) > 0:
-        rowx = np.where(well_name == well)[0]
-        if len(rowx) > 0:
-            wl_mes = wl[rowx]
-            time_mes = time[rowx]
+    well_data = data[data['Well_ID'] == well]
+    wl_mes = well_data['Obs. (mbgs)'].values
+    time_mes = well_data['Time (days)'].values
     print("done")
 
     return time_mes, wl_mes
