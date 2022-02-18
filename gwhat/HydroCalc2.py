@@ -660,7 +660,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 "were ∂h/∂t is the recession rate in m/day, "
                 "h is the depth to water table in mbgs, "
                 "and A and B are the coefficients of the MRC.<br><br>"
-                "Goodness of fit statistics :<br>"
+                "Goodness-of-fit statistics :<br>"
                 "RMSE = {:0.5f} m<br>"
                 "r² = {:0.5f}<br>"
                 "S = {:0.5f} m"

@@ -60,6 +60,7 @@ def predict_recession(tdeltas: np.ndarray, B: float, A: float,
 def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
     """
     Calculate the master recession curve (MRC).
+
     Parameters
     ----------
     t : np.ndarray
