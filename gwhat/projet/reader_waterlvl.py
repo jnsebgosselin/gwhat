@@ -194,14 +194,14 @@ def init_waterlvl_measures(dirname):
     if it does not already exist.
     """
     for ext in FILE_EXTS:
-        fname = os.path.join(dirname, "waterlvl_manual_measurements" + ext)
-        if os.path.exists(fname):
+        fname = osp.join(dirname, "waterlvl_manual_measurements" + ext)
+        if osp.exists(fname):
             return
     else:
         fname = os.path.join(dirname, 'waterlvl_manual_measurements.csv')
         fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
 
-        if not os.path.exists(dirname):
+        if not osp.exists(dirname):
             os.makedirs(dirname)
         save_content_to_csv(fname, fcontent)
 
