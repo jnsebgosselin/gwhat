@@ -220,10 +220,7 @@ def load_waterlvl_measures(filename, well):
         if os.path.exists(root + ext):
             break
     else:
-        # The file does not exists, so we generate an empty file with
-        # a header.
         print("done")
-        init_waterlvl_measures(os.path.dirname(root))
         return np.array([]), np.array([])
 
     # Open and read the file.
