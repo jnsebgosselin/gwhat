@@ -388,10 +388,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.MRC_type.addItems(['Linear', 'Exponential'])
         self.MRC_type.setCurrentIndex(1)
 
-        self.MRC_ObjFnType = QComboBox()
-        self.MRC_ObjFnType.addItems(['RMSE', 'MAE'])
-        self.MRC_ObjFnType.setCurrentIndex(0)
-
         self.MRC_results = QTextEdit()
         self.MRC_results.setReadOnly(True)
         self.MRC_results.setMinimumHeight(25)
