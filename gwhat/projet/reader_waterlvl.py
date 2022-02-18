@@ -20,8 +20,7 @@ from collections.abc import Mapping
 import numpy as np
 import pandas as pd
 import xlrd
-from xlrd.xldate import xldate_from_datetime_tuple
-from xlrd import xldate_as_tuple
+import openpyxl
 
 # ---- Local library imports
 from gwhat.common.utils import save_content_to_csv
@@ -127,11 +126,20 @@ def open_water_level_datafile(filename):
     if ext == '.csv':
         with open(filename, 'r', encoding='utf8') as f:
             data = list(csv.reader(f, delimiter=','))
-    elif ext in ['.xls', '.xlsx']:
+    elif ext == '.xls':
         with xlrd.open_workbook(filename, on_demand=True) as wb:
             sheet = wb.sheet_by_index(0)
             data = [sheet.row_values(rowx, start_colx=0, end_colx=None) for
                     rowx in range(sheet.nrows)]
+    elif ext == '.xlsx':
+        try:
+            workbook = openpyxl.load_workbook(filename)
+            sheet = workbook[workbook.sheetnames[0]]
+            data = [list(row_values) for row_values in
+                    sheet.iter_rows(min_col=1, values_only=True)]
+        finally:
+            workbook.close()
+        print(data)
 
     return data
 
