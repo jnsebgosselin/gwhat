@@ -727,6 +727,10 @@ class WLDataFrameHDF5(WLDataFrameBase):
                 'sdB', 'SumB', 'sdSumB']
         dataf = pd.DataFrame({key: grp[key][...] for key in keys if
                               key in grp.keys()})
+
+        # TODO: we should use pandas dataframe attrs to stock these values
+        # instead, once this become a supported feature.
+        # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.attrs.html
         dataf.date_start = datetime.datetime.strptime(
             grp.attrs['date start'], "%Y-%m-%dT%H:%M:%S")
         dataf.date_end = datetime.datetime.strptime(
