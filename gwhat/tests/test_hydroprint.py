@@ -83,14 +83,8 @@ def pagesetup(qtbot):
 
 
 # ---- Test HydroprintGUI
-def test_hydroprint_init(hydroprint, mocker, qtbot, projectpath):
-    """Test the initialization of the hydroprint plugin."""
-    # Assert that the water_level_measurement file was initialize correctly.
-    output_dir = os.path.join(projectpath, "Water Levels")
-    filename = os.path.join(output_dir, "waterlvl_manual_measurements.csv")
-    assert os.path.exists(filename)
-
-    # Assert that the Page Setup Window is shown correctly.
+def test_hydroprint_page_setup(hydroprint, mocker, qtbot, projectpath):
+    """Test the Page Setup Window is shown correctly."""
     qtbot.mouseClick(hydroprint.btn_page_setup, Qt.LeftButton)
     qtbot.waitForWindowShown(hydroprint.page_setup_win)
 

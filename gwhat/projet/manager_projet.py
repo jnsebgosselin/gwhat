@@ -31,7 +31,6 @@ from gwhat.projet.reader_projet import ProjetReader
 from gwhat.utils import icons
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.project_selector import ProjectSelector
-from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
 from gwhat import __namever__
@@ -192,7 +191,6 @@ class ProjetManager(QWidget):
                     self.close_projet()
                     return False
 
-        init_waterlvl_measures(osp.join(self.projet.dirname, "Water Levels"))
         self.project_selector.add_recent_project(self.projet.filename)
         self.project_selector.set_current_project(self.projet.filename)
         self.project_selector.adjustSize()
