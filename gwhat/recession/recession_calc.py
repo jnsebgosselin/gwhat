@@ -9,54 +9,80 @@
 
 from __future__ import annotations
 
+# ---- Standard library imports
+from functools import partial
+from collections import namedtuple
+
 # ---- Third party imports
 import numpy as np
 from scipy.optimize import curve_fit
-from functools import partial
+from scipy.stats import linregress
 
 
-def predict_recession(t: np.ndarray, B: float, A: float,
-                      h: np.ndarray,
-                      breaks: np.ndarray) -> np.ndarray:
+def predict_recession(tdeltas: np.ndarray, B: float, A: float,
+                      h: np.ndarray) -> np.ndarray:
     """
-    Compute synthetic hydrograph with a time-forward implicit numerical scheme
-    during periods where the water level recedes identified by the "ipeak"
-    pointers.
+    Parameters
+    ----------
+    tdeltas : np.ndarray
+        Time in days after the start of the recession segment. Values of
+        0 indicate the start of a new recession segment.
+    B : float
+        Coefficient of the master recession curve equation, where
+        ∂h/∂t = -A * h + B.
+    A : float
+        Coefficient of the master recession curve equation, where
+        ∂h/∂t = -A * h + B.
+    h : np.ndarray
+        Water levels in meters below the ground surface.
 
-    This is documented in logbook#10 p.79-80, 106.
+    Returns
+    -------
+    hp : np.ndarray
+        Predicted water levels in meters below the ground surface.
+
     """
     hp = np.ones(len(h)) * np.nan
-    for i in range(len(t)):
-        if i in breaks:
+    for i in range(len(tdeltas)):
+        if tdeltas[i] == 0:
             hp[i] = h[i]
         else:
-            dt = t[i] - t[i - 1]
+            dt = tdeltas[i] - tdeltas[i - 1]
             LUMP1 = (1 - A * dt / 2)
             LUMP2 = B * dt
             LUMP3 = (1 + A * dt / 2)**-1
 
             hp[i] = (LUMP1 * hp[i - 1] + LUMP2) * LUMP3
+
     return hp
 
 
 def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
     """
-    Calculate the equation parameters of the Master Recession Curve (MRC) of
-    the aquifer from the water level time series using a modified Gauss-Newton
-    optimization method.
-
+    Calculate the master recession curve (MRC).
     Parameters
     ----------
-    h : water level time series in mbgs
-    t : time in days
-    periods: sequence of tuples containing the boundaries, in XLS numerical
-             date format, of the periods selected by the user to evaluate
-             the MRC.
+    t : np.ndarray
+        Time in days.
+    h : np.ndarray
+        Water levels in meters below the ground surface.
+    periods : list(tuple)
+        List of tuples containing the boundaries of the segments of
+        the hydrograph that need to be used to evaluate the MRC.
+    mrctype : int, optional
+        Equation type of the MRC. The default is 1.
+            mrctype = 0 -> linear (dh/dt = b)
+            mrctype = 1 -> exponential (dh/dt = -a*h + b)
 
-    mrctype: MRC equation type
-             MODE = 0 -> linear (dh/dt = b)
-             MODE = 1 -> exponential (dh/dt = -a*h + b)
+    Returns
+    -------
+    coeffs : namedtuple
+        The optimal coefficients of the MRC.
+    hp : np.ndarray
+        The water levels predicted using the calculated MRC.
     """
+    # Define the indices corresponding to the beginning and end of each
+    # recession segment.
     iend = []
     istart = []
     for period in periods:
@@ -68,43 +94,56 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
         istart.append(min(indx0, indx1))
         iend.append(max(indx0, indx1))
 
-    indexes = []
-    for i in range(len(periods)):
-        indexes.extend(range(istart[i], iend[i] + 1))
-    indexes = np.sort(indexes)
+    # Define the indexes corresponding to the recession segments.
+    seg_indexes = []
+    seg_tstart = []
+    for i, j in zip(istart, iend):
+        seg_tstart.extend([t[i]] * (j - i + 1))
+        seg_indexes.extend(range(i, j + 1))
 
-    breaks = []
-    for i in range(len(indexes)):
-        if indexes[i] in istart:
-            breaks.append(i)
+    # Sort periods indexes and time start so that both series are
+    # monotically increasing.
+    argsort_idx = np.argsort(seg_indexes)
+    seg_indexes = np.array(seg_indexes)[argsort_idx]
+    seg_tstart = np.array(seg_tstart)[argsort_idx]
 
+    t_seg = t[seg_indexes]
+    h_seg = h[seg_indexes]
+    tdeltas = (t_seg - seg_tstart)
+
+    # Define initial guess for the parameters .
     A0 = 0
     B0 = np.mean((h[istart] - h[iend]) / (t[istart] - t[iend]))
 
     if mrctype == 1:  # exponential (dh/dt = -a*h + b)
         coeffs, coeffs_cov = curve_fit(
-            f=partial(predict_recession, h=h[indexes], breaks=breaks),
-            xdata=t[indexes], ydata=h[indexes],
-            p0=[A0, B0],
-            bounds=([-np.inf, 0], [np.inf, np.inf])
-            )
-        B, A = coeffs
+            f=partial(predict_recession, h=h_seg),
+            xdata=tdeltas, ydata=h_seg,
+            p0=[B0, A0],
+            bounds=([-np.inf, 0], [np.inf, np.inf]))
+        coeffs = namedtuple('Coeffs', ['B', 'A'])(*coeffs)
     elif mrctype == 0:  # linear (dh/dt = b)
-        func = partial(predict_recession, A=0, h=h[indexes], breaks=breaks)
         coeffs, coeffs_cov = curve_fit(
-            func, xdata=t[indexes], ydata=h[indexes], p0=[B0])
-        B = coeffs[0]
-        A = 0
+            f=partial(predict_recession, A=0, h=h_seg),
+            xdata=tdeltas, ydata=h_seg, p0=[B0])
+
+        # In order to return a consistent signature regardless of the type
+        # of the MRC equation, we return a value of 0 for the coefficient A.
+        coeffs = namedtuple('Coeffs', ['B', 'A'])('B', 'A')(coeffs[0], 0)
 
     hp = np.zeros(len(t)) * np.nan
-    hp[indexes] = predict_recession(
-        t=t[indexes], A=A, B=B, h=h[indexes], breaks=breaks)
+    hp[seg_indexes] = predict_recession(
+        tdeltas, A=coeffs[1], B=coeffs[0], h=h_seg)
 
-    RMSE = (np.mean((h[indexes] - hp[indexes])**2))**0.5
+    # standard error of the regression
+    # https://blog.minitab.com/en/adventures-in-statistics-2/regression-analysis-how-to-interpret-s-the-standard-error-of-the-regression
+    # https://statisticsbyjim.com/glossary/standard-error-regression/
+    slope, intercept, r_value, p_value, std_err = linregress(
+        h[seg_indexes], hp[seg_indexes])
+    r_squared = r_value**2
+    rmse = (np.nanmean((h - hp)**2))**0.5
 
-    print(coeffs_cov)
-
-    return A, B, hp, RMSE
+    return coeffs, hp, std_err, r_squared, rmse
 
 
 if __name__ == '__main__':
