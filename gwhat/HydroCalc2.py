@@ -645,28 +645,36 @@ class WLCalc(QWidget, SaveFileMixin):
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        A, B, recess, RMSE = calculate_mrc(
+        coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
             self.time, self.water_lvl, self._mrc_period_xdata,
             self.MRC_type.currentIndex())
+        A = coeffs.A
+        B = coeffs.B
 
-        print('MRC Parameters: A={}, B={}'
-              .format('None' if pd.isnull(A) else '{:0.3f}'.format(A),
-                      'None' if pd.isnull(B) else '{:0.3f}'.format(B))
-              )
-        if pd.isnull(A):
+        print('MRC Parameters: A={}, B={}'.format(
+            'None' if pd.isnull(A) else '{:0.3f}'.format(A),
+            'None' if pd.isnull(B) else '{:0.3f}'.format(B)))
+        if pd.isnull(coeffs.A):
             text = ''
         else:
-            text = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
-            text += '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
-            text += ('\nwhere h is the depth to water '
-                     'table in mbgs and ∂h/∂t is the recession '
-                     'rate in mm/d.')
-        self.MRC_results.setText(text)
+            text = (
+                "∂h/∂t = -A · h + B<br>"
+                "A = {:0.5f} day<sup>-1</sup><br>"
+                "B = {:0.5f} m/day<br><br>"
+                "were ∂h/∂t is the recession rate in m/day, "
+                "h is the depth to water table in mbgs, "
+                "and A and B are the coefficients of the MRC.<br><br>"
+                "Goodness of fit statistics :<br>"
+                "RMSE = {:0.5f} m<br>"
+                "r² = {:0.5f}<br>"
+                "S = {:0.5f} m"
+                ).format(A, B, rmse, r_squared, std_err)
+        self.MRC_results.setHtml(text)
 
         # Store and plot the results.
         print('Saving MRC interpretation in dataset...')
         self.wldset.set_mrc(
-            A, B, self._mrc_period_xdata, self.time, recess)
+            A, B, self._mrc_period_xdata, self.time, hp)
         self.btn_save_mrc.setEnabled(True)
         self.draw_mrc()
         self.sig_new_mrc.emit()
