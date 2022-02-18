@@ -80,6 +80,14 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
         The optimal coefficients of the MRC.
     hp : np.ndarray
         The water levels predicted using the calculated MRC.
+    std_err : float
+        The standard error of the water levels predicted with the MRC.
+    r_squared : float,
+        The coefficient of determination of the water levels predicted
+        with the MRC.
+    rmse : float
+        The root mean square error (RMSE) of the water levels predicted
+        with the MRC.
     """
     # Define the indices corresponding to the beginning and end of each
     # recession segment.
@@ -135,7 +143,7 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
     hp[seg_indexes] = predict_recession(
         tdeltas, A=coeffs[1], B=coeffs[0], h=h_seg)
 
-    # standard error of the regression
+    # Calculate metrics of the fit.
     # https://blog.minitab.com/en/adventures-in-statistics-2/regression-analysis-how-to-interpret-s-the-standard-error-of-the-regression
     # https://statisticsbyjim.com/glossary/standard-error-regression/
     slope, intercept, r_value, p_value, std_err = linregress(
