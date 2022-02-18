@@ -164,10 +164,64 @@ if __name__ == '__main__':
     t = wldset.xldates
     h = wldset.waterlevels
 
-    A, B, hp, RMSE = calculate_mrc(t, h, periods, mrctype=1)
-    print(A, B)
+    coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
+        t, h, periods, mrctype=1)
+    print(coeffs)
+    print(std_err, r_squared, rmse)
 
     fig, ax = plt.subplots()
     ax.plot(t, h)
     ax.plot(t, hp)
+    ax.plot(t, hp + std_err)
+    ax.plot(t, hp - std_err)
     ax.invert_yaxis()
+
+    fig2, ax2 = plt.subplots()
+    ax2.plot(h, hp, 'o')
+
+    # %%
+    coeffs_stack = []
+    hp_stack = []
+    for period in periods:
+        coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
+            t, h, [period], mrctype=1)
+        coeffs_stack.append(coeffs)
+        hp_stack.append(hp)
+
+    fig3, ax3 = plt.subplots()
+    ax3.plot(t, h)
+
+    iend = []
+    istart = []
+    for period in periods:
+        indx0 = np.argmin(np.abs(t - period[0]))
+        indx1 = np.argmin(np.abs(t - period[1]))
+        if np.abs(indx1 - indx0) < 2:
+            # Periods that are smaller than two time steps are ignored.
+            continue
+        istart.append(min(indx0, indx1))
+        iend.append(max(indx0, indx1))
+
+    # Define the indexes corresponding to the recession segments.
+    seg_indexes = []
+    seg_tstart = []
+    for i, j in zip(istart, iend):
+        seg_tstart.extend([t[i]] * (j - i + 1))
+        seg_indexes.extend(range(i, j + 1))
+
+    # Sort periods indexes and time start so that both series are
+    # monotically increasing.
+    argsort_idx = np.argsort(seg_indexes)
+    seg_indexes = np.array(seg_indexes)[argsort_idx]
+    seg_tstart = np.array(seg_tstart)[argsort_idx]
+
+    t_seg = t[seg_indexes]
+    h_seg = h[seg_indexes]
+    tdeltas = (t_seg - seg_tstart)
+
+    for coeffs in coeffs_stack:
+        hp = np.ones(len(h)) * np.nan
+        hp[seg_indexes] = predict_recession(tdeltas, coeffs.B, coeffs.A, h_seg)
+        ax3.plot(t, hp)
+
+    ax3.invert_yaxis()
