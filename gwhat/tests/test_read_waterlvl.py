@@ -38,8 +38,23 @@ DATA = [['Well name = ', "êi!@':i*"],
         ]
 FILENAME = "water_level_datafile"
 
+delete_file("waterlvl_manual_measurements.csv")
+delete_file("waterlvl_manual_measurements.xls")
+delete_file("waterlvl_manual_measurements.xlsx")
 
-# ---- Pytest Fixtures
+WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
+          ['Test', 40623.54167, 1.43],
+          ['Test', 40842.54167, 1.6],
+          ['Test', 41065.54167, 1.57],
+          ['test', 41065.54167, 1.57],
+          ["é@#^'", 41240.8125, 3.75],
+          ['test2', 41402.34375, 3.56],
+          ]
+
+
+# =============================================================================
+# ---- Fixtures
+# =============================================================================
 @pytest.fixture
 def datatmpdir(tmpdir):
     """Create a set of water level datafile in various format."""
@@ -53,7 +68,9 @@ def datatmpdir(tmpdir):
     return str(tmpdir)
 
 
-# ---- Test reading water level datafiles
+# =============================================================================
+# ---- Tests
+# =============================================================================
 @pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
 def test_reading_waterlvl(datatmpdir, ext):
     df = WLDataFrame(osp.join(datatmpdir, FILENAME + ext))
@@ -79,23 +96,6 @@ def test_reading_waterlvl(datatmpdir, ext):
     for key in ['WL', 'BP', 'ET']:
         assert np.abs(np.min(df[key] - expected_results[key])) < 10e-6
     assert np.abs(np.min(df.xldates - expected_results['Time'])) < 10e-6
-
-
-# Test water_level_measurements.
-# -------------------------------
-
-delete_file("waterlvl_manual_measurements.csv")
-delete_file("waterlvl_manual_measurements.xls")
-delete_file("waterlvl_manual_measurements.xlsx")
-
-WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
-          ['Test', 40623.54167, 1.43],
-          ['Test', 40842.54167, 1.6],
-          ['Test', 41065.54167, 1.57],
-          ['test', 41065.54167, 1.57],
-          ["é@#^'", 41240.8125, 3.75],
-          ['test2', 41402.34375, 3.56],
-          ]
 
 
 def test_init_waterlvl_measures():
@@ -168,4 +168,3 @@ def test_load_waterlvl_measures_withxls():
 
 if __name__ == "__main__":
     pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-    # pytest.main()
