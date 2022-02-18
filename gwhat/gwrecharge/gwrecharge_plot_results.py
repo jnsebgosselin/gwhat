@@ -14,6 +14,7 @@ import os.path as osp
 import datetime
 
 # ---- Imports: third parties
+import pandas as pd
 from xlrd.xldate import xldate_from_date_tuple
 import numpy as np
 import matplotlib as mpl
@@ -482,14 +483,14 @@ class YAxisOptPanel(SetpPanelBase):
         self._spb_ymin = QDoubleSpinBox()
         self._spb_ymin.setDecimals(0)
         self._spb_ymin.setSingleStep(50)
-        self._spb_ymin.setRange(0, 10000)
+        self._spb_ymin.setRange(-1000, 10000)
         self._spb_ymin.setKeyboardTracking(False)
         self._spb_ymin.valueChanged.connect(self._yaxis_changed)
 
         self._spb_ymax = QDoubleSpinBox()
         self._spb_ymax.setDecimals(0)
         self._spb_ymax.setSingleStep(50)
-        self._spb_ymax.setRange(0, 10000)
+        self._spb_ymax.setRange(-1000, 10000)
         self._spb_ymax.setKeyboardTracking(False)
         self._spb_ymax.valueChanged.connect(self._yaxis_changed)
 
@@ -915,8 +916,10 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
     def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
         """Set the limits of the yaxis to the provided values."""
-        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
-        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
+        self.setp['ymin'] = ymin
+        self.setp['ymax'] = ymax
+        self.setp['yscl'] = yscl
+        self.setp['yscl minor'] = yscl_minor
         if self.ax0 is not None:
             self.setup_ylimits()
             self.sig_fig_changed.emit(self.figure)
@@ -1218,83 +1221,68 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     FIGNAME = "gw_rechg_glue"
 
-    def __init__(self, setp={}):
-        super().__init__(setp)
+    def __init__(self, setp=None):
+        super().__init__({} if setp is None else setp)
         self._xticklabels_yt = 4
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
+
+        self.glue_rechg_yr = None
 
     def __plot__(self, glue_data):
         ax0 = self.ax0
         self.ax0.set_axisbelow(True)
 
-        year_range = glue_data['hydrol yearly budget']['years']
-        glue_rechg_yr = glue_data['hydrol yearly budget']['recharge']
+        self.glue_rechg_yr = pd.DataFrame(
+            data=glue_data['hydrol yearly budget']['recharge'],
+            index=glue_data['hydrol yearly budget']['years'].astype('int'),
+            columns=['GLUE05', 'GLUE25', 'GLUE50', 'GLUE75', 'GLUE95']
+            )
 
-        glue95_yr = glue_rechg_yr[:, -1]
-        glue05_yr = glue_rechg_yr[:, 0]
-        glue50_yr = glue_rechg_yr[:, 2]
-        glue25_yr = glue_rechg_yr[:, 1]
-        glue75_yr = glue_rechg_yr[:, -2]
-
-        self.glue_year_rechg_avg = tuple(
-            np.mean(glue_rechg_yr[:, i]) for i in range(5))
-
-        # ---- Xticks format
-
+        # Setup xticks and yticks.
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out', length=4)
-        ax0.set_xticks(year_range)
-
-        # ----- ticks format
-
-        ymax0 = np.ceil(np.max(glue95_yr)/10)*10 + 50
-        ymin0 = 0
-        scale_yticks = 50 if np.max(glue95_yr) < 250 else 250
-        scale_yticks_minor = 10 if np.max(glue95_yr) < 250 else 50
+        ax0.set_xticks(self.glue_rechg_yr.index)
 
         ax0.yaxis.set_ticks_position('left')
         ax0.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
                  linewidth=0.5, dashes=[0.5, 5])
 
-        # ---- Axis range
+        # Plot results.
+        self.g50, = ax0.plot(
+            self.glue_rechg_yr['GLUE50'], ls='-', lw=1, marker='o',
+            color='black', mew=1, mfc='White', mec='black',
+            ms=6, zorder=300)
 
-        self.setp['xmin'] = min(year_range)
-        self.setp['xmax'] = max(year_range)
-        self.setp['ymin'] = ymin0
-        self.setp['ymax'] = ymax0
-        self.setp['yscl'] = scale_yticks
-        self.setp['yscl minor'] = scale_yticks_minor
+        self.g0595 = ax0.errorbar(
+            self.glue_rechg_yr.index,
+            self.glue_rechg_yr['GLUE50'].values,
+            yerr=[(self.glue_rechg_yr['GLUE50'] -
+                   self.glue_rechg_yr['GLUE05']).values,
+                  (self.glue_rechg_yr['GLUE95'] -
+                   self.glue_rechg_yr['GLUE50']).values],
+            fmt='none', capthick=1, capsize=4, ecolor='0', elinewidth=1,
+            zorder=200)
 
-        self.set_ylimits(self.setp['ymin'], self.setp['ymax'],
-                         self.setp['yscl'], self.setp['yscl minor'])
-        self.set_xlimits(self.setp['xmin'], self.setp['xmax'])
+        self.g2575 = ax0.fill_between(
+            self.glue_rechg_yr.index,
+            self.glue_rechg_yr['GLUE25'].values,
+            self.glue_rechg_yr['GLUE75'].values, color="#FFCCCC")
 
-        # ---- Plot results
-
-        ax0.plot(year_range, glue50_yr, ls='-', lw=1, marker=None,
-                 color='black', zorder=300)
-        self.g50, = ax0.plot(year_range, glue50_yr, ls='none', marker='o',
-                             color='black', mew=1, mfc='White', mec='black',
-                             ms=6, zorder=300)
-
-        yerr = [glue50_yr-glue05_yr, glue95_yr-glue50_yr]
-        self.g0595 = ax0.errorbar(year_range, glue50_yr, yerr=yerr,
-                                  fmt='none', capthick=1, capsize=4,
-                                  ecolor='0', elinewidth=1, zorder=200)
-
-        self.g2575 = ax0.fill_between(year_range, glue25_yr, glue75_yr,
-                                      color="#FFCCCC")
-
-        # ---- Axes labels
-
-        self.setup_yticklabels()
-        self.setup_xticklabels()
-
-        # ----- Legend
-
+        # Setup legend.
         self.setup_legend()
         self.setup_yearly_avg_legend()
+
+        # Setup axis range.
+        max_glue95 = self.glue_rechg_yr['GLUE95'].max()
+        ymax0 = np.ceil(max_glue95 / 10) * 10 + 50
+        ymin0 = 0
+        scale_yticks = 50 if max_glue95 < 250 else 250
+        scale_yticks_minor = 10 if max_glue95 < 250 else 50
+
+        self.set_xlimits(self.glue_rechg_yr.index.min(),
+                         self.glue_rechg_yr.index.max())
+        self.set_ylimits(ymin0, ymax0, scale_yticks, scale_yticks_minor)
 
         self.sig_fig_changed.emit(self.figure)
         self.sig_newfig_plotted.emit(self.setp)
@@ -1314,18 +1302,22 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # Draw the labels anew.
         year_range = np.arange(
-            self.setp['xmin'], self.setp['xmax']+1).astype(int)
+            self.setp['xmin'], self.setp['xmax'] + 1).astype(int)
         xlabels = ["'%s - '%s" % (str(y)[-2:], str(y+1)[-2:])
                    for y in year_range]
 
-        xt = self._get_xlabel_xt(self.setp['xticks size'], 45)
         offset = mpl.transforms.ScaledTranslation(
-            xt, -self._xticklabels_yt/72, self.figure.dpi_scale_trans)
+            self._get_xlabel_xt(self.setp['xticks size'], 45),
+            -self._xticklabels_yt/72,
+            self.figure.dpi_scale_trans)
+        trans = mpl.transforms.blended_transform_factory(
+            self.ax0.transData + offset, self.ax0.transAxes + offset)
         for i in range(len(year_range)):
             self.xticklabels.append(self.ax0.text(
-                year_range[i], self.setp['ymin'], xlabels[i], rotation=45,
+                year_range[i], 0, xlabels[i], rotation=45,
                 va='top', ha='right', fontsize=self.setp['xticks size'],
-                transform=self.ax0.transData + offset))
+                transform=trans
+                ))
         self.setup_axes_labels()
 
     def setup_yticklabels(self):
@@ -1337,10 +1329,12 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def set_xlimits(self, xmin, xmax):
         """Set the limits of the xaxis to the provided values."""
-        self.setp['xmin'], self.setp['xmax'] = xmin, xmax
+        self.setp['xmin'] = int(xmin)
+        self.setp['xmax'] = int(xmax)
         if self.ax0 is not None:
             self.setup_xticklabels()
-            self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
+            self.refresh_yearly_avg_legend_text()
+            self.ax0.axis(xmin=xmin - 0.5, xmax=xmax + 0.5)
             self.sig_fig_changed.emit(self.figure)
 
     def setup_ylimits(self):
@@ -1373,28 +1367,36 @@ class FigYearlyRechgGLUE(FigCanvasBase):
             5/72, 5/72, self.figure.dpi_scale_trans)
         self.txt_yearly_avg = self.ax0.text(
             0, 0, '', va='bottom', ha='left', fontsize=self.setp['notes size'],
-            transform=self.ax0.transAxes + padding)
+            transform=self.ax0.transAxes + padding,
+            linespacing=1.5)
         self.notes.append(self.txt_yearly_avg)
-        self.refresh_yearly_avg_legend_text()
 
     def refresh_yearly_avg_legend_text(self):
         """Set the text and position of for the yearly averages results."""
+        glue_year_rechg_avg = self.glue_rechg_yr[
+            (self.glue_rechg_yr.index >= self.setp['xmin']) &
+            (self.glue_rechg_yr.index <= self.setp['xmax'])
+            ].mean().values.tolist()
         if self.setp['language'] == 'french':
-            text = ("Recharge annuelle moyenne :\n"
-                    "(GLUE 5) %d mm/a ; "
-                    "(GLUE 25) %d mm/a ; "
-                    "(GLUE 50) %d mm/a ; "
-                    "(GLUE 75) %d mm/a ; "
-                    "(GLUE 95) %d mm/a"
-                    ) % self.glue_year_rechg_avg
+            text = ("Recharge annuelle moyenne (01 oct. {} au 30 sep. {}):\n"
+                    "(GLUE 5){:0.0f} mm/a ; "
+                    "(GLUE 25) {:0.0f} mm/a ; "
+                    "(GLUE 50) {:0.0f} mm/a ; "
+                    "(GLUE 75) {:0.0f} mm/a ; "
+                    "(GLUE 95) {:0.0f} mm/a"
+                    ).format(self.setp['xmin'],
+                             self.setp['xmax'] + 1,
+                             *glue_year_rechg_avg)
         else:
-            text = ("Mean annual recharge :\n"
-                    "(GLUE 5) %d mm/y ; "
-                    "(GLUE 25) %d mm/y ; "
-                    "(GLUE 50) %d mm/y ; "
-                    "(GLUE 75) %d mm/y ; "
-                    "(GLUE 95) %d mm/y"
-                    ) % self.glue_year_rechg_avg
+            text = ("Mean annual recharge (01 Oct {} to 30 Sep {}):\n"
+                    "(GLUE 5) {:0.0f} mm/y ; "
+                    "(GLUE 25) {:0.0f} mm/y ; "
+                    "(GLUE 50) {:0.0f} mm/y ; "
+                    "(GLUE 75) {:0.0f} mm/y ; "
+                    "(GLUE 95) {:0.0f} mm/y"
+                    ).format(self.setp['xmin'],
+                             self.setp['xmax'] + 1,
+                             *glue_year_rechg_avg)
         self.txt_yearly_avg.set_text(text)
 
     def setup_legend(self,):
@@ -1629,8 +1631,6 @@ class FigAvgMonthlyBudget(FigCanvasBase):
             ncol=4, mode="expand", fontsize=self.setp['legend size'])
         legend.draw_frame(False)
 
-
-# %% ---- if __name__ == '__main__'
 
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy

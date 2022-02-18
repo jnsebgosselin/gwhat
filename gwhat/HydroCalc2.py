@@ -25,7 +25,7 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
     QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame,
-    QMessageBox)
+    QMessageBox, QFileDialog)
 
 import matplotlib as mpl
 from matplotlib.widgets import AxesWidget
@@ -40,6 +40,7 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
+from gwhat.recession.recession_calc import calculate_mrc
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
@@ -387,10 +388,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.MRC_type.addItems(['Linear', 'Exponential'])
         self.MRC_type.setCurrentIndex(1)
 
-        self.MRC_ObjFnType = QComboBox()
-        self.MRC_ObjFnType.addItems(['RMSE', 'MAE'])
-        self.MRC_ObjFnType.setCurrentIndex(0)
-
         self.MRC_results = QTextEdit()
         self.MRC_results.setReadOnly(True)
         self.MRC_results.setMinimumHeight(25)
@@ -433,7 +430,7 @@ class WLCalc(QWidget, SaveFileMixin):
             icon='save',
             iconsize=get_iconsize('normal'),
             tip='Save calculated MRC to file.',
-            triggered=self.save_mrc_tofile)
+            triggered=lambda: self.save_mrc_tofile())
 
         self.btn_MRCalc = QPushButton('Compute MRC')
         self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
@@ -644,28 +641,36 @@ class WLCalc(QWidget, SaveFileMixin):
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        A, B, recess, RMSE = calculate_mrc(
+        coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
             self.time, self.water_lvl, self._mrc_period_xdata,
             self.MRC_type.currentIndex())
+        A = coeffs.A
+        B = coeffs.B
 
-        print('MRC Parameters: A={}, B={}'
-              .format('None' if pd.isnull(A) else '{:0.3f}'.format(A),
-                      'None' if pd.isnull(B) else '{:0.3f}'.format(B))
-              )
-        if pd.isnull(A):
+        print('MRC Parameters: A={}, B={}'.format(
+            'None' if pd.isnull(A) else '{:0.3f}'.format(A),
+            'None' if pd.isnull(B) else '{:0.3f}'.format(B)))
+        if pd.isnull(coeffs.A):
             text = ''
         else:
-            text = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
-            text += '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
-            text += ('\nwhere h is the depth to water '
-                     'table in mbgs and ∂h/∂t is the recession '
-                     'rate in mm/d.')
-        self.MRC_results.setText(text)
+            text = (
+                "∂h/∂t = -A · h + B<br>"
+                "A = {:0.5f} day<sup>-1</sup><br>"
+                "B = {:0.5f} m/day<br><br>"
+                "were ∂h/∂t is the recession rate in m/day, "
+                "h is the depth to water table in mbgs, "
+                "and A and B are the coefficients of the MRC.<br><br>"
+                "Goodness-of-fit statistics :<br>"
+                "RMSE = {:0.5f} m<br>"
+                "r² = {:0.5f}<br>"
+                "S = {:0.5f} m"
+                ).format(A, B, rmse, r_squared, std_err)
+        self.MRC_results.setHtml(text)
 
         # Store and plot the results.
         print('Saving MRC interpretation in dataset...')
         self.wldset.set_mrc(
-            A, B, self._mrc_period_xdata, self.time, recess)
+            A, B, self._mrc_period_xdata, self.time, hp)
         self.btn_save_mrc.setEnabled(True)
         self.draw_mrc()
         self.sig_new_mrc.emit()
@@ -684,24 +689,24 @@ class WLCalc(QWidget, SaveFileMixin):
             self.btn_save_mrc.setEnabled(False)
         self.draw_mrc()
 
-    def save_mrc_tofile(self, savefilename=None):
+    def save_mrc_tofile(self, filename=None):
         """Save the master recession curve results to a file."""
-        if savefilename is None:
-            savefilename = osp.join(
+        if filename is None:
+            filename = osp.join(
                 self.dialog_dir,
-                "Well_%s_mrc_results.xlsx" % self.wldset['Well'])
+                "Well_{}_mrc_results.csv".format(self.wldset['Well']))
 
-        savefilename = self.select_savefilename(
-            "Save MRC results", savefilename, "*.xlsx;;*.xls;;*.csv")
+        filename, filetype = QFileDialog.getSaveFileName(
+            self, "Save MRC results", filename, 'Text CSV (*.csv)')
 
-        if savefilename:
+        if filename:
             QApplication.setOverrideCursor(Qt.WaitCursor)
             QApplication.processEvents()
             try:
-                self.wldset.save_mrc_tofile(savefilename)
+                self.wldset.save_mrc_tofile(filename)
             except PermissionError:
                 self.show_permission_error()
-                self.save_mrc_tofile(savefilename)
+                self.save_mrc_tofile(filename)
             QApplication.restoreOverrideCursor()
 
     def undo_mrc_period(self):
@@ -1576,208 +1581,6 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         self.ax.draw_artist(self.axvline)
         self.ax.draw_artist(self.axvspan)
         return False
-
-
-def calculate_mrc(t, h, periods, mrctype=1):
-    """
-    Calculate the equation parameters of the Master Recession Curve (MRC) of
-    the aquifer from the water level time series using a modified Gauss-Newton
-    optimization method.
-
-    Parameters
-    ----------
-    h : water level time series in mbgs
-    t : time in days
-    periods: sequence of tuples containing the boundaries, in XLS numerical
-             date format, of the periods selected by the user to evaluate
-             the MRC.
-
-    mrctype: MRC equation type
-             MODE = 0 -> linear (dh/dt = b)
-             MODE = 1 -> exponential (dh/dt = -a*h + b)
-
-    """
-    A = np.nan
-    B = np.nan
-    hp = t.copy() * np.nan
-    RMSE = np.nan
-
-    # Convert xlsdate periods into index periods.
-    ipeak = []
-    minpeak = []
-    maxpeak = []
-    for period in periods:
-        indx0 = np.argmin(np.abs(t - period[0]))
-        indx1 = np.argmin(np.abs(t - period[1]))
-        if np.abs(indx1 - indx0) < 2:
-            continue
-        minpeak.append(max(indx0, indx1))
-        maxpeak.append(min(indx0, indx1))
-        ipeak.extend([maxpeak[-1], minpeak[-1]])
-
-    # Check Min/Max
-    if len(minpeak) == 0:
-        print('No valid mrc period is currently selected')
-        return A, B, hp, RMSE
-
-    dpeak = (h[maxpeak] - h[minpeak]) * -1  # WARNING: Don't forget it is mbgs
-    if np.any(dpeak < 0):
-        print('There is a problem with the pair-ditribution of min-max')
-        return A, B, hp, RMSE
-
-    # ---- Optimization
-    print('---- MRC calculation started ----')
-    print('mrctype = %s' % (['Linear', 'Exponential'][mrctype]))
-
-    tstart = perf_counter()
-
-    # If mrctype is 0, then the parameter A is kept to a value of 0 throughout
-    # the entire optimization process and only paramter B is optimized.
-
-    dt = np.diff(t)
-    tolmax = 0.001
-
-    A = 0.
-    B = np.mean((h[maxpeak]-h[minpeak]) / (t[maxpeak]-t[minpeak]))
-
-    hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
-    tindx = np.where(~np.isnan(hp*h))
-    # indexes where there is a valid data inside a recession period
-
-    RMSE = np.sqrt(np.mean((h[tindx]-hp[tindx])**2))
-    print('A = %0.3f ; B= %0.3f; RMSE = %f' % (A, B, RMSE))
-
-    # NP: number of parameters
-    if mrctype == 0:
-        NP = 1
-    elif mrctype == 1:
-        NP = 2
-
-    while True:
-        # Calculating Jacobian (X) Numerically.
-        hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
-        XB = (hdB[tindx] - hp[tindx]) / tolmax
-
-        if mrctype == 1:
-            hdA = calc_synth_hydrograph(A + tolmax, B, h, dt, ipeak)
-            XA = (hdA[tindx] - hp[tindx]) / tolmax
-            Xt = np.vstack((XA, XB))
-        elif mrctype == 0:
-            Xt = XB
-
-        X = Xt.transpose()
-
-        # Solving Linear System.
-        dh = h[tindx] - hp[tindx]
-        XtX = np.dot(Xt, X)
-        Xtdh = np.dot(Xt, dh)
-
-        # Scaling.
-        C = np.dot(Xt, X) * np.identity(NP)
-        for j in range(NP):
-            C[j, j] = C[j, j] ** -0.5
-
-        Ct = C.transpose()
-        Cinv = np.linalg.inv(C)
-
-        # Constructing right hand side.
-        CtXtdh = np.dot(Ct, Xtdh)
-
-        # Constructing left hand side.
-        CtXtX = np.dot(Ct, XtX)
-        CtXtXC = np.dot(CtXtX, C)
-
-        # Loop for the Marquardt parameter (m)
-        m = 0
-        while True:
-
-            # Constructing left hand side (continued).
-            CtXtXCImr = CtXtXC + np.identity(NP) * m
-            CtXtXCImrCinv = np.dot(CtXtXCImr, Cinv)
-
-            # Calculating parameter change vector.
-            dr = np.linalg.tensorsolve(CtXtXCImrCinv, CtXtdh, axes=None)
-
-            # Checking Marquardt condition.
-            NUM = np.dot(dr.transpose(), CtXtdh)
-            DEN1 = np.dot(dr.transpose(), dr)
-            DEN2 = np.dot(CtXtdh.transpose(), CtXtdh)
-
-            cos = NUM / (DEN1 * DEN2)**0.5
-            if np.abs(cos) < 0.08:
-                m = 1.5 * m + 0.001
-            else:
-                break
-
-        # Storing old parameter values.
-        Aold = np.copy(A)
-        Bold = np.copy(B)
-        RMSEold = np.copy(RMSE)
-
-        # Loop for Damping (to prevent overshoot).
-        while True:
-            # Calculating new parameter values.
-            if mrctype == 1:
-                A = Aold + dr[0]
-                B = Bold + dr[1]
-            elif mrctype == 0:
-                B = Bold + dr[0, 0]
-
-            # Applying parameter lower bound-constraints.
-            A = np.max((A, 0))
-
-            # Solving for new parameter values.
-            hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
-            RMSE = np.sqrt(np.mean((h[tindx]-hp[tindx])**2))
-
-            # Checking overshoot.
-            if (RMSE - RMSEold) > 0.001:
-                dr = dr * 0.5
-            else:
-                break
-
-        # Checking tolerance.
-        tolA = np.abs(A - Aold)
-        tolB = np.abs(B - Bold)
-        tol = np.max((tolA, tolB))
-        if tol < tolmax:
-            break
-
-    tend = perf_counter()
-    print('TIME = %0.3f sec' % (tend-tstart))
-    print('---- FIN ----')
-
-    return A, B, hp, RMSE
-
-
-def calc_synth_hydrograph(A, B, h, dt, ipeak):
-    """
-    Compute synthetic hydrograph with a time-forward implicit numerical scheme
-    during periods where the water level recedes identified by the "ipeak"
-    pointers.
-
-    This is documented in logbook#10 p.79-80, 106.
-    """
-
-    # Time indexes delimiting periods where water level recedes :
-
-    maxpeak = ipeak[:-1:2]
-    minpeak = ipeak[1::2]
-    nsegmnt = len(minpeak)
-
-    hp = np.ones(len(h)) * np.nan
-    for i in range(nsegmnt):
-        hp[maxpeak[i]] = h[maxpeak[i]]
-        for j in range(minpeak[i] - maxpeak[i]):
-            imax = maxpeak[i]
-
-            LUMP1 = (1 - A*dt[imax+j]/2)
-            LUMP2 = B*dt[imax+j]
-            LUMP3 = (1 + A*dt[imax+j]/2)**-1
-
-            hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
-
-    return hp
 
 
 def mrc2rechg(t, ho, A, B, z, Sy):

@@ -12,9 +12,10 @@ import os
 import os.path as osp
 
 # ---- Third Party Libraries Imports
+import numpy as np
 import pytest
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QApplication
+from qtpy.QtWidgets import QApplication, QFileDialog
 
 
 # ---- Local Libraries Imports
@@ -87,6 +88,56 @@ def test_copy_to_clipboard(hydrocalc, qtbot):
 
     qtbot.mouseClick(hydrocalc.btn_copy_to_clipboard, Qt.LeftButton)
     assert not QApplication.clipboard().image().isNull()
+
+
+def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
+    """
+    Test that the tool to calculate the MRC is working as expected.
+    """
+    assert hydrocalc.dformat == 1  # Matplotlib date format
+    hydrocalc.switch_date_format()
+    assert hydrocalc.dformat == 0  # Excel date format
+
+    # Select recession periods on the hydrograph.
+    coordinates = [
+        (41384.260416666664, 41414.114583333336),
+        (41310.385416666664, 41340.604166666664),
+        (41294.708333333336, 41302.916666666664),
+        (41274.5625, 41284.635416666664),
+        (41457.395833333336, 41486.875),
+        (41440.604166666664, 41447.697916666664),
+        (41543.958333333336, 41552.541666666664)]
+    for coord in coordinates:
+        hydrocalc.add_mrcperiod(coord)
+
+    # Calcul the MRC.
+    mrc_data = hydrocalc.wldset.get_mrc()
+    assert np.isnan(mrc_data['params']).all()
+    assert len(mrc_data['peak_indx']) == 0
+    assert len(mrc_data['recess']) == 0
+    assert len(mrc_data['time']) == 0
+
+    hydrocalc.btn_MRCalc_isClicked()
+
+    mrc_data = hydrocalc.wldset.get_mrc()
+    assert abs(mrc_data['params'][0] - 0.07084190743598762) < 10**-5
+    assert abs(mrc_data['params'][1] - 0.25980409812537747) < 10**-5
+    assert len(mrc_data['peak_indx']) == 7
+    assert len(mrc_data['recess']) == 343
+    assert len(mrc_data['time']) == 343
+
+    # Save MRC results to file.
+    outfile = osp.join(tmp_path, 'test_mrc_export')
+    ffilter = "Text CSV (*.csv)"
+    qfdialog_patcher = mocker.patch.object(
+        QFileDialog,
+        'getSaveFileName',
+        return_value=(outfile, ffilter))
+
+    assert not osp.exists(outfile + '.csv')
+    hydrocalc.save_mrc_tofile()
+    assert osp.exists(outfile + '.csv')
+    assert qfdialog_patcher.call_count == 1
 
 
 if __name__ == "__main__":
