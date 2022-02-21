@@ -16,7 +16,9 @@ from collections import namedtuple
 # ---- Third party imports
 import numpy as np
 from scipy.optimize import curve_fit
-from scipy.stats import linregress
+
+# ---- Local imports
+from gwhat.utils.math import calc_goodness_of_fit
 
 
 def predict_recession(tdeltas: np.ndarray, B: float, A: float,
@@ -144,13 +146,7 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
     hp[seg_indexes] = predict_recession(
         tdeltas, A=coeffs[1], B=coeffs[0], h=h_seg)
 
-    # Calculate metrics of the fit.
-    # https://blog.minitab.com/en/adventures-in-statistics-2/regression-analysis-how-to-interpret-s-the-standard-error-of-the-regression
-    # https://statisticsbyjim.com/glossary/standard-error-regression/
-    slope, intercept, r_value, p_value, std_err = linregress(
-        h[seg_indexes], hp[seg_indexes])
-    r_squared = r_value**2
-    rmse = (np.nanmean((h - hp)**2))**0.5
+    std_err, r_squared, rmse = calc_goodness_of_fit(h, hp)
 
     return coeffs, hp, std_err, r_squared, rmse
 

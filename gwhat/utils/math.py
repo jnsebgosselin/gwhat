@@ -1,18 +1,53 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
-import numpy as np
 import datetime
+import numpy as np
+from scipy.stats import linregress
 
 
 def calcul_rmse(Xobs, Xpre):
     """Compute the root-mean square error."""
     return (np.nanmean((Xobs - Xpre)**2))**0.5
+
+
+def calc_goodness_of_fit(xobs, xpre):
+    """
+    Calculate the goodness-of-fit between observed and predicted values.
+
+    https://blog.minitab.com/en/adventures-in-statistics-2/regression-analysis-how-to-interpret-s-the-standard-error-of-the-regression
+    https://statisticsbyjim.com/glossary/standard-error-regression/
+
+    Parameters
+    ----------
+    xobs : np.ndarray
+        A numpy array containing the observations.
+    xpre : np.ndarray
+        A numpy array containing the predictions.
+
+    Returns
+    -------
+    std_err : float
+        The standard error of the water levels predicted with the MRC.
+    r_squared : float,
+        The coefficient of determination of the water levels predicted
+        with the MRC.
+    rmse : float
+        The root mean square error (RMSE) of the water levels predicted
+        with the MRC.
+
+    """
+    mask = ~np.isnan(xobs) * ~np.isnan(xpre)
+    slope, intercept, r_value, p_value, std_err = linregress(
+        xobs[mask], xpre[mask])
+    rmse = calcul_rmse(xobs, xpre)
+    return std_err, r_value**2, rmse
 
 
 def clip_time_series(tclip, tp, xp):
