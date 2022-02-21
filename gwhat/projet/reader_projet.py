@@ -582,22 +582,21 @@ class WLDataFrameHDF5(WLDataFrameBase):
         for key in keys:
             fheader.append([key, self[key]])
 
-        A, B = self['mrc/params']
         fheader.extend([
             [],
             ['∂h/∂t = -A * h + B'],
-            ['A (1/day) =', mrc_data['params'].A],
-            ['B (m/day) =', mrc_data['params'].B],
+            ['A (1/day)', mrc_data['params'].A],
+            ['B (m/day)', mrc_data['params'].B],
             []])
 
-        labels = ['RMSE', 'R-squared', 'S']
+        labels = ['RMSE (m)', 'R-squared', 'S (m)']
         keys = ['rmse', 'r_squared', 'std_err']
         for label, key in zip(labels, keys):
             value = mrc_data[key]
             if value is None:
-                fheader.append(["{} = N/A"].format(label))
+                fheader.append([label, "N/A"])
             else:
-                fheader.append(["{} = {:0.5f} m".format(label, value)])
+                fheader.append([label, "{:0.5f} m".format(value)])
         fheader.append([])
         fheader.append([['Observed and Predicted Water Level']])
 
