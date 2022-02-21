@@ -14,6 +14,7 @@ import csv
 import os
 import os.path as osp
 from shutil import copyfile
+from collections import namedtuple
 
 # ---- Third party imports
 import h5py
@@ -519,7 +520,8 @@ class WLDataFrameHDF5(WLDataFrameBase):
         return grp['Time'][...], grp['WL'][...]
 
     # ---- Master Recession Curve
-    def set_mrc(self, A, B, periods, time, recess):
+    def set_mrc(self, A, B, periods, time, recess,
+                std_err, r_squared, rmse):
         """Save the mrc results to the hdf5 project file."""
         self.dset['mrc/params'][:] = (A, B)
 
@@ -534,6 +536,9 @@ class WLDataFrameHDF5(WLDataFrameBase):
         self.dset['mrc/recess'][:] = recess
 
         self.dset['mrc'].attrs['exists'] = 1
+        self.dset['mrc'].attrs['std_err'] = std_err
+        self.dset['mrc'].attrs['r_squared'] = r_squared
+        self.dset['mrc'].attrs['rmse'] = rmse
 
         self.dset.file.flush()
 
@@ -545,11 +550,19 @@ class WLDataFrameHDF5(WLDataFrameBase):
         peak_indx = list(map(
             tuple, peak_indx[:n * m].reshape((n, m))
             ))
-        return {
-            'params': self['mrc/params'].tolist(),
+        coeffs = self['mrc/params'].tolist()
+
+        mrc_data = {
+            'params': namedtuple('Coeffs', ['A', 'B'])(*coeffs),
             'peak_indx': peak_indx,
             'time': self['mrc/time'].copy(),
             'recess': self['mrc/recess'].copy()}
+        for key in ['std_err', 'r_squared', 'rmse']:
+            try:
+                mrc_data[key] = self.dset['mrc'].attrs[key]
+            except KeyError:
+                mrc_data[key] = None
+        return mrc_data
 
     def mrc_exists(self):
         """Return whether a mrc results is saved in the hdf5 project file."""
@@ -559,6 +572,8 @@ class WLDataFrameHDF5(WLDataFrameBase):
         """Save the master recession curve results to a file."""
         if not filename.lower().endswith('.csv'):
             filename += '.csv'
+
+        mrc_data = self.get_mrc()
 
         # Prepare the file header.
         fheader = []
