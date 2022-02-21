@@ -519,13 +519,13 @@ class WLDataFrameHDF5(WLDataFrameBase):
         return grp['Time'][...], grp['WL'][...]
 
     # ---- Master Recession Curve
-    def set_mrc(self, A, B, peak_indx, time, recess):
+    def set_mrc(self, A, B, periods, time, recess):
         """Save the mrc results to the hdf5 project file."""
         self.dset['mrc/params'][:] = (A, B)
 
-        peak_indx = np.array(peak_indx).flatten()
-        self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
-        self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
+        periods = np.array(periods).flatten()
+        self.dset['mrc/peak_indx'].resize(np.shape(periods))
+        self.dset['mrc/peak_indx'][:] = np.array(periods)
 
         self.dset['mrc/time'].resize(np.shape(time))
         self.dset['mrc/time'][:] = time
