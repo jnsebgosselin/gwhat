@@ -638,7 +638,6 @@ class WLCalc(QWidget, SaveFileMixin):
     def btn_MRCalc_isClicked(self):
         if self.wldset is None:
             return
-
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
@@ -646,10 +645,33 @@ class WLCalc(QWidget, SaveFileMixin):
             self.MRC_type.currentIndex())
         A = coeffs.A
         B = coeffs.B
-
         print('MRC Parameters: A={}, B={}'.format(
-            'None' if pd.isnull(A) else '{:0.3f}'.format(A),
-            'None' if pd.isnull(B) else '{:0.3f}'.format(B)))
+            'None' if pd.isnull(A) else '{:0.3f}'.format(coeffs.A),
+            'None' if pd.isnull(B) else '{:0.3f}'.format(coeffs.B)))
+
+        # Store and plot the results.
+        print('Saving MRC interpretation in dataset...')
+        self.wldset.set_mrc(
+            A, B, self._mrc_period_xdata,
+            self.time, hp,
+            std_err, r_squared, rmse)
+
+        self.show_mrc_results()
+        self.btn_save_mrc.setEnabled(True)
+        self.draw_mrc()
+        self.sig_new_mrc.emit()
+
+        QApplication.restoreOverrideCursor()
+
+    def show_mrc_results(self):
+        """Show MRC results if any."""
+        if self.wldset is None:
+            self.MRC_results.setHtml('')
+            return
+
+        mrc_data = self.wldset.get_mrc()
+
+        coeffs = mrc_data['params']
         if pd.isnull(coeffs.A):
             text = ''
         else:
@@ -661,23 +683,19 @@ class WLCalc(QWidget, SaveFileMixin):
                 "h is the depth to water table in mbgs, "
                 "and A and B are the coefficients of the MRC.<br><br>"
                 "Goodness-of-fit statistics :<br>"
-                "RMSE = {:0.5f} m<br>"
-                "r² = {:0.5f}<br>"
-                "S = {:0.5f} m"
-                ).format(A, B, rmse, r_squared, std_err)
+                ).format(coeffs.A, coeffs.B)
+
+            fit_stats = {
+                'rmse': "RMSE = {} m<br>",
+                'r_squared': "r² = {}<br>",
+                'std_err': "S = {} m"}
+            for key, label in fit_stats.items():
+                value = mrc_data[key]
+                if value is None:
+                    text += label.format('N/A')
+                else:
+                    text += label.format('{:0.5f}'.format(value))
         self.MRC_results.setHtml(text)
-
-        # Store and plot the results.
-        print('Saving MRC interpretation in dataset...')
-        self.wldset.set_mrc(
-            A, B, self._mrc_period_xdata,
-            self.time, hp,
-            std_err, r_squared, rmse)
-        self.btn_save_mrc.setEnabled(True)
-        self.draw_mrc()
-        self.sig_new_mrc.emit()
-
-        QApplication.restoreOverrideCursor()
 
     def load_mrc_from_wldset(self):
         """Load saved MRC results from the project hdf5 file."""
@@ -689,6 +707,7 @@ class WLCalc(QWidget, SaveFileMixin):
             self._mrc_period_xdata = []
             self._mrc_period_memory = [[], ]
             self.btn_save_mrc.setEnabled(False)
+        self.show_mrc_results()
         self.draw_mrc()
 
     def save_mrc_tofile(self, filename=None):
