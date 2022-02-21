@@ -15,6 +15,7 @@ from collections import namedtuple
 
 # ---- Third party imports
 import numpy as np
+import pandas as pd
 from scipy.optimize import curve_fit
 
 # ---- Local imports
@@ -66,7 +67,7 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
     Parameters
     ----------
     t : np.ndarray
-        Time in days.
+        Time in days since epoch.
     h : np.ndarray
         Water levels in meters below the ground surface.
     periods : list(tuple)
@@ -92,39 +93,30 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
         The root mean square error (RMSE) of the water levels predicted
         with the MRC.
     """
-    # Define the indices corresponding to the beginning and end of each
-    # recession segment.
-    iend = []
-    istart = []
+    index = np.arange(len(t)).astype(int)
+
+    # Extract relevant information and data for each segment identified as
+    # a recession period.
+    tdeltas = np.array([])
+    h_seg = np.array([])
+    t_seg = np.array([])
+    index_seg = np.array([], dtype=int)
+    B0_seg = []
     for period in periods:
-        indx0 = np.argmin(np.abs(t - period[0]))
-        indx1 = np.argmin(np.abs(t - period[1]))
-        if np.abs(indx1 - indx0) < 2:
-            # Periods that are smaller than two time steps are ignored.
+        mask = (t >= min(period)) & (t <= max(period))
+        if len(mask) < 2:
+            # Segments that are smaller than two time steps are ignored.
             continue
-        istart.append(min(indx0, indx1))
-        iend.append(max(indx0, indx1))
 
-    # Define the indexes corresponding to the recession segments.
-    seg_indexes = []
-    seg_tstart = []
-    for i, j in zip(istart, iend):
-        seg_tstart.extend([t[i]] * (j - i + 1))
-        seg_indexes.extend(range(i, j + 1))
+        h_seg = np.append(h_seg, h[mask])
+        t_seg = np.append(t_seg, t[mask])
+        index_seg = np.append(index_seg, index[mask])
+        tdeltas = np.append(tdeltas, t[mask] - t[mask][0])
+        B0_seg.append((h[mask][-1] - h[mask][0]) / (t[mask][-1] - t[mask][0]))
 
-    # Sort periods indexes and time start so that both series are
-    # monotically increasing.
-    argsort_idx = np.argsort(seg_indexes)
-    seg_indexes = np.array(seg_indexes)[argsort_idx]
-    seg_tstart = np.array(seg_tstart)[argsort_idx]
-
-    t_seg = t[seg_indexes]
-    h_seg = h[seg_indexes]
-    tdeltas = (t_seg - seg_tstart)
-
-    # Define initial guess for the parameters .
+    # Define initial guess for the parameters.
     A0 = 0
-    B0 = np.mean((h[istart] - h[iend]) / (t[istart] - t[iend]))
+    B0 = np.mean(B0_seg)
 
     if mrctype == 1:  # exponential (dh/dt = -a*h + b)
         coeffs, coeffs_cov = curve_fit(
@@ -143,7 +135,7 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
         coeffs = namedtuple('Coeffs', ['B', 'A'])('B', 'A')(coeffs[0], 0)
 
     hp = np.zeros(len(t)) * np.nan
-    hp[seg_indexes] = predict_recession(
+    hp[index_seg] = predict_recession(
         tdeltas, A=coeffs[1], B=coeffs[0], h=h_seg)
 
     std_err, r_squared, rmse = calc_goodness_of_fit(h, hp)
