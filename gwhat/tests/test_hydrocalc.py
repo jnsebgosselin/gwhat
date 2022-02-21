@@ -125,6 +125,7 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
     assert len(mrc_data['peak_indx']) == 7
     assert len(mrc_data['recess']) == 343
     assert len(mrc_data['time']) == 343
+    assert np.sum(~np.isnan(mrc_data['recess'])) == 123
 
     # Save MRC results to file.
     outfile = osp.join(tmp_path, 'test_mrc_export')
