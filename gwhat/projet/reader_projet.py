@@ -584,14 +584,22 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
         A, B = self['mrc/params']
         fheader.extend([
-            [''],
+            [],
             ['∂h/∂t = -A * h + B'],
-            ['A (1/day)', A],
-            ['B (m/day)', B],
-            ['RMSE (m)', calcul_rmse(self['WL'], self['mrc/recess'])],
-            [''],
-            ['Observed and Predicted Water Level'],
-            ])
+            ['A (1/day) =', mrc_data['params'].A],
+            ['B (m/day) =', mrc_data['params'].B],
+            []])
+
+        labels = ['RMSE', 'R-squared', 'S']
+        keys = ['rmse', 'r_squared', 'std_err']
+        for label, key in zip(labels, keys):
+            value = mrc_data[key]
+            if value is None:
+                fheader.append(["{} = N/A"].format(label))
+            else:
+                fheader.append(["{} = {:0.5f} m".format(label, value)])
+        fheader.append([])
+        fheader.append([['Observed and Predicted Water Level']])
 
         # Save the observed and simulated data to the CSV file.
         df = pd.DataFrame(
