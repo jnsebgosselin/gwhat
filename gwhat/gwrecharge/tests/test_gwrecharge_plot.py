@@ -9,6 +9,7 @@
 
 # ---- Standard library imports
 import os.path as osp
+from shutil import copyfile
 
 # ---- Third party imports
 import numpy as np
@@ -28,11 +29,13 @@ from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 # ---- Pytest Fixtures
 # =============================================================================
 @pytest.fixture
-def project():
-    projectfile = osp.join(
+def project(tmp_path):
+    fsrc = osp.join(
         __rootdir__, 'gwrecharge', 'tests', 'test_gwrecharge_project.gwt')
-    project = ProjetReader(projectfile)
-    return project
+    fdst = osp.join(
+        tmp_path, 'test_gwrecharge_project.gwt')
+    copyfile(fsrc, fdst)
+    return ProjetReader(fdst)
 
 
 @pytest.fixture()
