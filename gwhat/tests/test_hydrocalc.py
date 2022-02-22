@@ -120,11 +120,12 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
     hydrocalc.btn_MRCalc_isClicked()
 
     mrc_data = hydrocalc.wldset.get_mrc()
-    assert abs(mrc_data['params'][0] - 0.07084190743598762) < 10**-5
-    assert abs(mrc_data['params'][1] - 0.25980409812537747) < 10**-5
+    assert abs(mrc_data['params'][0] - 0.07004324034418882) < 10**-5
+    assert abs(mrc_data['params'][1] - 0.25679183844863535) < 10**-5
     assert len(mrc_data['peak_indx']) == 7
     assert len(mrc_data['recess']) == 343
     assert len(mrc_data['time']) == 343
+    assert np.sum(~np.isnan(mrc_data['recess'])) == 123
 
     # Save MRC results to file.
     outfile = osp.join(tmp_path, 'test_mrc_export')
