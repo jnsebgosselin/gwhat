@@ -10,13 +10,16 @@
 # ---- Standard library imports
 import os
 import os.path as osp
+from shutil import copyfile
 os.environ['GWHAT_PYTEST'] = 'True'
 
 # ---- Third party imports
 import numpy as np
 import pytest
+import h5py
 
 # ---- Local imports
+from gwhat import __rootdir__
 from gwhat.common.utils import save_content_to_file
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.manager_projet import (
@@ -76,6 +79,17 @@ def projectfile(projectpath):
     project.close()
 
     return projectpath
+
+
+@pytest.fixture
+def oldprojectfile(projectpath, tmp_path):
+    """A path to a valid existing project file."""
+    fsrc = osp.join(
+        __rootdir__, 'projet', 'tests', 'test_project_gwhat_v0.5.0.gwt')
+    fdst = osp.join(
+        tmp_path, 'test_project_gwhat_v0.5.0.gwt')
+    copyfile(fsrc, fdst)
+    return fdst
 
 
 @pytest.fixture
@@ -427,7 +441,7 @@ def test_mrc_backward_compatibility(project, testfile):
     See jnsebgosselin/gwhat#370.
     See jnsebgosselin/gwhat#377.
     """
-    # Add the dataset to the test project.
+    # Add the dataset to the project.
     project.add_wldset('dataset_test', WLDataFrame(testfile))
     wldset = project.get_wldset('dataset_test')
 
@@ -470,6 +484,28 @@ def test_mrc_backward_compatibility(project, testfile):
 
     assert mrc_data['time'].tolist() == []
     assert mrc_data['recess'].tolist() == []
+
+
+def test_project_backward_compatibility(oldprojectfile):
+    """
+    Test that old project files are opened as expected in newer versions
+    of GWHAT.
+    """
+    # Make sure old recession periods are converted from indexes to xldates.
+    with h5py.File(oldprojectfile, mode='r') as hdf5file:
+        wldset = hdf5file['wldsets/PO01 - Calixa-Lavallée']
+        assert list(wldset['mrc/peak_indx']) == [6458, 8210, 13710, 15462,
+                                                 20596, 22022, 3036, 3892,
+                                                 5155, 5725]
+
+    project = ProjetReader(oldprojectfile)
+    wldset = project.get_wldset('PO01 - Calixa-Lavallée')
+    mrc_data = wldset.get_mrc()
+    assert mrc_data['peak_indx'] == [(41309.0, 41327.25),
+                                     (41384.541666666664, 41402.791666666664),
+                                     (41456.270833333336, 41471.125),
+                                     (41273.354166666664, 41282.270833333336),
+                                     (41295.427083333336, 41301.364583333336)]
 
 
 if __name__ == "__main__":
