@@ -1450,7 +1450,7 @@ class FigAvgYearlyBudget(FigCanvasBase):
             self.bar_handles.append(l)
             self.notes.append(self.ax0.text(
                 i + 1, glue50_avg_yrly[varname],
-                "%d" % glue50_avg_yrly[varname],
+                '{:0.0f}'.format(glue50_avg_yrly[varname]),
                 ha='center', va='bottom',
                 transform=self.ax0.transData + offset,
                 fontsize=self.setp['notes size']))
