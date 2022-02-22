@@ -9,8 +9,10 @@
 
 # ---- Standard library imports
 import os.path as osp
+from shutil import copyfile
 
 # ---- Third party imports
+import numpy as np
 import pytest
 from PyQt5.QtGui import QImage
 from PyQt5.QtCore import Qt
@@ -27,11 +29,13 @@ from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 # ---- Pytest Fixtures
 # =============================================================================
 @pytest.fixture
-def project():
-    projectfile = osp.join(
+def project(tmp_path):
+    fsrc = osp.join(
         __rootdir__, 'gwrecharge', 'tests', 'test_gwrecharge_project.gwt')
-    project = ProjetReader(projectfile)
-    return project
+    fdst = osp.join(
+        tmp_path, 'test_gwrecharge_project.gwt')
+    copyfile(fsrc, fdst)
+    return ProjetReader(fdst)
 
 
 @pytest.fixture()
@@ -60,6 +64,36 @@ def test_figstackmanager(figstackmanager, project):
     figstackmanager.set_gluedf(wldset.get_glue_at(-1))
     for index in range(figstackmanager.stack.count()):
         figstackmanager.stack.setCurrentIndex(index)
+
+
+def test_hydrological_budget_calculs(figstackmanager, project):
+    """
+    Test that the yearly values of the hydrological budget are calculated
+    as expected
+    """
+    wldset = project.get_wldset('3040002_15min')
+    glue_df = wldset.get_glue_at(-1)
+    figstackmanager.set_gluedf(glue_df)
+
+    # Assert the average yearly recharge values are calculated as expected in
+    # FigYearlyRechgGLUE.
+    figstackmanager.stack.setCurrentIndex(0)
+    figcanvas = figstackmanager.figmanagers[0].figcanvas
+    assert '(GLUE 5) 363 mm/y' in figcanvas.txt_yearly_avg.get_text()
+    assert '(GLUE 25) 415 mm/y' in figcanvas.txt_yearly_avg.get_text()
+    assert '(GLUE 50) 484 mm/y' in figcanvas.txt_yearly_avg.get_text()
+    assert '(GLUE 75) 578 mm/y' in figcanvas.txt_yearly_avg.get_text()
+    assert '(GLUE 95) 709 mm/y' in figcanvas.txt_yearly_avg.get_text()
+
+    # Assert the values are calculated as expected of the average
+    # yearly water budget in FigAvgYearlyBudget.
+    figstackmanager.stack.setCurrentIndex(2)
+    figcanvas = figstackmanager.figmanagers[2].figcanvas
+
+    assert figcanvas.notes[0].get_text() == '421'
+    assert figcanvas.notes[1].get_text() == '226'
+    assert figcanvas.notes[2].get_text() == '484'
+    assert figcanvas.notes[3].get_text() == '1131'
 
 
 def test_copy_to_clipboard(qtbot, figstackmanager, project):
