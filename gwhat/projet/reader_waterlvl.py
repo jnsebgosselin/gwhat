@@ -20,8 +20,7 @@ from collections.abc import Mapping
 import numpy as np
 import pandas as pd
 import xlrd
-from xlrd.xldate import xldate_from_datetime_tuple
-from xlrd import xldate_as_tuple
+import openpyxl
 
 # ---- Local library imports
 from gwhat.common.utils import save_content_to_csv
@@ -127,11 +126,20 @@ def open_water_level_datafile(filename):
     if ext == '.csv':
         with open(filename, 'r', encoding='utf8') as f:
             data = list(csv.reader(f, delimiter=','))
-    elif ext in ['.xls', '.xlsx']:
+    elif ext == '.xls':
         with xlrd.open_workbook(filename, on_demand=True) as wb:
             sheet = wb.sheet_by_index(0)
             data = [sheet.row_values(rowx, start_colx=0, end_colx=None) for
                     rowx in range(sheet.nrows)]
+    elif ext == '.xlsx':
+        try:
+            workbook = openpyxl.load_workbook(filename)
+            sheet = workbook[workbook.sheetnames[0]]
+            data = [list(row_values) for row_values in
+                    sheet.iter_rows(min_col=1, values_only=True)]
+        finally:
+            workbook.close()
+        print(data)
 
     return data
 
@@ -186,14 +194,14 @@ def init_waterlvl_measures(dirname):
     if it does not already exist.
     """
     for ext in FILE_EXTS:
-        fname = os.path.join(dirname, "waterlvl_manual_measurements" + ext)
-        if os.path.exists(fname):
+        fname = osp.join(dirname, "waterlvl_manual_measurements" + ext)
+        if osp.exists(fname):
             return
     else:
         fname = os.path.join(dirname, 'waterlvl_manual_measurements.csv')
         fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
 
-        if not os.path.exists(dirname):
+        if not osp.exists(dirname):
             os.makedirs(dirname)
         save_content_to_csv(fname, fcontent)
 
@@ -204,48 +212,27 @@ def load_waterlvl_measures(filename, well):
     resource file for the specified well.
     """
     print('Loading manual water level measures for well %s...' % well, end=" ")
-    time_mes, wl_mes = np.array([]), np.array([])
     # Determine the extension of the file.
     root, ext = os.path.splitext(filename)
     exts = [ext] if ext in FILE_EXTS else FILE_EXTS
     for ext in exts:
-        filename = root+ext
-        if os.path.exists(root+ext):
+        filename = root + ext
+        if os.path.exists(root + ext):
             break
     else:
-        # The file does not exists, so we generate an empty file with
-        # a header.
-        print("none")
-        init_waterlvl_measures(os.path.dirname(root))
-        return time_mes, wl_mes
+        print("done")
+        return np.array([]), np.array([])
 
     # Open and read the file.
+    dtypes = {'Well_ID': 'str', 'Time (days)': 'float', 'Obs. (mbgs)': 'float'}
     if ext == '.csv':
-        with open(filename, 'r') as f:
-            reader = np.array(list(csv.reader(f, delimiter=',')))
-            data = np.array(reader[1:])
-
-            well_name = np.array(data[:, 0]).astype('str')
-            time = np.array(data[:, 1]).astype('float')
-            wl = np.array(data[:, 2]).astype('float')
-
+        data = pd.read_csv(filename, dtype=dtypes)
     elif ext in ['.xlsx', '.xls']:
-        with xlrd.open_workbook(filename) as wb:
-            sheet = wb.sheet_by_index(0)
+        data = pd.read_excel(filename, dtype=dtypes)
 
-            well_name = sheet.col_values(0, start_rowx=1, end_rowx=None)
-            time = sheet.col_values(1, start_rowx=1, end_rowx=None)
-            wl = sheet.col_values(2, start_rowx=1, end_rowx=None)
-
-            well_name = np.array(well_name).astype('str')
-            time = np.array(time).astype('float')
-            wl = np.array(wl).astype('float')
-
-    if len(well_name) > 0:
-        rowx = np.where(well_name == well)[0]
-        if len(rowx) > 0:
-            wl_mes = wl[rowx]
-            time_mes = time[rowx]
+    well_data = data[data['Well_ID'] == well]
+    wl_mes = well_data['Obs. (mbgs)'].values
+    time_mes = well_data['Time (days)'].values
     print("done")
 
     return time_mes, wl_mes
