@@ -428,7 +428,7 @@ def test_store_mrc(project, testfile):
     assert wldset.mrc_exists() is True
 
     mrc_data = wldset.get_mrc()
-    assert mrc_data['params'] == [A, B]
+    assert mrc_data['params'] == (A, B)
     assert mrc_data['peak_indx'] == periods
     assert mrc_data['time'].tolist() == recess_time
     assert mrc_data['recess'].tolist() == recess_wlvl
@@ -519,5 +519,4 @@ def test_project_backward_compatibility(oldprojectfile):
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', __file__, '-v', '-rw',
-                 '-k', 'test_mrc_backward_compatibility'])
+    pytest.main(['-x', __file__, '-v', '-rw'])
