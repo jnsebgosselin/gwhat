@@ -419,8 +419,12 @@ def test_store_mrc(project, testfile):
     periods = [(2, 100), (30000, 33000)]
     recess_time = np.arange(0, 1000, 0.1).tolist()
     recess_wlvl = np.random.rand(len(recess_time)).tolist()
+    std_err = 0.002341
+    r_squared = 0.2314
+    rmse = 0.123445
 
-    wldset.set_mrc(A, B, periods, recess_time, recess_wlvl)
+    wldset.set_mrc(A, B, periods, recess_time, recess_wlvl,
+                   std_err, r_squared, rmse)
     assert wldset.mrc_exists() is True
 
     mrc_data = wldset.get_mrc()
@@ -428,6 +432,9 @@ def test_store_mrc(project, testfile):
     assert mrc_data['peak_indx'] == periods
     assert mrc_data['time'].tolist() == recess_time
     assert mrc_data['recess'].tolist() == recess_wlvl
+    assert mrc_data['std_err'] == std_err
+    assert mrc_data['r_squared'] == r_squared
+    assert mrc_data['rmse'] == rmse
 
 
 def test_mrc_backward_compatibility(project, testfile):
