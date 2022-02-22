@@ -506,6 +506,9 @@ def test_project_backward_compatibility(oldprojectfile):
                                      (41456.270833333336, 41471.125),
                                      (41273.354166666664, 41282.270833333336),
                                      (41295.427083333336, 41301.364583333336)]
+    assert mrc_data['std_err'] is None
+    assert mrc_data['r_squared'] is None
+    assert mrc_data['rmse'] is None
 
 
 if __name__ == "__main__":
