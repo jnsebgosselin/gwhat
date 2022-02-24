@@ -419,7 +419,7 @@ class WLCalc(QWidget, SaveFileMixin):
             "to use for the MRC assessment.")
         self.register_navig_and_select_tool(self.btn_addpeak)
 
-        self.btn_delpeak = OnOffToolButton('erase', size='normal')
+        self.btn_delpeak = OnOffToolButton('mrc_del', size='normal')
         self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
         self.btn_delpeak.setToolTip(
             "Left-click on a selected recession period to remove it.")
