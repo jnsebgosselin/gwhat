@@ -51,7 +51,6 @@ GWHAT_ICONS = {
     'clear_search': 'clear-search',
     'mrc_calc': 'MRCalc',
     'edit': 'edit',
-    'add_point': 'add_point',
     'erase': 'erase',
     'erase2': 'erase2',
     'showDataDots': 'show_datadots',
@@ -137,6 +136,9 @@ FA_ICONS = {
     'link_off': [
         ('mdi.link-off',),
         {'color': COLOR, 'scale_factor': 1, 'rotated': 90}],
+    'mrc_add': [
+        ('mdi.pencil-plus',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     'pan': [
         ('mdi.pan',),
         {'color': COLOR, 'scale_factor': 1.3}],

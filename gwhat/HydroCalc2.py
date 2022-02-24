@@ -412,7 +412,7 @@ class WLCalc(QWidget, SaveFileMixin):
             tip='Clear all extremum from the graph',
             triggered=self.clear_all_mrcperiods)
 
-        self.btn_addpeak = OnOffToolButton('add_point', size='normal')
+        self.btn_addpeak = OnOffToolButton('mrc_add', size='normal')
         self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
         self.btn_addpeak.setToolTip(
             "Left-click on the graph to select the recession periods "
