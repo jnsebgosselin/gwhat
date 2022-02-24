@@ -48,7 +48,6 @@ GWHAT_ICONS = {
     'select_range': 'select_range',
     'toggleMode': 'toggleMode2',
     'undo': 'undo',
-    'clear_search': 'clear-search',
     'mrc_calc': 'MRCalc',
     'edit': 'edit',
     'erase2': 'erase2',

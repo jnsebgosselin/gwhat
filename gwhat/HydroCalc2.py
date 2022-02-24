@@ -407,7 +407,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self.btn_clearPeak = create_toolbutton(
             parent=self,
-            icon='clear_search',
+            icon='clear_changes',
             iconsize=get_iconsize('normal'),
             tip='Clear all extremum from the graph',
             triggered=self.clear_all_mrcperiods)
