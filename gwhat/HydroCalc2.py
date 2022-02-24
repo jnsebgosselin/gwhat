@@ -409,20 +409,19 @@ class WLCalc(QWidget, SaveFileMixin):
             parent=self,
             icon='clear_changes',
             iconsize=get_iconsize('normal'),
-            tip='Clear all extremum from the graph',
+            tip='Clear all recession periods.',
             triggered=self.clear_all_mrcperiods)
 
         self.btn_addpeak = OnOffToolButton('pencil_add', size='normal')
         self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
         self.btn_addpeak.setToolTip(
-            "Left-click on the graph to select the recession periods "
-            "to use for the MRC assessment.")
+            "Left-click on the graph to add new recession periods.")
         self.register_navig_and_select_tool(self.btn_addpeak)
 
         self.btn_delpeak = OnOffToolButton('pencil_del', size='normal')
         self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
         self.btn_delpeak.setToolTip(
-            "Left-click on a selected recession period to remove it.")
+            "Left-click on a recession period to remove it.")
         self.register_navig_and_select_tool(self.btn_delpeak)
 
         self.btn_save_mrc = create_toolbutton(
@@ -434,8 +433,8 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self.btn_MRCalc = QPushButton('Compute MRC')
         self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
-        self.btn_MRCalc.setToolTip('<p>Calculate the Master Recession Curve'
-                                   ' (MRC) for the selected time periods.</p>')
+        self.btn_MRCalc.setToolTip(
+            'Calculate the Master Recession Curve (MRC).')
 
         mrc_tb = ToolBarWidget()
         for btn in [self.btn_undo, self.btn_clearPeak, self.btn_addpeak,
