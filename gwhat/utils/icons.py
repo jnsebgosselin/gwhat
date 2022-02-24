@@ -49,7 +49,6 @@ GWHAT_ICONS = {
     'toggleMode': 'toggleMode2',
     'undo': 'undo',
     'mrc_calc': 'MRCalc',
-    'edit': 'edit',
     'erase2': 'erase2',
     'showDataDots': 'show_datadots',
     'stratigraphy': 'stratigraphy',
