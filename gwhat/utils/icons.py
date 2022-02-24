@@ -134,11 +134,11 @@ FA_ICONS = {
     'link_off': [
         ('mdi.link-off',),
         {'color': COLOR, 'scale_factor': 1, 'rotated': 90}],
-    'mrc_add': [
+    'pencil_add': [
         ('mdi.pencil-plus',),
         {'color': COLOR, 'scale_factor': 1.2}],
-    'mrc_del': [
-        ('mdi.pencil-remove',),
+    'pencil_del': [
+        ('mdi.pencil-minus',),
         {'color': COLOR, 'scale_factor': 1.2}],
     'pan': [
         ('mdi.pan',),
