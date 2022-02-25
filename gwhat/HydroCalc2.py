@@ -40,6 +40,7 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
+from gwhat.hydrocalc.selectors import WLCalcVSpanSelector
 from gwhat.recession.recession_calc import calculate_mrc
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
