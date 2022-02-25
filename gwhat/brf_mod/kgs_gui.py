@@ -32,8 +32,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 
 # ---- Local imports
-from gwhat.widgets.buttons import OnOffPushButton
+from gwhat.hydrocalc.api import WLCalcTool
 from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
+from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.layout import HSep
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
@@ -124,9 +125,14 @@ class KGSBRFInstaller(QFrame):
         QApplication.restoreOverrideCursor()
 
 
-class BRFManager(QFrame):
+class BRFManager(WLCalcTool):
     sig_brfperiod_changed = QSignal(tuple)
     sig_select_brfperiod_requested = QSignal(bool)
+
+    __toolname__ = 'brf'
+    __tooltitle__ = 'BRF'
+    __tooltip__ = ("A tool to evaluate the barometric "
+                   "response function of wells.")
 
     def __init__(self, wldset=None, parent=None):
         super(BRFManager, self).__init__(parent)
@@ -341,12 +347,11 @@ class BRFManager(QFrame):
 
         self._plot_brfperiod()
 
-    # ---- Public API
+    # ---- WLCalcTool API
     def register_tool(self, wlcalc: QWidget):
         self.wlcalc = wlcalc
-        wlcalc.tools_tabwidget.addTab(self, 'BRF')
-        wlcalc.tools_tabwidget.setTabToolTip(
-            2, "A tool to evaluate the barometric response function of wells.")
+        wlcalc.tools_tabwidget.addTab(self, self.title())
+        wlcalc.tools_tabwidget.setTabToolTip(2, self.tooltip())
 
         self.wlcalc.tools_tabwidget.currentChanged.connect(
             lambda: self.toggle_brfperiod_selection(False))
@@ -366,8 +371,7 @@ class BRFManager(QFrame):
 
         self.sig_brfperiod_changed.connect(self._plot_brfperiod)
 
-    def close(self):
-        """"Clos this brf manager"""
+    def _close(self):
         CONF.set('brf', 'graphs_labels_language', self.viewer.get_language())
         CONF.set('brf', 'graph_opt_panel_is_visible',
                  self.viewer._graph_opt_panel_is_visible)
@@ -385,6 +389,25 @@ class BRFManager(QFrame):
                  self.detrend_waterlevels_cbox.isChecked())
         super().close()
 
+    def set_wldset(self, wldset):
+        self.wldset = wldset
+        self.viewer.set_wldset(wldset)
+        self.toggle_brfperiod_selection(False)
+        self.setEnabled(wldset is not None)
+        if wldset is not None:
+            xldates = self.wldset.xldates
+            self.set_daterange((xldates[0], xldates[-1]))
+
+            # Set the period over which the BRF would be evaluated.
+            saved_brfperiod = wldset.get_brfperiod()
+            self.set_brfperiod((saved_brfperiod[0] or np.floor(xldates[0]),
+                                saved_brfperiod[1] or np.floor(xldates[-1])))
+        self._plot_brfperiod()
+
+    def set_wxdset(self, wxdset):
+        pass
+
+    # ---- BRF Tool Interface
     @property
     def nlag_baro(self):
         """Return the number of lags to use for barometric correction."""
@@ -446,22 +469,6 @@ class BRFManager(QFrame):
                 widget.setDateTime(qdatetime_from_xldate(xldate))
                 widget.blockSignals(False)
         self.wldset.save_brfperiod(period)
-
-    def set_wldset(self, wldset):
-        """Set the namespace for the wldset in the widget."""
-        self.wldset = wldset
-        self.viewer.set_wldset(wldset)
-        self.toggle_brfperiod_selection(False)
-        self.setEnabled(wldset is not None)
-        if wldset is not None:
-            xldates = self.wldset.xldates
-            self.set_daterange((xldates[0], xldates[-1]))
-
-            # Set the period over which the BRF would be evaluated.
-            saved_brfperiod = wldset.get_brfperiod()
-            self.set_brfperiod((saved_brfperiod[0] or np.floor(xldates[0]),
-                                saved_brfperiod[1] or np.floor(xldates[-1])))
-        self._plot_brfperiod()
 
     def set_daterange(self, daterange):
         """
