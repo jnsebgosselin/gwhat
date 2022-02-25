@@ -355,13 +355,14 @@ class BRFManager(QFrame):
             self._select_brfperiod_btn)
 
         self._period_selector = WLCalcVSpanSelector(
-            wlcalc.fig.axes[0], wlcalc, onselected=self._on_period_selected)
+            wlcalc.fig.axes[0], wlcalc, onselected=self._on_period_selected,
+            axvspan_color='#009900')
         wlcalc.install_axeswidget(self._period_selector)
 
         # Init axvline artists to plot the BRF period.
         ax = wlcalc.fig.axes[0]
-        self._axvline1 = ax.axvline(0, color='red', lw=1)
-        self._axvline2 = ax.axvline(0, color='red', lw=1)
+        self._axvline1 = ax.axvline(0, color='#009900', lw=1)
+        self._axvline2 = ax.axvline(0, color='#009900', lw=1)
 
         self.sig_brfperiod_changed.connect(self._plot_brfperiod)
 
