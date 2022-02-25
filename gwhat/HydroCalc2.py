@@ -208,10 +208,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500,
                                ls='-')
 
-        self._brf_selector = ax0.axvspan(
-            0, 0, edgecolor='black', facecolor='red', linestyle=':',
-            fill=True, alpha=0.15, visible=False)
-
         # Predicted GLUE water levels
         self.glue_plt, = ax0.plot([], [])
 
