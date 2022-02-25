@@ -33,7 +33,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 # ---- Local imports
 from gwhat.widgets.buttons import OnOffPushButton
-from gwhat.hydrocalc.selectors import WLCalcVSpanSelector
+from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
 from gwhat.widgets.layout import HSep
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
