@@ -120,11 +120,12 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
                 if event.xdata:
                     self.axvline.set_xdata((event.xdata, event.xdata))
 
-                onrelease_xdata = tuple(
+                onrelease_xdata = tuple((
                     min(self._onrelease_xdata) -
                     self.wlcalc.dt4xls2mpl * self.wlcalc.dformat,
                     max(self._onrelease_xdata) -
-                    self.wlcalc.dt4xls2mpl * self.wlcalc.dformat)
+                    self.wlcalc.dt4xls2mpl * self.wlcalc.dformat
+                    ))
                 self._onpress_button = None
                 self._onpress_xdata = []
                 self._onrelease_xdata = []
