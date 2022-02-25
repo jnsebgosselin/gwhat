@@ -20,7 +20,7 @@ from typing import Any, Callable
 import numpy as np
 import pandas as pd
 from qtpy.QtGui import QImage
-from PyQt5.QtCore import Qt, QObject
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
@@ -216,10 +216,6 @@ class WLCalc(QWidget, SaveFileMixin):
             (0, 0), 0, 0, edgecolor='black', facecolor='red', linestyle=':',
             fill=True, alpha=0.15, visible=False)
         ax0.add_patch(self._rect_selector)
-
-        # Vertical guide line under cursor.
-        self.vguide = ax0.axvline(
-            -1, color='black', zorder=40, linestyle='--', lw=1, visible=False)
 
         # x and y coorrdinate labels displayed at the right-bottom corner
         # of the graph
@@ -1050,7 +1046,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
     def draw(self):
         """Draw the canvas and save a snapshot of the background figure."""
-        self.vguide.set_visible(False)
         self.xycoord.set_visible(False)
         self.axvspan_highlight.set_visible(False)
         for widget in self._axes_widgets:
@@ -1199,17 +1194,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
             self.fig.axes[0].draw_artist(self._rect_selector)
 
-    def _draw_mouse_cursor(self, x, y):
-        """Draw a vertical and horizontal line at the specified xy position."""
-        if not all((x, y)):
-            self.vguide.set_visible(False)
-        elif self.brf_eval_widget.is_brfperiod_selection_toggled():
-            self.vguide.set_visible(True)
-            self.vguide.set_xdata(x)
-            self.fig.axes[0].draw_artist(self.vguide)
-        else:
-            self.vguide.set_visible(False)
-
     # ----- Mouse Event Handlers
     def is_all_btn_raised(self):
         """
@@ -1271,7 +1255,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Draw the vertical cursor guide.
         x, y = event.xdata, event.ydata
-        self._draw_mouse_cursor(x, y)
 
         # Draw the xy coordinates on the graph.
         if all((x, y)):
@@ -1323,7 +1306,6 @@ class WLCalc(QWidget, SaveFileMixin):
         been clicked.
         """
         self.__mouse_btn_is_pressed = False
-        self.vguide.set_color('black')
 
         # Disconnect the pan and zoom callback before drawing the canvas again.
         if self.pan_is_active:
