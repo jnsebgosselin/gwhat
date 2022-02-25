@@ -23,7 +23,8 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
     sig_span_selected = QSignal(tuple)
 
     def __init__(self, ax: Axes, wlcalc: QWidget,
-                 useblit: bool = True, onselected: Callable = None):
+                 useblit: bool = True, onselected: Callable = None,
+                 axvspan_color: str = 'red', axvline_color: str = 'black'):
         AxesWidget.__init__(self, ax)
         QObject.__init__(self)
         self.visible = True
@@ -35,12 +36,12 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
 
         self.axvspan = ax.axvspan(
             ax.get_xbound()[0], ax.get_xbound()[0], visible=False,
-            color='red', linewidth=1, ls='-', animated=self.useblit,
+            color=axvspan_color, linewidth=1, ls='-', animated=self.useblit,
             alpha=0.1)
 
         self.axvline = ax.axvline(
-            ax.get_ybound()[0], visible=False, color='black', linewidth=1,
-            ls='--', animated=self.useblit)
+            ax.get_ybound()[0], visible=False, color=axvline_color,
+            linewidth=1, ls='--', animated=self.useblit)
 
         self._onpress_xdata = []
         self._onpress_button = None
