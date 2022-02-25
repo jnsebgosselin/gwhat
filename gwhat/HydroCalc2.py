@@ -29,8 +29,6 @@ from PyQt5.QtWidgets import (
     QMessageBox, QFileDialog)
 
 import matplotlib as mpl
-from matplotlib.axes import Axes
-from matplotlib.widgets import AxesWidget
 import matplotlib.dates as mdates
 from matplotlib.figure import Figure as MplFigure
 from matplotlib.patches import Rectangle
@@ -70,6 +68,7 @@ class WLCalc(QWidget, SaveFileMixin):
         QWidget.__init__(self, parent)
         SaveFileMixin.__init__(self)
 
+        self.tools = {}
         self._navig_and_select_tools = []
         self._wldset = None
 
@@ -110,7 +109,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Setup BRF calculation tool.
         self.brf_eval_widget = BRFManager(parent=self)
-        self.brf_eval_widget.register_tool(self)
+        self.install_tool(self.brf_eval_widget)
 
         self.tools_tabwidget.setCurrentIndex(
             CONF.get('hydrocalc', 'current_tool_index'))
@@ -501,10 +500,18 @@ class WLCalc(QWidget, SaveFileMixin):
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
 
+    def install_tool(self, tool):
+        """Install the provided tool in WLCalc."""
+        if tool.name() in self.tools:
+            print(
+                "WARNING: There is already a tool named '{}' installed "
+                "in WLCalc.".format(tool.name()))
+            return
+        tool.register_tool(self)
+        self.tools[tool.name()] = tool
+
     def install_axeswidget(self, axes_widget):
-        """
-        Install the provided axes widget in the WLCalc.
-        """
+        """Install the provided axes widget in WLCalc."""
         self._axes_widgets.append(axes_widget)
 
     def emit_warning(self, message, title='Warning'):
@@ -533,7 +540,8 @@ class WLCalc(QWidget, SaveFileMixin):
         self.mrc_eval_widget.setEnabled(self.wldset is not None)
 
         # Setup BRF widget.
-        self.brf_eval_widget.set_wldset(wldset)
+        for tool in self.tools.values():
+            tool.set_wldset(wldset)
 
         self.setup_hydrograph()
         self.toolbar.update()
@@ -554,7 +562,9 @@ class WLCalc(QWidget, SaveFileMixin):
         CONF.set('hydrocalc', 'show_glue', self.btn_show_glue.value())
         CONF.set('hydrocalc', 'show_meas_wl', self.btn_show_meas_wl.value())
 
-        self.brf_eval_widget.close()
+        for tool in self.tools.values():
+            tool.close()
+
         super().close()
 
     def copy_to_clipboard(self):
