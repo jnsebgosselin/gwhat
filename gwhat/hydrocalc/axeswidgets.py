@@ -11,6 +11,8 @@
 from typing import Any, Callable
 
 # ---- Third party imports
+import numpy as np
+
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import QWidget
@@ -55,6 +57,16 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
+
+        self.axvline.set_xdata((np.inf, np.inf))
+        self.axvline.set_visible(active)
+
+        self.axvspan.xy = [[np.inf, 1],
+                           [np.inf, 0],
+                           [np.inf, 0],
+                           [np.inf, 1]]
+        self.axvspan.set_visible(active)
+
         super().set_active(active)
         self.wlcalc.draw()
 
