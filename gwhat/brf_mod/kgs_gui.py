@@ -37,7 +37,6 @@ from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
 from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.layout import HSep
 from gwhat.config.gui import FRAME_SYLE
-from gwhat.config.main import CONF
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_icon
 from gwhat.utils.dates import qdatetime_from_xldate
@@ -136,8 +135,8 @@ class BRFManager(WLCalcTool):
         self._bp_and_et_lags_are_linked = False
 
         self.viewer = BRFViewer(wldset, parent)
-        self.viewer.set_language(CONF.get('brf', 'graphs_labels_language'))
-        if CONF.get('brf', 'graph_opt_panel_is_visible', False):
+        self.viewer.set_language(self.get_option('graphs_labels_language'))
+        if self.get_option('graph_opt_panel_is_visible', False):
             self.viewer.toggle_graphpannel()
         self.viewer.sig_import_params_in_manager_request.connect(
             self.import_current_viewer_brf_parameters)
@@ -153,7 +152,7 @@ class BRFManager(WLCalcTool):
         # Detrend and Correct Options
         self.baro_spinbox = QSpinBox()
         self.baro_spinbox.setRange(0, 9999)
-        self.baro_spinbox.setValue(CONF.get('brf', 'nbr_of_baro_lags'))
+        self.baro_spinbox.setValue(self.get_option('nbr_of_baro_lags'))
         self.baro_spinbox.setKeyboardTracking(True)
         self.baro_spinbox.valueChanged.connect(
             lambda value: self._handle_lag_value_changed(self.baro_spinbox))
@@ -161,17 +160,17 @@ class BRFManager(WLCalcTool):
         self.earthtides_spinbox = QSpinBox()
         self.earthtides_spinbox.setRange(0, 9999)
         self.earthtides_spinbox.setValue(
-            CONF.get('brf', 'nbr_of_earthtides_lags'))
+            self.get_option('nbr_of_earthtides_lags'))
         self.earthtides_spinbox.setKeyboardTracking(True)
         self.earthtides_spinbox.setEnabled(
-            CONF.get('brf', 'compute_with_earthtides'))
+            self.get_option('compute_with_earthtides'))
         self.earthtides_spinbox.valueChanged.connect(
             lambda value: self._handle_lag_value_changed(
                 self.earthtides_spinbox))
 
         self.earthtides_cbox = QCheckBox('No. of ET lags :')
         self.earthtides_cbox.setChecked(
-            CONF.get('brf', 'compute_with_earthtides'))
+            self.get_option('compute_with_earthtides'))
         self.earthtides_cbox.toggled.connect(
             lambda: self.earthtides_spinbox.setEnabled(
                 self.earthtides_cbox.isChecked()))
@@ -184,11 +183,11 @@ class BRFManager(WLCalcTool):
             lambda checked: self.toggle_link_bp_and_et_lags(
                 not self._bp_and_et_lags_are_linked))
         self.toggle_link_bp_and_et_lags(
-            CONF.get('brf', 'bp_and_et_lags_are_linked', False))
+            self.get_option('bp_and_et_lags_are_linked', False))
 
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
         self.detrend_waterlevels_cbox.setChecked(
-            CONF.get('brf', 'detrend_waterlevels'))
+            self.get_option('detrend_waterlevels'))
 
         # Lags spinboxes layout.
         lags_layout = QGridLayout()
@@ -355,21 +354,21 @@ class BRFManager(WLCalcTool):
         self._axvline2 = ax.axvline(0, color='#009900', lw=1)
 
     def _close(self):
-        CONF.set('brf', 'graphs_labels_language', self.viewer.get_language())
-        CONF.set('brf', 'graph_opt_panel_is_visible',
-                 self.viewer._graph_opt_panel_is_visible)
+        self.set_option('graphs_labels_language', self.viewer.get_language())
+        self.set_option('graph_opt_panel_is_visible',
+                        self.viewer._graph_opt_panel_is_visible)
         self.viewer.close()
 
-        CONF.set('brf', 'bp_and_et_lags_are_linked',
-                 self._bp_and_et_lags_are_linked)
-        CONF.set('brf', 'compute_with_earthtides',
-                 self.earthtides_cbox.isChecked())
-        CONF.set('brf', 'nbr_of_earthtides_lags',
-                 self.earthtides_spinbox.value())
-        CONF.set('brf', 'nbr_of_baro_lags',
-                 self.baro_spinbox.value())
-        CONF.set('brf', 'detrend_waterlevels',
-                 self.detrend_waterlevels_cbox.isChecked())
+        self.set_option('brf', 'bp_and_et_lags_are_linked',
+                        self._bp_and_et_lags_are_linked)
+        self.set_option('brf', 'compute_with_earthtides',
+                        self.earthtides_cbox.isChecked())
+        self.set_option('brf', 'nbr_of_earthtides_lags',
+                        self.earthtides_spinbox.value())
+        self.set_option('brf', 'nbr_of_baro_lags',
+                        self.baro_spinbox.value())
+        self.set_option('brf', 'detrend_waterlevels',
+                        self.detrend_waterlevels_cbox.isChecked())
         super().close()
 
     def set_wldset(self, wldset):
