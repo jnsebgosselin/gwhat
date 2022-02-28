@@ -127,7 +127,6 @@ class KGSBRFInstaller(QFrame):
 
 class BRFManager(WLCalcTool):
     sig_brfperiod_changed = QSignal(tuple)
-    sig_select_brfperiod_requested = QSignal(bool)
 
     __toolname__ = 'brf'
     __tooltitle__ = 'BRF'
@@ -217,18 +216,14 @@ class BRFManager(WLCalcTool):
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
         self.date_start_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
-        self.date_start_edit.dateChanged.connect(
-            lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
-        self.date_start_edit.dateChanged.connect(
-            lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
+        self.date_start_edit.dateChanged.connect(self._plot_brfperiod)
+        self.date_start_edit.dateChanged.connect(self._plot_brfperiod)
 
         self.date_end_edit = QDateTimeEdit()
         self.date_end_edit.setCalendarPopup(True)
         self.date_end_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
-        self.date_end_edit.dateChanged.connect(
-            lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
-        self.date_end_edit.dateChanged.connect(
-            lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
+        self.date_end_edit.dateChanged.connect(self._plot_brfperiod)
+        self.date_end_edit.dateChanged.connect(self._plot_brfperiod)
 
         self._select_brfperiod_btn = OnOffPushButton('Select')
         self._select_brfperiod_btn.setIcon(get_icon('select_range'))
@@ -368,8 +363,6 @@ class BRFManager(WLCalcTool):
         ax = wlcalc.fig.axes[0]
         self._axvline1 = ax.axvline(0, color='#009900', lw=1)
         self._axvline2 = ax.axvline(0, color='#009900', lw=1)
-
-        self.sig_brfperiod_changed.connect(self._plot_brfperiod)
 
     def _close(self):
         CONF.set('brf', 'graphs_labels_language', self.viewer.get_language())
