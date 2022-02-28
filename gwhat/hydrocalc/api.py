@@ -13,11 +13,10 @@ from abc import abstractmethod
 
 # ---- Third party imports
 from appconfigs.user import NoDefault
-from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QWidget, QFrame
 
 # ---- Local imports
-from sardes.config.main import CONF
+from gwhat.config.main import CONF
 
 
 class WLCalcToolBase(QFrame):
