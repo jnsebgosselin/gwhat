@@ -126,8 +126,6 @@ class KGSBRFInstaller(QFrame):
 
 
 class BRFManager(WLCalcTool):
-    sig_brfperiod_changed = QSignal(tuple)
-
     __toolname__ = 'brf'
     __tooltitle__ = 'BRF'
     __tooltip__ = ("A tool to evaluate the barometric "
@@ -515,7 +513,7 @@ class BRFManager(WLCalcTool):
         xls_date_end = xldate_from_datetime_tuple(
             brfdata.date_end.timetuple()[:6], 0)
         self.set_brfperiod((xls_date_start, xls_date_end))
-        self.sig_brfperiod_changed.emit((xls_date_start, xls_date_end))
+        self._plot_brfperiod()
 
     def _handle_lag_value_changed(self, sender):
         """
