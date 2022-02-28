@@ -306,6 +306,7 @@ class BRFManager(WLCalcTool):
             brfperiod = self.get_brfperiod()
         else:
             brfperiod = [None, None]
+
         for x, vline in zip(brfperiod, [self._axvline1, self._axvline2]):
             vline.set_visible(x is not None)
             if x is not None:
@@ -320,26 +321,17 @@ class BRFManager(WLCalcTool):
         """
         if self.wlcalc.wldset is None:
             self._period_selector.set_active(False)
-            self._select_brfperiod_btn.setValue(False)
+            self._select_brfperiod_btn.setValue(False, silent=True)
             if value is True:
                 self.wlcalc.emit_warning(
                     "Please import a valid water level dataset first.")
             return
 
         self._period_selector.set_active(value)
-        self._select_brfperiod_btn.setValue(value)
+        self._select_brfperiod_btn.setValue(value, silent=True)
         if value is True:
-            self._previous_toggled_navig_and_select_tool = None
-            for tool in self.wlcalc._navig_and_select_tools:
-                if tool.value() is True:
-                    self._previous_toggled_navig_and_select_tool = tool
-                    break
             self.wlcalc.toggle_navig_and_select_tools(
                 self._select_brfperiod_btn)
-        else:
-            if self._previous_toggled_navig_and_select_tool is not None:
-                self._previous_toggled_navig_and_select_tool.setValue(True)
-
         self._plot_brfperiod()
 
     # ---- WLCalcTool API
