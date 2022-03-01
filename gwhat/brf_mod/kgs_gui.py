@@ -269,13 +269,6 @@ class BRFManager(WLCalcTool):
         if not KGSBRFInstaller().kgsbrf_is_installed():
             self.__install_kgs_brf_installer()
 
-    def showEvent(self, event):
-        """Extend Qt method"""
-        # This is required to make sure the BRF is plotted correctly on
-        # restart.
-        self._plot_brfperiod()
-        super().showEvent(event)
-
     # ---- WLCalc integration
     def _on_period_selected(self, xdata):
         """
@@ -336,6 +329,8 @@ class BRFManager(WLCalcTool):
         self.wlcalc = wlcalc
         wlcalc.tools_tabwidget.addTab(self, self.title())
         wlcalc.tools_tabwidget.setTabToolTip(2, self.tooltip())
+        wlcalc.tools_tabwidget.currentChanged.connect(
+            self._plot_brfperiod)
 
         self.wlcalc.tools_tabwidget.currentChanged.connect(
             lambda: self.toggle_brfperiod_selection(False))
@@ -352,6 +347,8 @@ class BRFManager(WLCalcTool):
         ax = wlcalc.fig.axes[0]
         self._axvline1 = ax.axvline(0, color='#009900', lw=1)
         self._axvline2 = ax.axvline(0, color='#009900', lw=1)
+
+        self._plot_brfperiod()
 
     def _close(self):
         self.set_option('graphs_labels_language', self.viewer.get_language())
