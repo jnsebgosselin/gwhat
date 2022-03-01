@@ -339,7 +339,7 @@ class BRFManager(WLCalcTool):
         wlcalc.tools_tabwidget.addTab(self, self.title())
         wlcalc.tools_tabwidget.setTabToolTip(2, self.tooltip())
         wlcalc.tools_tabwidget.currentChanged.connect(
-            self._plot_brfperiod)
+            lambda: self._plot_brfperiod())
 
         self.wlcalc.tools_tabwidget.currentChanged.connect(
             lambda: self.toggle_brfperiod_selection(False))
