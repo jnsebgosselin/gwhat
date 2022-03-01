@@ -131,8 +131,11 @@ class BRFManager(WLCalcTool):
                    "response function of wells.")
 
     def __init__(self, wldset=None, parent=None):
-        super(BRFManager, self).__init__(parent)
+        super().__init__(parent)
         self._bp_and_et_lags_are_linked = False
+        self.wlcalc = None
+        self._previous_toggled_navig_and_select_tool = None
+        self.kgs_brf_installer = None
 
         self.viewer = BRFViewer(wldset, parent)
         self.viewer.set_language(self.get_option('graphs_labels_language'))
@@ -141,9 +144,6 @@ class BRFManager(WLCalcTool):
         self.viewer.sig_import_params_in_manager_request.connect(
             self.import_current_viewer_brf_parameters)
 
-        self.wlcalc = None
-        self._previous_toggled_navig_and_select_tool = None
-        self.kgs_brf_installer = None
         self.__initGUI__()
 
     def __initGUI__(self):
