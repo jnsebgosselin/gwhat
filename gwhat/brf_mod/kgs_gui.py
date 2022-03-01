@@ -298,10 +298,12 @@ class BRFManager(WLCalcTool):
             brfperiod = [None, None]
 
         for x, vline in zip(brfperiod, [self._axvline1, self._axvline2]):
-            vline.set_visible(x is not None)
-            if x is not None:
-                x = x + self.wlcalc.dt4xls2mpl * self.wlcalc.dformat
-                vline.set_xdata(x)
+            if x is None:
+                vline.set_visible(False)
+            else:
+                vline.set_visible(True)
+                vline.set_xdata(
+                    x + self.wlcalc.dt4xls2mpl * self.wlcalc.dformat)
         self.wlcalc.draw()
 
     def toggle_brfperiod_selection(self, value):
