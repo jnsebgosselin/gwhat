@@ -108,7 +108,7 @@ class WLCalcTool(WLCalcToolBase):
 
     @abstractmethod
     def is_registered(self):
-        """Return whether this tool is registered to a WLCalc instance.""" 
+        """Return whether this tool is registered to a WLCalc instance."""
         pass
 
     @abstractmethod
