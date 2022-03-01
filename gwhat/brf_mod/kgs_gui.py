@@ -371,15 +371,15 @@ class BRFManager(WLCalcTool):
                         self.viewer._graph_opt_panel_is_visible)
         self.viewer.close()
 
-        self.set_option('brf', 'bp_and_et_lags_are_linked',
+        self.set_option('bp_and_et_lags_are_linked',
                         self._bp_and_et_lags_are_linked)
-        self.set_option('brf', 'compute_with_earthtides',
+        self.set_option('compute_with_earthtides',
                         self.earthtides_cbox.isChecked())
-        self.set_option('brf', 'nbr_of_earthtides_lags',
+        self.set_option('nbr_of_earthtides_lags',
                         self.earthtides_spinbox.value())
-        self.set_option('brf', 'nbr_of_baro_lags',
+        self.set_option('nbr_of_baro_lags',
                         self.baro_spinbox.value())
-        self.set_option('brf', 'detrend_waterlevels',
+        self.set_option('detrend_waterlevels',
                         self.detrend_waterlevels_cbox.isChecked())
         super().close()
 
