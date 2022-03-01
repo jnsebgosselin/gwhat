@@ -365,7 +365,7 @@ class BRFManager(WLCalcTool):
 
         self._plot_brfperiod()
 
-    def _close(self):
+    def close_tool(self):
         self.set_option('graphs_labels_language', self.viewer.get_language())
         self.set_option('graph_opt_panel_is_visible',
                         self.viewer._graph_opt_panel_is_visible)

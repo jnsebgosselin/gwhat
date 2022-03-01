@@ -559,7 +559,7 @@ class WLCalc(QWidget, SaveFileMixin):
         CONF.set('hydrocalc', 'show_meas_wl', self.btn_show_meas_wl.value())
 
         for tool in self.tools.values():
-            tool.close()
+            tool.close_tool()
 
         super().close()
 
