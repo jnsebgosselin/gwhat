@@ -190,6 +190,11 @@ class MainWindow(QMainWindow):
         self.tab_hydrocalc.setEnabled(True)
 
     # ---- Qt method override/extension
+    def show(self):
+        super().show()
+        self.tab_hydrocalc.show()
+        self.tab_hydrograph.show()
+
     def closeEvent(self, event):
         """Qt method override to close the project before close the app."""
         self._save_window_geometry()

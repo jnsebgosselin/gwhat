@@ -548,6 +548,12 @@ class WLCalc(QWidget, SaveFileMixin):
         self.rechg_eval_widget.set_wxdset(wxdset)
         self.draw_weather()
 
+    def show(self):
+        """Show this groundwater level calc window."""
+        for tool in self.tools.values():
+            tool.show()
+        super().show()
+
     def close(self):
         """Close this groundwater level calc window."""
         CONF.set('hydrocalc', 'current_tool_index',

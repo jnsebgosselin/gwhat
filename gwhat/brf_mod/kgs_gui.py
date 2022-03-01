@@ -271,6 +271,10 @@ class BRFManager(WLCalcTool):
             self.__install_kgs_brf_installer()
 
     # ---- WLCalc integration
+    def show(self):
+        super().show()
+        self._plot_brfperiod()
+
     @wlcalcmethod
     def _on_period_selected(self, xdata):
         """
@@ -336,12 +340,9 @@ class BRFManager(WLCalcTool):
 
     def register_tool(self, wlcalc: QWidget):
         self.wlcalc = wlcalc
-        wlcalc.tools_tabwidget.addTab(self, self.title())
-        wlcalc.tools_tabwidget.setTabToolTip(2, self.tooltip())
+        index = wlcalc.tools_tabwidget.addTab(self, self.title())
+        wlcalc.tools_tabwidget.setTabToolTip(index, self.tooltip())
         wlcalc.tools_tabwidget.currentChanged.connect(
-            lambda: self._plot_brfperiod())
-
-        self.wlcalc.tools_tabwidget.currentChanged.connect(
             lambda: self.toggle_brfperiod_selection(False))
 
         wlcalc.register_navig_and_select_tool(

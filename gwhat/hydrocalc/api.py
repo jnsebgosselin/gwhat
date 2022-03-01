@@ -112,6 +112,10 @@ class WLCalcTool(WLCalcToolBase):
         pass
 
     @abstractmethod
+    def show(self):
+        pass
+
+    @abstractmethod
     def close(self):
         pass
 
