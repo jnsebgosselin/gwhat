@@ -131,6 +131,9 @@ class BRFManager(WLCalcTool):
     __tooltip__ = ("A tool to evaluate the barometric "
                    "response function of wells.")
 
+    # Whether it is the first time showEvent is called.
+    _first_show_event = True
+
     def __init__(self, wldset=None, parent=None):
         super().__init__(parent)
         self._bp_and_et_lags_are_linked = False
@@ -145,9 +148,9 @@ class BRFManager(WLCalcTool):
         self.viewer.sig_import_params_in_manager_request.connect(
             self.import_current_viewer_brf_parameters)
 
-        self.__initGUI__()
+        self.setup()
 
-    def __initGUI__(self):
+    def setup(self):
         self.setContentsMargins(10, 10, 10, 10)
 
         # Detrend and Correct Options
@@ -270,11 +273,13 @@ class BRFManager(WLCalcTool):
         if not KGSBRFInstaller().kgsbrf_is_installed():
             self.__install_kgs_brf_installer()
 
-    # ---- WLCalc integration
-    def show(self):
-        super().show()
-        self._plot_brfperiod()
+    def showEvent(self, event):
+        if self._first_show_event:
+            self._first_show_event = False
+            self._plot_brfperiod()
+        super().showEvent(event)
 
+    # ---- WLCalc integration
     @wlcalcmethod
     def _on_period_selected(self, xdata):
         """
