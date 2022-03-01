@@ -32,7 +32,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 
 # ---- Local imports
-from gwhat.hydrocalc.api import WLCalcTool
+from gwhat.hydrocalc.api import WLCalcTool, wlcalcmethod
 from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
 from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.layout import HSep
@@ -270,6 +270,7 @@ class BRFManager(WLCalcTool):
             self.__install_kgs_brf_installer()
 
     # ---- WLCalc integration
+    @wlcalcmethod
     def _on_period_selected(self, xdata):
         """
         Handle when a period is selected for the BRF calculations.
@@ -287,6 +288,7 @@ class BRFManager(WLCalcTool):
         self.set_brfperiod(brfperiod)
         self.toggle_brfperiod_selection(False)
 
+    @wlcalcmethod
     def _plot_brfperiod(self):
         """
         Plot on the graph the vertical lines that are used to define the period
@@ -306,6 +308,7 @@ class BRFManager(WLCalcTool):
                     x + self.wlcalc.dt4xls2mpl * self.wlcalc.dformat)
         self.wlcalc.draw()
 
+    @wlcalcmethod
     def toggle_brfperiod_selection(self, value):
         """
         Toggle on or off the option to select the BRF calculation period on
@@ -327,6 +330,9 @@ class BRFManager(WLCalcTool):
         self._plot_brfperiod()
 
     # ---- WLCalcTool API
+    def is_registered(self):
+        return self.wlcalc is not None
+
     def register_tool(self, wlcalc: QWidget):
         self.wlcalc = wlcalc
         wlcalc.tools_tabwidget.addTab(self, self.title())
