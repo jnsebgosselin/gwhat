@@ -8,6 +8,7 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard library imports
+import functools
 from typing import Any, Callable
 from abc import abstractmethod
 
@@ -17,6 +18,16 @@ from PyQt5.QtWidgets import QWidget, QFrame
 
 # ---- Local imports
 from gwhat.config.main import CONF
+
+
+def wlcalcmethod(func):
+    @functools.wraps(func)
+    def wrapper(tool, *args, **kwargs):
+        if not tool.is_registered():
+            return
+        else:
+            return func(*args, **kwargs)
+    return wrapper
 
 
 class WLCalcToolBase(QFrame):
@@ -93,6 +104,11 @@ class WLCalcTool(WLCalcToolBase):
 
     @abstractmethod
     def register_tool(self, wlcalc: QWidget):
+        pass
+
+    @abstractmethod
+    def is_registered(self):
+        """Return whether this tool is registered to a WLCalc instance.""" 
         pass
 
     @abstractmethod
