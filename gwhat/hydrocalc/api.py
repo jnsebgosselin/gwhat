@@ -26,7 +26,7 @@ def wlcalcmethod(func):
         if not tool.is_registered():
             return
         else:
-            return func(*args, **kwargs)
+            return func(tool, *args, **kwargs)
     return wrapper
 
 
