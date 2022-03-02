@@ -18,7 +18,7 @@ import numpy as np
 # ---- Local library imports
 from gwhat.common.utils import save_content_to_excel, save_content_to_csv
 from gwhat.projet.reader_waterlvl import (
-    load_waterlvl_measures, init_waterlvl_measures, WLDataFrame)
+    load_waterlvl_measures, init_waterlvl_measures, WLDataset)
 
 DATA = [['Well name = ', "êi!@':i*"],
         ['well id : ', '1234ABC'],
@@ -72,7 +72,7 @@ def datatmpdir(tmp_path):
 # =============================================================================
 @pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
 def test_reading_waterlvl(datatmpdir, ext):
-    df = WLDataFrame(osp.join(datatmpdir, 'water_level_datafile' + ext))
+    df = WLDataset(osp.join(datatmpdir, 'water_level_datafile' + ext))
 
     expected_results = {
         'Well': "êi!@':i*",

@@ -24,7 +24,7 @@ from gwhat.common.utils import save_content_to_file
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.manager_projet import (
     ProjetManager, QFileDialog, QMessageBox, CONF)
-from gwhat.projet.reader_waterlvl import WLDataFrame
+from gwhat.projet.reader_waterlvl import WLDataset
 from gwhat.utils.math import nan_as_text_tolist
 
 NAME = "test @ prô'jèt!"
@@ -409,7 +409,7 @@ def test_store_mrc(project, testfile):
     Test that MRC data and results are saved and retrieved as expected
     in GWHAT project files.
     """
-    project.add_wldset('dataset_test', WLDataFrame(testfile))
+    project.add_wldset('dataset_test', WLDataset(testfile))
     wldset = project.get_wldset('dataset_test')
     assert wldset.mrc_exists() is False
 
@@ -449,7 +449,7 @@ def test_mrc_backward_compatibility(project, testfile):
     See jnsebgosselin/gwhat#377.
     """
     # Add the dataset to the project.
-    project.add_wldset('dataset_test', WLDataFrame(testfile))
+    project.add_wldset('dataset_test', WLDataset(testfile))
     wldset = project.get_wldset('dataset_test')
 
     # Make sure that the namespace was created automatically for the mrc
