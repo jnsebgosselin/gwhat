@@ -59,7 +59,8 @@ HEADER_REGEX = {
 
 class WLDataFrame(pd.DataFrame):
     def __init__(self, data: list = None, columns: list = None):
-        super().__init__(data=[], columns=COLUMNS, index=[INDEX])
+        super().__init__(data=[], columns=COLUMNS)
+        self.set_index([INDEX], drop=True, inplace=True)
 
         if data is not None and columns is not None:
             df = pd.DataFrame(data, columns=columns)
@@ -143,8 +144,6 @@ def open_water_level_datafile(filename):
                     sheet.iter_rows(min_col=1, values_only=True)]
         finally:
             workbook.close()
-        print(data)
-
     return data
 
 
