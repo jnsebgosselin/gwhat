@@ -144,10 +144,10 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
 
 
 if __name__ == '__main__':
-    from gwhat.projet.reader_waterlvl import WLDataFrame
+    from gwhat.projet.reader_waterlvl import WLDataset
     import matplotlib.pyplot as plt
 
-    wldset = WLDataFrame(
+    wldset = WLDataset(
         "C:/Users/User/gwhat/gwhat/tests/data/sample_water_level_datafile.csv")
     periods = [
         (41384.260416666664, 41414.114583333336),

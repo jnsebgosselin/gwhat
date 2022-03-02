@@ -24,7 +24,7 @@ import datetime
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase, METEO_VARIABLES
-from gwhat.projet.reader_waterlvl import WLDataFrameBase, WLDataset
+from gwhat.projet.reader_waterlvl import WLDatasetBase, WLDataFrame
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
@@ -220,7 +220,7 @@ class ProjetReader(object):
         if name in self.wldsets:
             self.set_last_opened_wldset(name)
             print('done')
-            return WLDataFrameHDF5(self.db['wldsets/%s' % name])
+            return WLDatasetHDF5(self.db['wldsets/%s' % name])
         else:
             print('failed')
             return None
@@ -282,7 +282,7 @@ class ProjetReader(object):
             print('Unable to save dataset to project db')
             del self.db['wldsets'][name]
 
-        return WLDataFrameHDF5(grp)
+        return WLDatasetHDF5(grp)
 
     def del_wldset(self, name):
         """Delete the specified water level dataset."""
@@ -389,7 +389,7 @@ class ProjetReader(object):
         self.db.flush()
 
 
-class WLDataFrameHDF5(WLDataFrameBase):
+class WLDatasetHDF5(WLDatasetBase):
     """
     This is a wrapper around the h5py group that is used to store
     water level datasets. It mimick the structure of the DataFrame that
@@ -398,7 +398,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
     """
 
     def __init__(self, hdf5group, *args, **kwargs):
-        super(WLDataFrameHDF5, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__load_dataset__(hdf5group)
 
     def __load_dataset__(self, hdf5group):
@@ -413,7 +413,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
                 columns.append(colname)
         data = np.vstack(tuple(data)).transpose()
         columns = tuple(columns)
-        self._dataf = WLDataset(data, columns)
+        self._dataf = WLDataFrame(data, columns)
 
         # Setup the structure for the Master Recession Curve
         if 'mrc' not in list(self.dset.keys()):

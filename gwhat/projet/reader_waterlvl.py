@@ -39,9 +39,13 @@ COL_REGEX = OrderedDict([
     ])
 COLUMNS = list(COL_REGEX.keys())
 
-HEADER = {'Well': '', 'Well ID': '',
-          'Province': '', 'Municipality': '',
-          'Latitude': 0, 'Longitude': 0, 'Elevation': 0}
+HEADER = {'Well': '',
+          'Well ID': '',
+          'Province': '',
+          'Municipality': '',
+          'Latitude': 0,
+          'Longitude': 0,
+          'Elevation': 0}
 HEADER_REGEX = {
     'Well': r'(?<!\S)(wellname|name)(:|=)?(?!\S)',
     'Well ID': r'(?<!\S)(wellid|id)(:|=)?(?!\S)',
@@ -53,25 +57,26 @@ HEADER_REGEX = {
     }
 
 
-class EmptyWLDataset(pd.DataFrame):
-    def __init__(self):
-        super().__init__(np.empty((0, len(COLUMNS))), columns=COLUMNS)
+class WLDataFrame(pd.DataFrame):
+    def __init__(self, data: list = None, columns: list = None):
+        super().__init__(data=[], columns=COLUMNS)
         self.set_index([INDEX], drop=True, inplace=True)
 
-
-class WLDataset(EmptyWLDataset):
-    def __init__(self, data, columns):
-        super().__init__()
-        df = pd.DataFrame(data, columns=columns)
-        for column in columns:
-            for colname, regex in COL_REGEX.items():
-                str_ = column.replace(" ", "").replace("_", "")
-                if re.search(regex, str_, re.IGNORECASE):
-                    self[colname] = df[column].copy()
-                    break
-        del df
+        if data is not None and columns is not None:
+            df = pd.DataFrame(data, columns=columns)
+            for column in columns:
+                for colname, regex in COL_REGEX.items():
+                    str_ = column.replace(" ", "").replace("_", "")
+                    if re.search(regex, str_, re.IGNORECASE):
+                        self[colname] = df[column].copy()
+                        break
+            del df
         self.format_numeric_data()
         self.format_datetime_data()
+
+    @property
+    def _constructor(self):
+        return WLDataFrame
 
     def format_numeric_data(self):
         """Format the data to floats type."""
@@ -139,8 +144,6 @@ def open_water_level_datafile(filename):
                     sheet.iter_rows(min_col=1, values_only=True)]
         finally:
             workbook.close()
-        print(data)
-
     return data
 
 
@@ -177,7 +180,7 @@ def read_water_level_datafile(filename):
         return None
 
     # Cast the data into a Pandas dataframe.
-    dataf = WLDataset(reader[i+1:], columns=row)
+    dataf = WLDataFrame(reader[i+1:], columns=row)
 
     # Add the metadata to the dataframe.
     for key in header.keys():
@@ -261,16 +264,16 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     return table
 
 
-class WLDataFrameBase(Mapping):
+class WLDatasetBase(Mapping):
     """
     A water level data frame base class.
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.dset = None
         self._undo_stack = []
-        self._dataf = EmptyWLDataset()
+        self._dataf = WLDataFrame()
 
     def __load_dataset__(self):
         """Loads the dataset and save it in a store."""
@@ -359,7 +362,7 @@ class WLDataFrameBase(Mapping):
             self._undo_stack.append(self._dataf['WL'].iloc[indexes].copy())
 
 
-class WLDataFrame(WLDataFrameBase):
+class WLDataset(WLDatasetBase):
     """
     A water level dataset container that loads its data from a csv
     or an Excel file.
@@ -389,9 +392,9 @@ class WLDataFrame(WLDataFrameBase):
 
 if __name__ == "__main__":
     from gwhat import __rootdir__
-    df = WLDataFrame(
+    df = WLDataset(
         osp.join(__rootdir__, 'tests', "water_level_datafile.csv"))
-    df2 = WLDataFrame(
+    df2 = WLDataset(
         osp.join(__rootdir__, 'tests', "water_level_datafile.xls"))
-    df3 = WLDataFrame(
+    df3 = WLDataset(
         osp.join(__rootdir__, 'tests', "water_level_datafile.xlsx"))
