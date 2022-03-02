@@ -53,7 +53,7 @@ HEADER_REGEX = {
     }
 
 
-class WLDataset(pd.DataFrame):
+class WLDataFrame(pd.DataFrame):
     def __init__(self, data: list = None, columns: list = None):
         super().__init__(data=[], columns=COLUMNS, index=[INDEX])
 
@@ -172,7 +172,7 @@ def read_water_level_datafile(filename):
         return None
 
     # Cast the data into a Pandas dataframe.
-    dataf = WLDataset(reader[i+1:], columns=row)
+    dataf = WLDataFrame(reader[i+1:], columns=row)
 
     # Add the metadata to the dataframe.
     for key in header.keys():
@@ -256,7 +256,7 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     return table
 
 
-class WLDataFrameBase(Mapping):
+class WLDatasetBase(Mapping):
     """
     A water level data frame base class.
     """
@@ -265,7 +265,7 @@ class WLDataFrameBase(Mapping):
         super().__init__(*args, **kwargs)
         self.dset = None
         self._undo_stack = []
-        self._dataf = WLDataset()
+        self._dataf = WLDataFrame()
 
     def __load_dataset__(self):
         """Loads the dataset and save it in a store."""
@@ -354,7 +354,7 @@ class WLDataFrameBase(Mapping):
             self._undo_stack.append(self._dataf['WL'].iloc[indexes].copy())
 
 
-class WLDataFrame(WLDataFrameBase):
+class WLDataset(WLDatasetBase):
     """
     A water level dataset container that loads its data from a csv
     or an Excel file.
@@ -384,9 +384,9 @@ class WLDataFrame(WLDataFrameBase):
 
 if __name__ == "__main__":
     from gwhat import __rootdir__
-    df = WLDataFrame(
+    df = WLDataset(
         osp.join(__rootdir__, 'tests', "water_level_datafile.csv"))
-    df2 = WLDataFrame(
+    df2 = WLDataset(
         osp.join(__rootdir__, 'tests', "water_level_datafile.xls"))
-    df3 = WLDataFrame(
+    df3 = WLDataset(
         osp.join(__rootdir__, 'tests', "water_level_datafile.xlsx"))
