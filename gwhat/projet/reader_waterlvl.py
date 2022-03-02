@@ -57,14 +57,15 @@ class WLDataFrame(pd.DataFrame):
     def __init__(self, data: list = None, columns: list = None):
         super().__init__(data=[], columns=COLUMNS, index=[INDEX])
 
-        df = pd.DataFrame(data, columns=columns)
-        for column in columns:
-            for colname, regex in COL_REGEX.items():
-                str_ = column.replace(" ", "").replace("_", "")
-                if re.search(regex, str_, re.IGNORECASE):
-                    self[colname] = df[column].copy()
-                    break
-        del df
+        if data is not None and columns is not None:
+            df = pd.DataFrame(data, columns=columns)
+            for column in columns:
+                for colname, regex in COL_REGEX.items():
+                    str_ = column.replace(" ", "").replace("_", "")
+                    if re.search(regex, str_, re.IGNORECASE):
+                        self[colname] = df[column].copy()
+                        break
+            del df
         self.format_numeric_data()
         self.format_datetime_data()
 
