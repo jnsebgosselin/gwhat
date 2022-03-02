@@ -69,6 +69,10 @@ class WLDataFrame(pd.DataFrame):
         self.format_numeric_data()
         self.format_datetime_data()
 
+    @property
+    def _constructor(self):
+        return WLDataFrame
+
     def format_numeric_data(self):
         """Format the data to floats type."""
         for colname in COLUMNS:
