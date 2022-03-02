@@ -24,7 +24,7 @@ import datetime
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase, METEO_VARIABLES
-from gwhat.projet.reader_waterlvl import WLDatasetBase, WLDataset
+from gwhat.projet.reader_waterlvl import WLDatasetBase, WLDataFrame
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
@@ -413,7 +413,7 @@ class WLDatasetHDF5(WLDatasetBase):
                 columns.append(colname)
         data = np.vstack(tuple(data)).transpose()
         columns = tuple(columns)
-        self._dataf = WLDataset(data, columns)
+        self._dataf = WLDataFrame(data, columns)
 
         # Setup the structure for the Master Recession Curve
         if 'mrc' not in list(self.dset.keys()):
