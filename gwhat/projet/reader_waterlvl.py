@@ -53,15 +53,10 @@ HEADER_REGEX = {
     }
 
 
-class EmptyWLDataset(pd.DataFrame):
-    def __init__(self):
-        super().__init__(np.empty((0, len(COLUMNS))), columns=COLUMNS)
-        self.set_index([INDEX], drop=True, inplace=True)
+class WLDataset(pd.DataFrame):
+    def __init__(self, data: list = None, columns: list = None):
+        super().__init__(data=[], columns=COLUMNS, index=[INDEX])
 
-
-class WLDataset(EmptyWLDataset):
-    def __init__(self, data, columns):
-        super().__init__()
         df = pd.DataFrame(data, columns=columns)
         for column in columns:
             for colname, regex in COL_REGEX.items():
@@ -270,7 +265,7 @@ class WLDataFrameBase(Mapping):
         super().__init__(*args, **kwargs)
         self.dset = None
         self._undo_stack = []
-        self._dataf = EmptyWLDataset()
+        self._dataf = WLDataset()
 
     def __load_dataset__(self):
         """Loads the dataset and save it in a store."""
