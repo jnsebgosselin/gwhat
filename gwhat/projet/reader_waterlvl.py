@@ -271,7 +271,7 @@ class WLDatasetBase(Mapping):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.dset = None
         self._undo_stack = []
         self._dataf = WLDataFrame()
