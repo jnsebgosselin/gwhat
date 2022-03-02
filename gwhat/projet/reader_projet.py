@@ -24,7 +24,7 @@ import datetime
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase, METEO_VARIABLES
-from gwhat.projet.reader_waterlvl import WLDataFrameBase, WLDataset
+from gwhat.projet.reader_waterlvl import WLDatasetBase, WLDataset
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
@@ -389,7 +389,7 @@ class ProjetReader(object):
         self.db.flush()
 
 
-class WLDataFrameHDF5(WLDataFrameBase):
+class WLDataFrameHDF5(WLDatasetBase):
     """
     This is a wrapper around the h5py group that is used to store
     water level datasets. It mimick the structure of the DataFrame that
