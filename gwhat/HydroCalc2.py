@@ -983,15 +983,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self.fig.axes[0].draw_artist(self._rect_selector)
 
     # ----- Mouse Event Handlers
-    def is_all_btn_raised(self):
-        """
-        Return whether all of the tool buttons that can block the panning and
-        zooming of the graph are raised.
-        """
-        return(self.btn_delpeak.autoRaise() and
-               self.btn_addpeak.autoRaise() and
-               not self.brf_eval_widget.is_brfperiod_selection_toggled())
-
     def on_fig_leave(self, event):
         """Handle when the mouse cursor leaves the graph."""
         self.draw()
