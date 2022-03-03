@@ -192,6 +192,8 @@ class MasterRecessionCalcTool(WLCalcTool):
 
     def register_tool(self, wlcalc: QWidget):
         self.wlcalc = wlcalc
+        wlcalc.register_navig_and_select_tool(self.btn_addpeak)
+        wlcalc.register_navig_and_select_tool(self.btn_delpeak)
 
         wlcalc.sig_wldset_changed.connect(self._on_wldset_changed)
 
