@@ -53,8 +53,6 @@ docs/_build/
 target/
 
 # ---- Tests output files
-
-water_level_datafile.*
 waterlvl_manual_measurements.*
 glue_rawdata.npy
 
