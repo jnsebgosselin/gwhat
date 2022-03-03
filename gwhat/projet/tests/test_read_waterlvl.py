@@ -54,7 +54,8 @@ def datatmpdir(tmp_path):
 # =============================================================================
 # ---- Tests
 # =============================================================================
-@pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx', '_xldates.csv'])
+@pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx', '_xldates.csv',
+                                 '_strfmt.xls', '_strfmt.xlsx'])
 def test_read_waterlvl(ext):
     """
     Test that reading water level input data files is working as expected.
