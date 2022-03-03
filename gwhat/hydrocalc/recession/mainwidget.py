@@ -14,14 +14,15 @@ from __future__ import annotations
 # ---- Third party imports
 import pandas as pd
 from PyQt5.QtWidgets import (
-    QWidget, QComboBox, QTextEdit, QSizePolicy)
+    QWidget, QComboBox, QTextEdit, QSizePolicy, QPushButton, QGridLayout,
+    QLabel)
 
 # ---- Local imports
 from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
 from gwhat.hydrocalc.api import WLCalcTool, wlcalcmethod
 from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
-from gwhat.widgets.buttons import OnOffToolButton
+from gwhat.widgets.buttons import OnOffToolButton, ToolBarWidget
 
 
 class MasterRecessionCalcTool(WLCalcTool):
@@ -39,4 +40,77 @@ class MasterRecessionCalcTool(WLCalcTool):
     _mrc_period_xdata = []
     _mrc_period_axvspans = []
     _mrc_period_memory = [[], ]
+
+    def setup(self):
+        # Setup MRC parameter widgets.
+        self.MRC_type = QComboBox()
+        self.MRC_type.addItems(['Linear', 'Exponential'])
+        self.MRC_type.setCurrentIndex(1)
+
+        self.MRC_results = QTextEdit()
+        self.MRC_results.setReadOnly(True)
+        self.MRC_results.setMinimumHeight(25)
+        self.MRC_results.setMinimumWidth(100)
+        self.MRC_results.setSizePolicy(
+            QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
+
+        # Setup the toolbar.
+        self.btn_undo = create_toolbutton(
+            parent=self,
+            icon='undo',
+            iconsize=get_iconsize('normal'),
+            tip='Undo',
+            triggered=self.undo_mrc_period)
+        self.btn_undo.setEnabled(False)
+
+        self.btn_clearPeak = create_toolbutton(
+            parent=self,
+            icon='clear_changes',
+            iconsize=get_iconsize('normal'),
+            tip='Clear all recession periods.',
+            triggered=self.clear_all_mrcperiods)
+
+        self.btn_addpeak = OnOffToolButton('pencil_add', size='normal')
+        self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
+        self.btn_addpeak.setToolTip(
+            "Left-click on the graph to add new recession periods.")
+
+        self.btn_delpeak = OnOffToolButton('pencil_del', size='normal')
+        self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
+        self.btn_delpeak.setToolTip(
+            "Left-click on a recession period to remove it.")
+
+        self.btn_save_mrc = create_toolbutton(
+            parent=self,
+            icon='save',
+            iconsize=get_iconsize('normal'),
+            tip='Save calculated MRC to file.',
+            triggered=lambda: self.save_mrc_tofile())
+
+        self.btn_MRCalc = QPushButton('Compute MRC')
+        self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
+        self.btn_MRCalc.setToolTip(
+            'Calculate the Master Recession Curve (MRC).')
+
+        mrc_tb = ToolBarWidget()
+        for btn in [self.btn_undo, self.btn_clearPeak, self.btn_addpeak,
+                    self.btn_delpeak, self.btn_save_mrc]:
+            mrc_tb.addWidget(btn)
+
+        # Setup the MRC Layout.
+        layout = QGridLayout(self)
+
+        row = 0
+        layout.addWidget(QLabel('MRC Type :'), row, 0)
+        layout.addWidget(self.MRC_type, row, 1)
+        row += 1
+        layout.addWidget(self.MRC_results, row, 0, 1, 3)
+        row += 1
+        layout.addWidget(mrc_tb, row, 0, 1, 3)
+        row += 1
+        layout.setRowMinimumHeight(row, 5)
+        layout.setRowStretch(row, 100)
+        row += 1
+        layout.addWidget(self.btn_MRCalc, row, 0, 1, 3)
+        layout.setColumnStretch(2, 500)
 
