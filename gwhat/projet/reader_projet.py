@@ -275,12 +275,14 @@ class ProjetReader(object):
             mmeas.create_dataset('Time', data=np.array([]), maxshape=(None,))
             mmeas.create_dataset('WL', data=np.array([]), maxshape=(None,))
 
-            self.db.flush()
-
             print('New dataset created sucessfully')
-        except Exception:
-            print('Unable to save dataset to project db')
+        except Exception as e:
+            print('Unable to save dataset to project db because of the '
+                  'following error:')
+            print(e)
             del self.db['wldsets'][name]
+        finally:
+            self.db.flush()
 
         return WLDatasetHDF5(grp)
 
