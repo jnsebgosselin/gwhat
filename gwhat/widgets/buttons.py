@@ -15,8 +15,9 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import QSize, Qt, QEvent
-from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QGridLayout,
-                             QListWidget, QMenu, QStyle, QToolButton, QWidget)
+from PyQt5.QtWidgets import (
+    QApplication, QDoubleSpinBox, QGridLayout, QListWidget, QMenu, QStyle,
+    QToolButton, QWidget, QPushButton)
 
 # ---- Local imports
 from gwhat.utils.icons import QToolButtonBase
@@ -380,6 +381,28 @@ class ExportDataButton(DropdownToolButton, SaveFileMixin):
                 raise ValueError("The model must be an instance of %s" %
                                  str(type(self.MODELCLS)))
         self.setEnabled(self.__model is not None)
+
+
+class OnOffPushButton(QPushButton):
+    """A push button that can be toggled on or off by clicking on it."""
+    sig_value_changed = QSignal(bool)
+
+    def __init__(self, label, parent=None):
+        super().__init__(label, parent)
+        self.installEventFilter(self)
+        self.setCheckable(True)
+        self.toggled.connect(self.sig_value_changed.emit)
+
+    def value(self):
+        """Return True if autoRaise is False and False if True."""
+        return self.isChecked()
+
+    def setValue(self, value, silent=False):
+        """Set autoRaise to False if value is True and to True if False."""
+        if value != self.value():
+            self.blockSignals(silent)
+            self.setChecked(value)
+            self.blockSignals(False)
 
 
 class OnOffToolButton(QToolButtonBase):

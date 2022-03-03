@@ -14,12 +14,13 @@ import csv
 import os
 import os.path as osp
 import datetime
+from typing import Any, Callable
 
 # ---- Third party imports
 import numpy as np
 import pandas as pd
 from qtpy.QtGui import QImage
-from PyQt5.QtCore import Qt, QObject
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
@@ -28,7 +29,6 @@ from PyQt5.QtWidgets import (
     QMessageBox, QFileDialog)
 
 import matplotlib as mpl
-from matplotlib.widgets import AxesWidget
 import matplotlib.dates as mdates
 from matplotlib.figure import Figure as MplFigure
 from matplotlib.patches import Rectangle
@@ -40,6 +40,7 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
+from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
 from gwhat.recession.recession_calc import calculate_mrc
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
@@ -49,7 +50,7 @@ from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
 from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.widgets.buttons import ToolBarWidget
-from gwhat.widgets.buttons import OnOffToolButton
+from gwhat.widgets.buttons import OnOffToolButton, OnOffPushButton
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
 
@@ -67,8 +68,8 @@ class WLCalc(QWidget, SaveFileMixin):
         QWidget.__init__(self, parent)
         SaveFileMixin.__init__(self)
 
+        self.tools = {}
         self._navig_and_select_tools = []
-        self._last_toggled_navig_and_select_tool = None
         self._wldset = None
 
         self.dmngr = datamanager
@@ -78,12 +79,6 @@ class WLCalc(QWidget, SaveFileMixin):
         # Setup recharge calculation tool.
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
         self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
-
-        # Setup BRF calculation tool.
-        self.brf_eval_widget = BRFManager(parent=self)
-        self.brf_eval_widget.sig_brfperiod_changed.connect(self.plot_brfperiod)
-        self.brf_eval_widget.sig_select_brfperiod_requested.connect(
-            self.toggle_brfperiod_selection)
 
         self._figbckground = None
         self._axes_widgets = []
@@ -111,6 +106,15 @@ class WLCalc(QWidget, SaveFileMixin):
         self.__initUI__()
         self.btn_pan.setValue(True)
         self.setup_ax_margins(None)
+
+        # Setup BRF calculation tool.
+        self.brf_eval_widget = BRFManager(parent=self)
+        self.install_tool(self.brf_eval_widget)
+
+        self.tools_tabwidget.setCurrentIndex(
+            CONF.get('hydrocalc', 'current_tool_index'))
+
+        # Setup water levels and weather datasets.
         self.set_wldset(self.dmngr.get_current_wldset())
         self.set_wxdset(self.dmngr.get_current_wxdset())
 
@@ -203,15 +207,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500,
                                ls='-')
 
-        # Barometric response function (BRF).
-        self.h_brf1 = ax0.axvline(0, color='red', lw=1)
-        self.h_brf2 = ax0.axvline(0, color='red', lw=1)
-
-        self._selected_brfperiod = [None, None]
-        self._brf_selector = ax0.axvspan(
-            0, 0, edgecolor='black', facecolor='red', linestyle=':',
-            fill=True, alpha=0.15, visible=False)
-
         # Predicted GLUE water levels
         self.glue_plt, = ax0.plot([], [])
 
@@ -221,10 +216,6 @@ class WLCalc(QWidget, SaveFileMixin):
             (0, 0), 0, 0, edgecolor='black', facecolor='red', linestyle=':',
             fill=True, alpha=0.15, visible=False)
         ax0.add_patch(self._rect_selector)
-
-        # Vertical guide line under cursor.
-        self.vguide = ax0.axvline(
-            -1, color='black', zorder=40, linestyle='--', lw=1, visible=False)
 
         # x and y coorrdinate labels displayed at the right-bottom corner
         # of the graph
@@ -376,9 +367,9 @@ class WLCalc(QWidget, SaveFileMixin):
         """Setup the tool to evaluate the MRC."""
 
         # Setup the mrc period selector.
-        self.mrc_selector = WLCalcVSpanSelector(self.fig.axes[0])
+        self.mrc_selector = WLCalcVSpanSelector(
+            self.fig.axes[0], self, onselected=self.add_mrcperiod)
         self.install_axeswidget(self.mrc_selector)
-        self.mrc_selector.sig_span_selected.connect(self.add_mrcperiod)
         self._mrc_period_xdata = []
         self._mrc_period_axvspans = []
         self._mrc_period_memory = [[], ]
@@ -485,14 +476,6 @@ class WLCalc(QWidget, SaveFileMixin):
             1, ("<p>A tool to evaluate groundwater recharge and its"
                 " uncertainty from observed water levels and daily "
                 " weather data.</p>"))
-        self.tools_tabwidget.addTab(self.brf_eval_widget, 'BRF')
-        self.tools_tabwidget.setTabToolTip(
-            2, ("<p>A tool to evaluate the barometric response function of"
-                " the well.</p>"))
-        self.tools_tabwidget.currentChanged.connect(
-            lambda: self.toggle_brfperiod_selection(False))
-        self.tools_tabwidget.setCurrentIndex(
-            CONF.get('hydrocalc', 'current_tool_index'))
 
         # Setup the right panel.
         self.right_panel = QFrame()
@@ -513,10 +496,18 @@ class WLCalc(QWidget, SaveFileMixin):
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
 
+    def install_tool(self, tool):
+        """Install the provided tool in WLCalc."""
+        if tool.name() in self.tools:
+            print(
+                "WARNING: There is already a tool named '{}' installed "
+                "in WLCalc.".format(tool.name()))
+            return
+        tool.register_tool(self)
+        self.tools[tool.name()] = tool
+
     def install_axeswidget(self, axes_widget):
-        """
-        Install the provided axes widget in the WLCalc.
-        """
+        """Install the provided axes widget in WLCalc."""
         self._axes_widgets.append(axes_widget)
 
     def emit_warning(self, message, title='Warning'):
@@ -545,8 +536,8 @@ class WLCalc(QWidget, SaveFileMixin):
         self.mrc_eval_widget.setEnabled(self.wldset is not None)
 
         # Setup BRF widget.
-        self.brf_eval_widget.set_wldset(wldset)
-        self.plot_brfperiod()
+        for tool in self.tools.values():
+            tool.set_wldset(wldset)
 
         self.setup_hydrograph()
         self.toolbar.update()
@@ -567,15 +558,10 @@ class WLCalc(QWidget, SaveFileMixin):
         CONF.set('hydrocalc', 'show_glue', self.btn_show_glue.value())
         CONF.set('hydrocalc', 'show_meas_wl', self.btn_show_meas_wl.value())
 
-        self.brf_eval_widget.close()
-        super().close()
+        for tool in self.tools.values():
+            tool.close_tool()
 
-    def showEvent(self, event):
-        """Extend Qt method"""
-        # This is required to make sure the BRF is plotted correctly on
-        # restart.
-        self.plot_brfperiod()
-        super().showEvent(event)
+        super().close()
 
     def copy_to_clipboard(self):
         """Put a copy of the figure on the clipboard."""
@@ -590,8 +576,8 @@ class WLCalc(QWidget, SaveFileMixin):
         Add a a new mrc period using the provided xdata.
         """
         try:
-            xmin = min(xdata) - self.dt4xls2mpl * self.dformat
-            xmax = max(xdata) - self.dt4xls2mpl * self.dformat
+            xmin = min(xdata)
+            xmax = max(xdata)
         except TypeError:
             return
 
@@ -746,61 +732,46 @@ class WLCalc(QWidget, SaveFileMixin):
             self._mrc_period_memory.append([])
         self.draw_mrc()
 
-    # ---- BRF selection
-    def plot_brfperiod(self):
+    def draw_mrc(self):
         """
-        Plot on the graph the vertical lines that are used to define the period
-        over which the BRF is evaluated.
+        Draw the periods during which water levels recedes and draw the
+        water levels that were predicted with the MRC.
         """
-        if (not self.brf_eval_widget.is_brfperiod_selection_toggled() and
-                self.brf_eval_widget.isVisible()):
-            brfperiod = self.brf_eval_widget.get_brfperiod()
-        else:
-            brfperiod = [None, None]
-        for x, vline in zip(brfperiod, [self.h_brf1, self.h_brf2]):
-            vline.set_visible(x is not None)
-            if x is not None:
-                x = x + self.dt4xls2mpl*self.dformat
-                vline.set_xdata(x)
+        self._draw_mrc_wl()
+        self._draw_mrc_periods()
         self.draw()
 
-    def toggle_brfperiod_selection(self, value):
-        """
-        Toggle on or off the option to select the BRF calculation period on
-        the graph.
-        """
-        if self.wldset is None:
-            self.brf_eval_widget.toggle_brfperiod_selection(False)
-            if value is True:
-                self.emit_warning(
-                    "Please import a valid water level dataset first.")
-            return
-
-        if value is True:
-            self._last_toggled_navig_and_select_tool = None
-            for tool in self._navig_and_select_tools:
-                if tool.value() is True:
-                    self._last_toggled_navig_and_select_tool = tool
-                    tool.setValue(False)
-                    break
+    def _draw_mrc_wl(self):
+        """Draw the water levels that were predicted with the MRC."""
+        if (self.wldset is not None and self.btn_show_mrc.value() and
+                self.wldset.mrc_exists()):
+            self._mrc_plt.set_visible(True)
+            mrc_data = self.wldset.get_mrc()
+            self._mrc_plt.set_data(
+                mrc_data['time'] + self.dt4xls2mpl * self.dformat,
+                mrc_data['recess'])
         else:
-            self.brf_eval_widget.toggle_brfperiod_selection(False)
-            if self._last_toggled_navig_and_select_tool is not None:
-                self._last_toggled_navig_and_select_tool.setValue(True)
-        self.plot_brfperiod()
+            self._mrc_plt.set_visible(False)
 
-    def on_brf_select(self):
-        """
-        Handle when a period has been selected for the BRF calculation.
-        """
-        if all(self._selected_brfperiod):
-            brfperiod = [None, None]
-            for i in range(2):
-                x = self._selected_brfperiod[i] - (
-                    self.dt4xls2mpl * self.dformat)
-                brfperiod[i] = self.time[np.argmin(np.abs(x - self.time))]
-            self.brf_eval_widget.set_brfperiod(brfperiod)
-        self.toggle_brfperiod_selection(False)
+    def _draw_mrc_periods(self):
+        """Draw the periods that will be used to compute the MRC."""
+        self.btn_undo.setEnabled(len(self._mrc_period_memory) > 1)
+        for axvspan in self._mrc_period_axvspans:
+            axvspan.set_visible(False)
+        if self.wldset is not None and self.btn_show_mrc.value():
+            for i, xdata in enumerate(self._mrc_period_xdata):
+                xmin = xdata[0] + (self.dt4xls2mpl * self.dformat)
+                xmax = xdata[1] + (self.dt4xls2mpl * self.dformat)
+                try:
+                    axvspan = self._mrc_period_axvspans[i]
+                    axvspan.set_visible(True)
+                    axvspan.xy = [[xmin, 1], [xmin, 0],
+                                  [xmax, 0], [xmax, 1]]
+                except IndexError:
+                    axvspan = self.fig.axes[0].axvspan(
+                        xmin, xmax, visible=True, color='red', linewidth=1,
+                        ls='-', alpha=0.1)
+                    self._mrc_period_axvspans.append(axvspan)
 
     # ---- Peaks handlers
     def btn_addpeak_isclicked(self):
@@ -809,7 +780,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self.toggle_navig_and_select_tools(self.btn_addpeak)
             self.btn_show_mrc.setValue(True)
         self.mrc_selector.set_active(self.btn_addpeak.value())
-        self.draw()
 
     def btn_delpeak_isclicked(self):
         """Handle when the button btn_delpeak is clicked."""
@@ -824,7 +794,7 @@ class WLCalc(QWidget, SaveFileMixin):
         Add the tool to the list of tools that are available to interactively
         navigate and select the data.
         """
-        if not isinstance(tool, OnOffToolButton):
+        if not isinstance(tool, (OnOffToolButton, OnOffPushButton)):
             raise TypeError
 
         if tool not in self._navig_and_select_tools:
@@ -843,10 +813,6 @@ class WLCalc(QWidget, SaveFileMixin):
         for tool in self._navig_and_select_tools:
             if tool not in keep_toggled:
                 tool.setValue(False)
-
-        # Reset BRF selection.
-        self.brf_eval_widget.toggle_brfperiod_selection(False)
-        self.plot_brfperiod()
 
     @property
     def zoom_is_active(self):
@@ -1080,7 +1046,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
     def draw(self):
         """Draw the canvas and save a snapshot of the background figure."""
-        self.vguide.set_visible(False)
         self.xycoord.set_visible(False)
         self.axvspan_highlight.set_visible(False)
         for widget in self._axes_widgets:
@@ -1205,15 +1170,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self.h_etp.set_data(time_bin, etp_bin)
         self.setup_ax_margins()
 
-    def draw_mrc(self):
-        """
-        Draw the periods during which water levels recedes and draw the
-        water levels that were predicted with the MRC.
-        """
-        self._draw_mrc_wl()
-        self._draw_mrc_periods()
-        self.draw()
-
     def _draw_obs_wl(self, draw=True):
         """Draw the observed water level data on the graph."""
         self.clear_selected_wl(draw=False)
@@ -1224,38 +1180,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self._obs_wl_plt.set_visible(self.wldset is not None)
         if draw:
             self.draw()
-
-    def _draw_mrc_wl(self):
-        """Draw the water levels that were predicted with the MRC."""
-        if (self.wldset is not None and self.btn_show_mrc.value() and
-                self.wldset.mrc_exists()):
-            self._mrc_plt.set_visible(True)
-            mrc_data = self.wldset.get_mrc()
-            self._mrc_plt.set_data(
-                mrc_data['time'] + self.dt4xls2mpl * self.dformat,
-                mrc_data['recess'])
-        else:
-            self._mrc_plt.set_visible(False)
-
-    def _draw_mrc_periods(self):
-        """Draw the periods that will be used to compute the MRC."""
-        self.btn_undo.setEnabled(len(self._mrc_period_memory) > 1)
-        for axvspan in self._mrc_period_axvspans:
-            axvspan.set_visible(False)
-        if self.wldset is not None and self.btn_show_mrc.value():
-            for i, xdata in enumerate(self._mrc_period_xdata):
-                xmin = xdata[0] + (self.dt4xls2mpl * self.dformat)
-                xmax = xdata[1] + (self.dt4xls2mpl * self.dformat)
-                try:
-                    axvspan = self._mrc_period_axvspans[i]
-                    axvspan.set_visible(True)
-                    axvspan.xy = [[xmin, 1], [xmin, 0],
-                                  [xmax, 0], [xmax, 1]]
-                except IndexError:
-                    axvspan = self.fig.axes[0].axvspan(
-                        xmin, xmax, visible=True, color='red', linewidth=1,
-                        ls='-', alpha=0.1)
-                    self._mrc_period_axvspans.append(axvspan)
 
     def _draw_rect_selection(self, x2, y2):
         """Draw the rectangle of the rectangular selection tool."""
@@ -1269,31 +1193,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self._rect_selector.set_visible(True)
 
             self.fig.axes[0].draw_artist(self._rect_selector)
-
-    def _draw_brf_selection(self, x2):
-        """Draw the period of the BRF selection tool."""
-        x1 = self._selected_brfperiod[0]
-        if not all((x1, x2)):
-            self._brf_selector.set_visible(False)
-        else:
-            self._brf_selector.set_xy([[min(x1, x2), 0],
-                                       [min(x1, x2), 1],
-                                       [max(x1, x2), 1],
-                                       [max(x1, x2), 0],
-                                       [min(x1, x2), 0]])
-            self._brf_selector.set_visible(True)
-            self.fig.axes[0].draw_artist(self._brf_selector)
-
-    def _draw_mouse_cursor(self, x, y):
-        """Draw a vertical and horizontal line at the specified xy position."""
-        if not all((x, y)):
-            self.vguide.set_visible(False)
-        elif self.brf_eval_widget.is_brfperiod_selection_toggled():
-            self.vguide.set_visible(True)
-            self.vguide.set_xdata(x)
-            self.fig.axes[0].draw_artist(self.vguide)
-        else:
-            self.vguide.set_visible(False)
 
     # ----- Mouse Event Handlers
     def is_all_btn_raised(self):
@@ -1356,7 +1255,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Draw the vertical cursor guide.
         x, y = event.xdata, event.ydata
-        self._draw_mouse_cursor(x, y)
 
         # Draw the xy coordinates on the graph.
         if all((x, y)):
@@ -1374,9 +1272,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         if self.rect_select_is_active and self.__mouse_btn_is_pressed:
             self._draw_rect_selection(x, y)
-        if (self.brf_eval_widget.is_brfperiod_selection_toggled() and
-                self.__mouse_btn_is_pressed):
-            self._draw_brf_selection(x)
 
         # Draw mrc period highlight.
         if self.btn_delpeak.value() and len(self._mrc_period_axvspans) > 0:
@@ -1411,7 +1306,6 @@ class WLCalc(QWidget, SaveFileMixin):
         been clicked.
         """
         self.__mouse_btn_is_pressed = False
-        self.vguide.set_color('black')
 
         # Disconnect the pan and zoom callback before drawing the canvas again.
         if self.pan_is_active:
@@ -1422,10 +1316,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self._rect_selection[1] = (event.xdata, event.ydata)
             self._rect_selector.set_visible(False)
             self.on_rect_select()
-        if self.brf_eval_widget.is_brfperiod_selection_toggled():
-            self._selected_brfperiod[1] = event.xdata
-            self._brf_selector.set_visible(False)
-            self.on_brf_select()
 
         # Update all axes widget.
         for widget in self._axes_widgets:
@@ -1444,11 +1334,6 @@ class WLCalc(QWidget, SaveFileMixin):
         if self.btn_delpeak.value() and len(self._mrc_period_xdata) > 0:
             self.axvspan_highlight.set_visible(False)
             self.remove_mrcperiod(event.xdata)
-        elif self.brf_eval_widget.is_brfperiod_selection_toggled():
-            self._selected_brfperiod[0] = event.xdata
-            self.vguide.set_color('red')
-            self.draw()
-            self.onmove(event)
         elif self.rect_select_is_active:
             self._rect_selection[0] = (event.xdata, event.ydata)
 
@@ -1458,149 +1343,6 @@ class WLCalc(QWidget, SaveFileMixin):
                 widget.onpress(event)
 
         self.draw()
-
-
-class WLCalcVSpanSelector(AxesWidget, QObject):
-    sig_span_selected = QSignal(tuple)
-
-    def __init__(self, ax, useblit=True):
-        AxesWidget.__init__(self, ax)
-        QObject.__init__(self)
-        self.visible = True
-        self.useblit = useblit and self.canvas.supports_blit
-
-        self.axvspan = ax.axvspan(
-            ax.get_xbound()[0], ax.get_xbound()[0], visible=False,
-            color='red', linewidth=1, ls='-', animated=self.useblit,
-            alpha=0.1)
-
-        self.axvline = ax.axvline(
-            ax.get_ybound()[0], visible=False, color='black', linewidth=1,
-            ls='--', animated=self.useblit)
-
-        self._onpress_xdata = []
-        self._onpress_button = None
-        self._onrelease_xdata = []
-        super().set_active(False)
-
-    def set_active(self, active):
-        """
-        Set whether the selector is active.
-        """
-        self._onpress_xdata = []
-        self._onpress_button = None
-        self._onrelease_xdata = []
-        super().set_active(active)
-
-    def clear(self):
-        """
-        Clear the selector.
-
-        This method must be called by the canvas BEFORE making a copy of
-        the canvas background.
-        """
-        self.__axvspan_visible = self.axvspan.get_visible()
-        self.__axvline_visible = self.axvline.get_visible()
-        self.axvspan.set_visible(False)
-        self.axvline.set_visible(False)
-
-    def restore(self):
-        """
-        Restore the selector.
-
-        This method must be called by the canvas AFTER a copy has been made
-        of the canvas background.
-        """
-        self.axvspan.set_visible(self.__axvspan_visible)
-        self.ax.draw_artist(self.axvspan)
-
-        self.axvline.set_visible(self.__axvline_visible)
-        self.ax.draw_artist(self.axvline)
-
-    def onpress(self, event):
-        """Handler for the button_press_event event."""
-        if event.button == 1 and event.xdata:
-            if self._onpress_button in [None, event.button]:
-                self._onpress_button = event.button
-                self._onpress_xdata.append(event.xdata)
-                self.axvline.set_visible(False)
-                self.axvspan.set_visible(True)
-                if len(self._onpress_xdata) == 1:
-                    self.axvspan.xy = [[self._onpress_xdata[0], 1],
-                                       [self._onpress_xdata[0], 0],
-                                       [self._onpress_xdata[0], 0],
-                                       [self._onpress_xdata[0], 1]]
-                elif len(self._onpress_xdata) == 2:
-                    self.axvspan.xy = [[self._onpress_xdata[0], 1],
-                                       [self._onpress_xdata[0], 0],
-                                       [self._onpress_xdata[1], 0],
-                                       [self._onpress_xdata[1], 1]]
-        self._update()
-
-    def onrelease(self, event):
-        if event.button == self._onpress_button:
-            self._onrelease_xdata = self._onpress_xdata.copy()
-            if len(self._onrelease_xdata) == 1:
-                self.axvline.set_visible(True)
-                self.axvspan.set_visible(True)
-                if event.xdata:
-                    self.axvline.set_xdata((event.xdata, event.xdata))
-                    self.axvspan.xy = [[self._onrelease_xdata[0], 1],
-                                       [self._onrelease_xdata[0], 0],
-                                       [event.xdata, 0],
-                                       [event.xdata, 1]]
-            elif len(self._onrelease_xdata) == 2:
-                self.axvline.set_visible(True)
-                self.axvspan.set_visible(False)
-                if event.xdata:
-                    self.axvline.set_xdata((event.xdata, event.xdata))
-
-                onrelease_xdata = tuple(self._onrelease_xdata)
-                self._onpress_button = None
-                self._onpress_xdata = []
-                self._onrelease_xdata = []
-                self.sig_span_selected.emit(onrelease_xdata)
-        self._update()
-
-    def onmove(self, event):
-        """Handler to draw the selector when the mouse cursor moves."""
-        if self.ignore(event):
-            return
-        if not self.canvas.widgetlock.available(self):
-            return
-        if not self.visible:
-            return
-
-        if event.xdata is None:
-            self.axvline.set_visible(False)
-            self.axvspan.set_visible(False)
-        elif len(self._onpress_xdata) == 0 and len(self._onrelease_xdata) == 0:
-            self.axvline.set_visible(True)
-            self.axvline.set_xdata((event.xdata, event.xdata))
-            self.axvspan.set_visible(False)
-        elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 0:
-            self.axvline.set_visible(False)
-            self.axvspan.set_visible(True)
-        elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 1:
-            self.axvline.set_visible(True)
-            self.axvline.set_xdata((event.xdata, event.xdata))
-            self.axvspan.set_visible(True)
-            self.axvspan.xy = [[self._onrelease_xdata[0], 1],
-                               [self._onrelease_xdata[0], 0],
-                               [event.xdata, 0],
-                               [event.xdata, 1]]
-        elif len(self._onpress_xdata) == 2 and len(self._onrelease_xdata) == 1:
-            self.axvline.set_visible(False)
-            self.axvspan.set_visible(True)
-        elif len(self._onpress_xdata) == 2 and len(self._onrelease_xdata) == 2:
-            self.axvline.set_visible(False)
-            self.axvspan.set_visible(False)
-        self._update()
-
-    def _update(self):
-        self.ax.draw_artist(self.axvline)
-        self.ax.draw_artist(self.axvspan)
-        return False
 
 
 def mrc2rechg(t, ho, A, B, z, Sy):
