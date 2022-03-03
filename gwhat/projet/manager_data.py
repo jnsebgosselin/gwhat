@@ -267,11 +267,11 @@ class DataManager(QWidget):
         Receives the new water level dataset, saves it in the project and
         update the GUI.
         """
-        print("Saving the new water level dataset in the project...", end=" ")
+        print("Saving the new water level dataset in the project...")
         self.projet.add_wldset(name, dataset)
         self.update_wldsets(name)
         self.wldset_changed()
-        print("done")
+        print("New water level dataset saved in the project successfully.")
 
     def update_wldsets(self, name=None):
         self.wldsets_cbox.blockSignals(True)
