@@ -101,17 +101,22 @@ def _format_datetime_data(df):
             datetimes = df['Time'].astype('float64', errors='raise')
             datetimes = pd.to_datetime(datetimes.apply(
                 lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
-        except ValueError:
+
+            # Get rid of milliseconds to avoid introducting round-off errors.
+            datetimes = datetimes.dt.round('S')
+
+            df['Time'] = datetimes
+        except (ValueError, TypeError) as e:
             try:
                 # Try converting the strings to datetime objects.
                 # The format of the datetime strings must be
                 # "%Y-%m-%d %H:%M:%S"
                 datetimes = pd.to_datetime(
                     df['Time'], infer_datetime_format=True)
+                df['Time'] = datetimes
             except ValueError:
                 print('WARNING: the dates are not formatted correctly.')
         finally:
-            df['Time'] = datetimes
             df.set_index(['Time'], drop=True, inplace=True)
     else:
         print('WARNING: no "Time" data found in the datafile.')
@@ -121,7 +126,6 @@ def _format_datetime_data(df):
         print("WARNING: Duplicated values were found in the datafile. "
               "Only the first entries for each date were kept.")
         df.drop_duplicates(keep='first', inplace=True)
-
     return df
 
 
