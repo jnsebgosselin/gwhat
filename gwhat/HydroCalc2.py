@@ -193,10 +193,6 @@ class WLCalc(QWidget, SaveFileMixin):
             [], [], clip_on=True, ls='none', zorder=10, marker='+', ms=8,
             mec='red', mew=2, mfc='red')
 
-        # Recession.
-        self._mrc_plt, = ax0.plot([], [], color='red', clip_on=True,
-                                  zorder=15, marker='None', linestyle='--')
-
         # Rain.
         self.h_rain, = ax1.plot([], [])
 
@@ -613,47 +609,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self._mrc_period_xdata = []
             self._mrc_period_memory.append([])
         self.draw_mrc()
-
-    def draw_mrc(self):
-        """
-        Draw the periods during which water levels recedes and draw the
-        water levels that were predicted with the MRC.
-        """
-        self._draw_mrc_wl()
-        self._draw_mrc_periods()
-        self.draw()
-
-    def _draw_mrc_wl(self):
-        """Draw the water levels that were predicted with the MRC."""
-        if (self.wldset is not None and self.btn_show_mrc.value() and
-                self.wldset.mrc_exists()):
-            self._mrc_plt.set_visible(True)
-            mrc_data = self.wldset.get_mrc()
-            self._mrc_plt.set_data(
-                mrc_data['time'] + self.dt4xls2mpl * self.dformat,
-                mrc_data['recess'])
-        else:
-            self._mrc_plt.set_visible(False)
-
-    def _draw_mrc_periods(self):
-        """Draw the periods that will be used to compute the MRC."""
-        self.btn_undo.setEnabled(len(self._mrc_period_memory) > 1)
-        for axvspan in self._mrc_period_axvspans:
-            axvspan.set_visible(False)
-        if self.wldset is not None and self.btn_show_mrc.value():
-            for i, xdata in enumerate(self._mrc_period_xdata):
-                xmin = xdata[0] + (self.dt4xls2mpl * self.dformat)
-                xmax = xdata[1] + (self.dt4xls2mpl * self.dformat)
-                try:
-                    axvspan = self._mrc_period_axvspans[i]
-                    axvspan.set_visible(True)
-                    axvspan.xy = [[xmin, 1], [xmin, 0],
-                                  [xmax, 0], [xmax, 1]]
-                except IndexError:
-                    axvspan = self.fig.axes[0].axvspan(
-                        xmin, xmax, visible=True, color='red', linewidth=1,
-                        ls='-', alpha=0.1)
-                    self._mrc_period_axvspans.append(axvspan)
 
     # ---- Peaks handlers
     def btn_addpeak_isclicked(self):

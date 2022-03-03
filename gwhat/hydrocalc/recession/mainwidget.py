@@ -129,6 +129,65 @@ class MasterRecessionCalcTool(WLCalcTool):
         self.add_mrcperiod(xdata)
         self.wlcalc._draw_mrc()
 
+    @wlcalcmethod
+    def _draw_mrc(self):
+        """
+        Draw the periods during which water levels recedes and draw the
+        water levels that were predicted with the MRC.
+        """
+        self._draw_mrc_wl()
+        self._draw_mrc_periods()
+        self.wlcalc.draw()
+
+    @wlcalcmethod
+    def _draw_mrc_wl(self):
+        """Draw the water levels that were predicted with the MRC."""
+        if (self.wldset is not None and
+                self.wlcalc.btn_show_mrc.value() and
+                self.wldset.mrc_exists()):
+            self._mrc_plt.set_visible(True)
+            mrc_data = self.wldset.get_mrc()
+
+            x = mrc_data['time'] + self.wlcalc.dt4xls2mpl * self.wlcalc.dformat
+            y = mrc_data['recess']
+            self._mrc_plt.set_data(x, y)
+        else:
+            self._mrc_plt.set_visible(False)
+
+    @wlcalcmethod
+    def _draw_mrc_periods(self):
+        """Draw the periods that will be used to compute the MRC."""
+        self.btn_undo.setEnabled(len(self._mrc_period_memory) > 1)
+        for axvspan in self._mrc_period_axvspans:
+            axvspan.set_visible(False)
+        if self.wldset is not None and self.btn_show_mrc.value():
+            for i, xdata in enumerate(self._mrc_period_xdata):
+                xmin = xdata[0] + (
+                    self.wlcalc.dt4xls2mpl * self.wlcalc.dformat)
+                xmax = xdata[1] + (
+                    self.wlcalc.dt4xls2mpl * self.wlcalc.dformat)
+                try:
+                    axvspan = self._mrc_period_axvspans[i]
+                    axvspan.set_visible(True)
+                    axvspan.xy = [[xmin, 1], [xmin, 0],
+                                  [xmax, 0], [xmax, 1]]
+                except IndexError:
+                    axvspan = self.wlcalc.fig.axes[0].axvspan(
+                        xmin, xmax, visible=True, color='red', linewidth=1,
+                        ls='-', alpha=0.1)
+                    self._mrc_period_axvspans.append(axvspan)
+
+    # ---- WLCalcTool API
+    def is_registered(self):
+        return self.wlcalc is not None
+
+    def register_tool(self, wlcalc: QWidget):
+        self.wlcalc = wlcalc
+
+        # Init matplotlib artists.
+        self._mrc_plt, = self.wlcalc.fig.axes[0].plot(
+            [], [], color='red', clip_on=True,
+            zorder=15, marker='None', linestyle='--')
     # ---- MRC Tool Interface
     def add_mrcperiod(self, xdata):
         """
