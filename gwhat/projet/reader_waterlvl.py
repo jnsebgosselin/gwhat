@@ -127,7 +127,9 @@ def _drop_duplicates(df):
     if df.index.duplicated(keep='first').any():
         print("WARNING: Duplicated values were found in the datafile. "
               "Only the first entries for each date were kept.")
-        return df.loc[df.index.drop_duplicates(keep='first')]
+        index = df.index.drop_duplicates(keep='first')
+        df = df.loc[index]
+    return df
 
 
 class WLDataFrame(pd.DataFrame):
