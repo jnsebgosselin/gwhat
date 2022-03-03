@@ -106,12 +106,12 @@ class WLCalc(QWidget, SaveFileMixin):
         self.btn_pan.setValue(True)
         self.setup_ax_margins(None)
 
-        # Setup BRF calculation tool.
-        self.brf_eval_widget = BRFManager(parent=self)
-        self.install_tool(self.brf_eval_widget)
-
+        # Setup wlcalc tool.
         self.mrc_eval_widget = MasterRecessionCalcTool(parent=self)
         self.install_tool(self.mrc_eval_widget)
+
+        self.brf_eval_widget = BRFManager(parent=self)
+        self.install_tool(self.brf_eval_widget)
 
         self.tools_tabwidget.setCurrentIndex(
             CONF.get('hydrocalc', 'current_tool_index'))
@@ -438,7 +438,6 @@ class WLCalc(QWidget, SaveFileMixin):
         """Set the namespace for the water level dataset."""
         self._wldset = wldset
         self.rechg_eval_widget.set_wldset(wldset)
-        self.mrc_eval_widget.setEnabled(self.wldset is not None)
 
         # Setup BRF widget.
         for tool in self.tools.values():
