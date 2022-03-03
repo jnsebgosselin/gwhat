@@ -197,6 +197,9 @@ class MasterRecessionCalcTool(WLCalcTool):
 
         wlcalc.sig_wldset_changed.connect(self._on_wldset_changed)
 
+        self.mrc_selector = WLCalcVSpanSelector(
+            self.wlcalc.fig.axes[0], self, onselected=self._on_period_selected)
+        self.install_axeswidget(self.mrc_selector)
 
         # Init matplotlib artists.
         self._mrc_plt, = self.wlcalc.fig.axes[0].plot(
