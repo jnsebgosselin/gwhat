@@ -41,14 +41,14 @@ from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
 from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
-from gwhat.recession.recession_calc import calculate_mrc
+from gwhat.hydrocalc.recession.recession_calc import calculate_mrc
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
-from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.widgets.buttons import OnOffToolButton, OnOffPushButton
 from gwhat.widgets.layout import VSep
@@ -63,6 +63,7 @@ class WLCalc(QWidget, SaveFileMixin):
     MRC and ultimately estimate groundwater recharge.
     """
     sig_new_mrc = QSignal()
+    sig_wldset_changed = QSignal()
 
     def __init__(self, datamanager, parent=None):
         QWidget.__init__(self, parent)
@@ -448,7 +449,8 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self.setup_hydrograph()
         self.toolbar.update()
-        self.load_mrc_from_wldset()
+
+        self.sig_wldset_changed.emit(wldset)
 
     def set_wxdset(self, wxdset):
         """Set the weather dataset."""
