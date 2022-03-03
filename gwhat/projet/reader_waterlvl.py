@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 
 # ---- Standard library imports
@@ -26,7 +27,6 @@ import openpyxl
 FILE_EXTS = ['.csv', '.xls', '.xlsx']
 
 
-# ---- Read and Load Water Level Datafiles
 INDEX = 'Time'
 
 COL_REGEX = OrderedDict([
@@ -229,7 +229,6 @@ def read_water_level_datafile(filename):
     return dataf
 
 
-# ---- Water Level Manual Measurements
 def load_waterlvl_measures(filename, well):
     """
     Load and read the water level manual measurements from the specified
