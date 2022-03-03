@@ -114,3 +114,47 @@ class MasterRecessionCalcTool(WLCalcTool):
         layout.addWidget(self.btn_MRCalc, row, 0, 1, 3)
         layout.setColumnStretch(2, 500)
 
+    # ---- WLCalc integration
+    @wlcalcmethod
+    def _on_period_selected(self, xdata):
+        """
+        Handle when a new period is selected for the MRC calculations.
+
+        Parameters
+        ----------
+        xdata : 2-tuple
+            A 2-tuple of floats containing the time, in numerical Excel format,
+            of the new selected recession period.
+        """
+        self.add_mrcperiod(xdata)
+        self.wlcalc._draw_mrc()
+
+    # ---- MRC Tool Interface
+    def add_mrcperiod(self, xdata):
+        """
+        Add a a new mrc period using the provided xdata.
+        """
+        try:
+            xmin = min(xdata)
+            xmax = max(xdata)
+        except TypeError:
+            return
+
+        for i in reversed(range(len(self._mrc_period_xdata))):
+            period_xdata = self._mrc_period_xdata[i]
+            if xmin >= period_xdata[0] and xmax <= period_xdata[1]:
+                # This means this mrc period is fully enclosed within
+                # another period previously selected by the user,
+                # so we discard it completely.
+                return
+
+            if period_xdata[0] >= xmin and period_xdata[0] <= xmax:
+                xmax = max(period_xdata[1], xmax)
+                del self._mrc_period_xdata[i]
+            elif period_xdata[1] >= xmin and period_xdata[1] <= xmax:
+                xmin = min(period_xdata[0], xmin)
+                del self._mrc_period_xdata[i]
+
+        self._mrc_period_xdata.append((xmin, xmax))
+        self._mrc_period_memory.append(self._mrc_period_xdata.copy())
+
