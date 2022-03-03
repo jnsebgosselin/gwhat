@@ -217,3 +217,36 @@ class MasterRecessionCalcTool(WLCalcTool):
         self._mrc_period_xdata.append((xmin, xmax))
         self._mrc_period_memory.append(self._mrc_period_xdata.copy())
 
+    def show_mrc_results(self):
+        """Show MRC results if any."""
+        if self.wldset is None:
+            self.MRC_results.setHtml('')
+            return
+
+        mrc_data = self.wldset.get_mrc()
+
+        coeffs = mrc_data['params']
+        if pd.isnull(coeffs.A):
+            text = ''
+        else:
+            text = (
+                "∂h/∂t = -A · h + B<br>"
+                "A = {:0.5f} day<sup>-1</sup><br>"
+                "B = {:0.5f} m/day<br><br>"
+                "were ∂h/∂t is the recession rate in m/day, "
+                "h is the depth to water table in mbgs, "
+                "and A and B are the coefficients of the MRC.<br><br>"
+                "Goodness-of-fit statistics :<br>"
+                ).format(coeffs.A, coeffs.B)
+
+            fit_stats = {
+                'rmse': "RMSE = {} m<br>",
+                'r_squared': "r² = {}<br>",
+                'std_err': "S = {} m"}
+            for key, label in fit_stats.items():
+                value = mrc_data[key]
+                if value is None:
+                    text += label.format('N/A')
+                else:
+                    text += label.format('{:0.5f}'.format(value))
+        self.MRC_results.setHtml(text)

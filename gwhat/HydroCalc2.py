@@ -526,53 +526,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         QApplication.restoreOverrideCursor()
 
-    def show_mrc_results(self):
-        """Show MRC results if any."""
-        if self.wldset is None:
-            self.MRC_results.setHtml('')
-            return
-
-        mrc_data = self.wldset.get_mrc()
-
-        coeffs = mrc_data['params']
-        if pd.isnull(coeffs.A):
-            text = ''
-        else:
-            text = (
-                "∂h/∂t = -A · h + B<br>"
-                "A = {:0.5f} day<sup>-1</sup><br>"
-                "B = {:0.5f} m/day<br><br>"
-                "were ∂h/∂t is the recession rate in m/day, "
-                "h is the depth to water table in mbgs, "
-                "and A and B are the coefficients of the MRC.<br><br>"
-                "Goodness-of-fit statistics :<br>"
-                ).format(coeffs.A, coeffs.B)
-
-            fit_stats = {
-                'rmse': "RMSE = {} m<br>",
-                'r_squared': "r² = {}<br>",
-                'std_err': "S = {} m"}
-            for key, label in fit_stats.items():
-                value = mrc_data[key]
-                if value is None:
-                    text += label.format('N/A')
-                else:
-                    text += label.format('{:0.5f}'.format(value))
-        self.MRC_results.setHtml(text)
-
-    def load_mrc_from_wldset(self):
-        """Load saved MRC results from the project hdf5 file."""
-        if self.wldset is not None:
-            self._mrc_period_xdata = self.wldset.get_mrc()['peak_indx']
-            self._mrc_period_memory[0] = self._mrc_period_xdata.copy()
-            self.btn_save_mrc.setEnabled(True)
-        else:
-            self._mrc_period_xdata = []
-            self._mrc_period_memory = [[], ]
-            self.btn_save_mrc.setEnabled(False)
-        self.show_mrc_results()
-        self.draw_mrc()
-
     def save_mrc_tofile(self, filename=None):
         """Save the master recession curve results to a file."""
         if filename is None:
