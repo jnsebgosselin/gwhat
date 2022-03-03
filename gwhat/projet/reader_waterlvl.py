@@ -22,8 +22,6 @@ import pandas as pd
 import xlrd
 import openpyxl
 
-# ---- Local library imports
-from gwhat.common.utils import save_content_to_csv
 
 FILE_EXTS = ['.csv', '.xls', '.xlsx']
 
@@ -58,6 +56,9 @@ HEADER_REGEX = {
 
 
 def _format_column_names(df):
+    """
+    Rename valid columns, drop invalid columns, and add missing columns.
+    """
     # Rename valid columns and drop invalid columns.
     drop = []
     rename = {}
@@ -69,7 +70,8 @@ def _format_column_names(df):
                 break
         else:
             drop.append(column)
-    df = df.rename(columns=rename).drop(columns=drop)
+    df = df.rename(columns=rename)
+    df = df.drop(columns=drop)
 
     # Add missing columns.
     for column in COLUMNS:
@@ -82,56 +84,54 @@ def _format_column_names(df):
 def _format_numeric_data(df):
     """Format the data to floats type."""
     for colname in COLUMNS:
-        if colname == INDEX:
-            continue
-
-        if colname in df.columns:
+        if colname != INDEX and colname in df.columns:
             df[colname] = pd.to_numeric(df[colname], errors='coerce')
-        else:
-            print('WARNING: no "%s" data found in the datafile.' % colname)
     return df
 
 
 def _format_datetime_data(df):
     """Format the dates to datetimes and set it as index."""
     if INDEX in df.columns:
-        try:
-            # We assume first that the dates are stored in the
-            # Excel numeric format.
-            datetimes = df['Time'].astype('float64', errors='raise')
-            datetimes = pd.to_datetime(datetimes.apply(
-                lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
-
-            # Get rid of milliseconds to avoid introducting round-off errors.
-            datetimes = datetimes.dt.round('S')
-
-            df['Time'] = datetimes
-        except (ValueError, TypeError) as e:
+        if df['Time'].dtypes != 'datetime64[ns]':
             try:
-                # Try converting the strings to datetime objects.
-                # The format of the datetime strings must be
-                # "%Y-%m-%d %H:%M:%S"
+                # We check first if the dates are stored in the
+                # Excel numeric format.
+                datetimes = df['Time'].astype('float64', errors='raise')
                 datetimes = pd.to_datetime(
-                    df['Time'], infer_datetime_format=True)
+                    datetimes.apply(
+                        lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
+
+                # Get rid of milliseconds to avoid introducting
+                # round-off errors.
+                datetimes = datetimes.dt.round('S')
+
                 df['Time'] = datetimes
-            except ValueError:
-                print('WARNING: the dates are not formatted correctly.')
-        finally:
-            df.set_index(['Time'], drop=True, inplace=True)
+            except (ValueError, TypeError) as e:
+                try:
+                    # We assume that dates are stored as strings.
+                    df['Time'] = pd.to_datetime(
+                        df['Time'], infer_datetime_format=True)
+                except ValueError:
+                    print('WARNING: the dates are not formatted correctly.')
+
+        df.set_index(['Time'], drop=True, inplace=True)
     else:
         print('WARNING: no "Time" data found in the datafile.')
-
-    # Check and remove duplicate data.
-    if any(df.index.duplicated(keep='first')):
-        print("WARNING: Duplicated values were found in the datafile. "
-              "Only the first entries for each date were kept.")
-        df.drop_duplicates(keep='first', inplace=True)
     return df
 
 
+def _drop_duplicates(df):
+    """
+    Drop duplicated indexes from the dataframe.
+    """
+    if df.index.duplicated(keep='first').any():
+        print("WARNING: Duplicated values were found in the datafile. "
+              "Only the first entries for each date were kept.")
+        return df.loc[df.index.drop_duplicates(keep='first')]
+
+
 class WLDataFrame(pd.DataFrame):
-    def __init__(self, data: list = None, columns: list = None,
-                 metadata: dict = None):
+    def __init__(self, data=None, columns=None, metadata=None):
         if data is None:
             super().__init__(data=[], columns=COLUMNS)
             self.set_index(INDEX, drop=True, inplace=True)
@@ -140,6 +140,7 @@ class WLDataFrame(pd.DataFrame):
             df = _format_column_names(df)
             df = _format_numeric_data(df)
             df = _format_datetime_data(df)
+            df = _drop_duplicates(df)
             super().__init__(df)
 
         metadata = {} if metadata is None else metadata
@@ -187,26 +188,40 @@ def read_water_level_datafile(filename):
     for i, row in enumerate(reader):
         if not len(row):
             continue
+
         label = str(row[0]).replace(" ", "").replace("_", "")
+        if re.search(COL_REGEX[INDEX], label, re.IGNORECASE):
+            break
+
         for key in HEADER.keys():
             if re.search(HEADER_REGEX[key], label, re.IGNORECASE):
                 if isinstance(header[key], (float, int)):
                     try:
                         header[key] = float(row[1])
                     except ValueError:
-                        print('Wrong format for entry "{}".'.format(key))
+                        print('Wrong format for metadata "{}".'.format(key))
                 else:
                     header[key] = str(row[1])
                 break
-        else:
-            if re.search(COL_REGEX[INDEX], label, re.IGNORECASE):
-                break
     else:
-        print("ERROR: the water level datafile is not formatted correctly.")
-        return None
+        print("ERROR: no data found in input water level file.")
+        return WLDataFrame(metadata=header)
+
+    root, ext = osp.splitext(filename)
+    if ext.lower() in ['.xls', '.xlsx']:
+        data = pd.read_excel(
+            filename,
+            header=i,
+            parse_dates=[row[0]]
+            )
+    else:
+        data = pd.read_csv(
+            filename,
+            skip_blank_lines=False,
+            header=i)
 
     # Cast the data into a Pandas dataframe.
-    dataf = WLDataFrame(reader[i+1:], columns=row, metadata=header)
+    dataf = WLDataFrame(data, columns=None, metadata=header)
     dataf.filename = filename
 
     return dataf
@@ -396,10 +411,11 @@ class WLDataset(WLDatasetBase):
 
 if __name__ == "__main__":
     from gwhat import __rootdir__
-    df = WLDataset(
-        osp.join(__rootdir__, 'tests', "water_level_datafile.csv"))
-    df2 = WLDataset(
-        osp.join(__rootdir__, 'tests', "water_level_datafile.xls"))
-    df3 = WLDataset(
-        osp.join(__rootdir__, 'tests', "water_level_datafile.xlsx"))
-    df4 = WLDataFrame()
+    dirname = osp.join(__rootdir__, 'projet', 'tests', 'data')
+    df1 = WLDataset(osp.join(dirname, "water_level_datafile.csv"))
+    df2 = WLDataset(osp.join(dirname, "water_level_datafile.xls"))
+    df3 = WLDataset(osp.join(dirname, "water_level_datafile.xlsx"))
+    df4 = WLDataset(osp.join(dirname, "water_level_datafile_xldates.csv"))
+    df5 = WLDataset(osp.join(dirname, "water_level_datafile_strfmt.xls"))
+    df6 = WLDataset(osp.join(dirname, "water_level_datafile_strfmt.xlsx"))
+    df7 = WLDataFrame()
