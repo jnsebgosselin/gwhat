@@ -115,6 +115,15 @@ class MasterRecessionCalcTool(WLCalcTool):
         layout.setColumnStretch(2, 500)
 
     # ---- WLCalc integration
+    @property
+    def wldset(self):
+        return None if self.wlcalc is None else self.wlcalc.wldset
+
+    @wlcalcmethod
+    def _on_wldset_changed(self):
+        self.load_mrc_from_wldset()
+        self._draw_mrc()
+
     @wlcalcmethod
     def _on_period_selected(self, xdata):
         """
@@ -183,6 +192,9 @@ class MasterRecessionCalcTool(WLCalcTool):
 
     def register_tool(self, wlcalc: QWidget):
         self.wlcalc = wlcalc
+
+        wlcalc.sig_wldset_changed.connect(self._on_wldset_changed)
+
 
         # Init matplotlib artists.
         self._mrc_plt, = self.wlcalc.fig.axes[0].plot(
