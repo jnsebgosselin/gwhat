@@ -28,8 +28,8 @@ from gwhat.widgets.buttons import OnOffToolButton, ToolBarWidget
 class MasterRecessionCalcTool(WLCalcTool):
     __toolname__ = 'mrc'
     __tooltitle__ = 'MRC'
-    __tooltip__ = ("A tool to evaluate the barometric "
-                   "response function of wells.")
+    __tooltip__ = ("A tool to evaluate the master recession curve "
+                   "of the hydrograph.")
 
     # Whether it is the first time showEvent is called.
     _first_show_event = True

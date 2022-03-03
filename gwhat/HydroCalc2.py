@@ -29,7 +29,6 @@ from PyQt5.QtWidgets import (
     QMessageBox, QFileDialog)
 
 import matplotlib as mpl
-import matplotlib.dates as mdates
 from matplotlib.figure import Figure as MplFigure
 from matplotlib.patches import Rectangle
 from matplotlib.transforms import ScaledTranslation
@@ -40,7 +39,7 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
-from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
+from gwhat.hydrocalc.recession.mainwidget import MasterRecessionCalcTool
 from gwhat.hydrocalc.recession.recession_calc import calculate_mrc
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
@@ -49,7 +48,6 @@ from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
-from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.widgets.buttons import OnOffToolButton, OnOffPushButton
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
@@ -111,6 +109,9 @@ class WLCalc(QWidget, SaveFileMixin):
         # Setup BRF calculation tool.
         self.brf_eval_widget = BRFManager(parent=self)
         self.install_tool(self.brf_eval_widget)
+
+        self.mrc_eval_widget = MasterRecessionCalcTool(parent=self)
+        self.install_tool(self.mrc_eval_widget)
 
         self.tools_tabwidget.setCurrentIndex(
             CONF.get('hydrocalc', 'current_tool_index'))
@@ -374,11 +375,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Setup the tools tab area.
         self.tools_tabwidget = QTabWidget()
-        self.mrc_eval_widget = self._setup_mrc_tool()
-        self.tools_tabwidget.addTab(self.mrc_eval_widget, 'MRC')
-        self.tools_tabwidget.setTabToolTip(
-            0, ("<p>A tool to evaluate the master recession curve"
-                " of the hydrograph.</p>"))
+
         self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
         self.tools_tabwidget.setTabToolTip(
             1, ("<p>A tool to evaluate groundwater recharge and its"
