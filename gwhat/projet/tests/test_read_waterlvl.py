@@ -1,38 +1,27 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
+from datetime import datetime
 import os
 import os.path as osp
-import csv
 
 # ---- Third party imports
 import pytest
 import numpy as np
+import pandas as pd
 
 # ---- Local library imports
+from gwhat import __rootdir__
 from gwhat.common.utils import save_content_to_excel, save_content_to_csv
 from gwhat.projet.reader_waterlvl import (
-    load_waterlvl_measures, init_waterlvl_measures, WLDataset)
-
-DATA = [['Well name = ', "êi!@':i*"],
-        ['well id : ', '1234ABC'],
-        ['Province', 'Qc'],
-        ['latitude   ', 45.36],
-        ['Longitude=', -72.4234665345],
-        ['Elevation:', 123],
-        [],
-        [],
-        ['Date', 'WL(mbgs)', 'BP(m)', 'ET'],
-        [41241.69792, 3.667377006, 10.33327435, 383.9680352],
-        [41241.70833, 3.665777025, 10.33127437, 387.7404819],
-        [41241.71875, 3.665277031, 10.33097437, 396.9950643]
-        ]
+    load_waterlvl_measures, WLDataset)
 
 WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
           ['Test', 40623.54167, 1.43],
@@ -43,6 +32,8 @@ WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
           ['test2', 41402.34375, 3.56],
           ]
 
+DATADIR = osp.join(__rootdir__, 'projet', 'tests', 'data')
+
 
 # =============================================================================
 # ---- Fixtures
@@ -50,13 +41,6 @@ WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
 @pytest.fixture
 def datatmpdir(tmp_path):
     """Create a set of water level datafile in various format."""
-    save_content_to_csv(
-        osp.join(tmp_path, 'water_level_datafile.csv'), DATA)
-    save_content_to_excel(
-        osp.join(tmp_path, 'water_level_datafile.xls'), DATA)
-    save_content_to_excel(
-        osp.join(tmp_path, 'water_level_datafile.xlsx'), DATA)
-
     save_content_to_csv(
         osp.join(tmp_path, 'waterlvl_manual_measurements.csv'), WLMEAS)
     save_content_to_excel(
@@ -70,9 +54,13 @@ def datatmpdir(tmp_path):
 # =============================================================================
 # ---- Tests
 # =============================================================================
-@pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
-def test_reading_waterlvl(datatmpdir, ext):
-    df = WLDataset(osp.join(datatmpdir, 'water_level_datafile' + ext))
+@pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx', '_xldates.csv'])
+def test_read_waterlvl(ext):
+    """
+    Test that reading water level input data files is working as expected.
+    """
+    filename = osp.join(DATADIR, 'water_level_datafile' + ext)
+    dataset = WLDataset(filename)
 
     expected_results = {
         'Well': "êi!@':i*",
@@ -81,54 +69,44 @@ def test_reading_waterlvl(datatmpdir, ext):
         'Latitude': 45.36,
         'Longitude': -72.4234665345,
         'Elevation': 123,
-        'Municipality': '',
-        'Time': np.array([41241.69792, 41241.70833, 41241.71875]),
-        'WL': np.array([3.667377006, 3.665777025, 3.665277031]),
-        'BP': np.array([10.33327435, 10.33127437, 10.33097437]),
-        'ET': np.array([383.9680352, 387.7404819, 396.9950643])}
-
+        'Municipality': ''}
     keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
             'Elevation', 'Municipality']
     for key in keys:
-        assert df[key] == expected_results[key]
+        assert dataset[key] == expected_results[key]
 
-    for key in ['WL', 'BP', 'ET']:
-        assert np.abs(np.min(df[key] - expected_results[key])) < 10e-6
-    assert np.abs(np.min(df.xldates - expected_results['Time'])) < 10e-6
+    # Check barometric pressure.
+    expected_results = np.array([10.33327435, 10.33127437, 10.33097437])
+    assert np.min(np.abs(dataset['BP'] - expected_results)) < 10e-6
 
+    # Ckeck water levels.
+    expected_results = np.array([3.667377006, 3.665777025, 3.665277031])
+    assert np.min(np.abs(dataset['WL'] - expected_results)) < 10e-6
 
-def test_init_waterlvl_measures(tmp_path):
-    """
-    Assert that the water_level_measurement file is initialized correctly.
-    """
-    filename = os.path.join(tmp_path, 'waterlvl_manual_measurements.csv')
-    assert not osp.exists(filename)
+    # Check earth tides.
+    expected_results = np.array([383.9680352, 387.7404819, 396.9950643])
+    assert np.min(np.abs(dataset['ET'] - expected_results)) < 10e-6
 
-    time, wl = load_waterlvl_measures(filename, 'Test')
-    assert len(time) == 0 and isinstance(time, np.ndarray)
-    assert len(wl) == 0 and isinstance(wl, np.ndarray)
+    # Check Excel numeric dates.
+    expected_results = np.array([41241.69792, 41241.70833, 41241.71875])
+    assert np.min(np.abs(dataset.xldates - expected_results)) < 10e-6
 
-    init_waterlvl_measures(tmp_path)
-    assert osp.exists(filename)
+    # Checks datetimes.
+    expected_results = pd.to_datetime([
+        datetime(2012, 11, 28, 16, 45, 0),
+        datetime(2012, 11, 28, 17, 0, 0),
+        datetime(2012, 11, 28, 17, 15, 0)])
+    assert (dataset.dates == expected_results.values).all()
 
-    time, wl = load_waterlvl_measures(filename, 'Test')
-    assert len(time) == 0 and isinstance(time, np.ndarray)
-    assert len(wl) == 0 and isinstance(wl, np.ndarray)
-
-    # Assert that the format of the file is correct.
-    expected_result = ['Well_ID', 'Time (days)', 'Obs. (mbgs)']
-    with open(filename, 'r') as f:
-        reader = list(csv.reader(f, delimiter=','))
-    assert len(reader) == 1
-    assert reader[0] == expected_result
+    # Check times.
+    expected_results = [
+        '2012-11-28T16:45:00', '2012-11-28T17:00:00', '2012-11-28T17:15:00']
+    assert list(dataset['Time']) == expected_results
 
 
 @pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
 def test_load_waterlvl_measurements(datatmpdir, ext):
     filename = osp.join(datatmpdir, "waterlvl_manual_measurements" + ext)
-
-    # Test that init_waterlvl_measures does not everride an existing file.
-    init_waterlvl_measures(datatmpdir)
 
     # Assert that it loads the right data.
     time, wl = load_waterlvl_measures(filename, 'Dummy')
