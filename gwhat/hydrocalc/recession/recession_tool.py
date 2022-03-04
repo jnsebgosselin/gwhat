@@ -84,10 +84,10 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             tip='Clear all recession periods.',
             triggered=self.clear_all_mrcperiods)
 
-        self.btn_addpeak = OnOffToolButton('pencil_add', size='normal')
-        self.btn_addpeak.sig_value_changed.connect(
-            lambda: self._btn_addpeak_isclicked())
-        self.btn_addpeak.setToolTip(
+        self.btn_add_period = OnOffToolButton('pencil_add', size='normal')
+        self.btn_add_period.sig_value_changed.connect(
+            lambda: self._btn_add_period_isclicked())
+        self.btn_add_period.setToolTip(
             "Left-click on the graph to add new recession periods.")
 
         self.btn_delpeak = OnOffToolButton('pencil_del', size='normal')
@@ -109,7 +109,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             'Calculate the Master Recession Curve (MRC).')
 
         mrc_tb = ToolBarWidget()
-        for btn in [self.btn_undo, self.btn_clearPeak, self.btn_addpeak,
+        for btn in [self.btn_undo, self.btn_clearPeak, self.btn_add_period,
                     self.btn_delpeak, self.btn_save_mrc]:
             mrc_tb.addWidget(btn)
 
@@ -192,12 +192,12 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             self._mrc_plt.set_visible(False)
 
     @wlcalcmethod
-    def _btn_addpeak_isclicked(self):
+    def _btn_add_period_isclicked(self):
         """Handle when the button add_peak is clicked."""
-        if self.btn_addpeak.value():
-            self.wlcalc.toggle_navig_and_select_tools(self.btn_addpeak)
+        if self.btn_add_period.value():
+            self.wlcalc.toggle_navig_and_select_tools(self.btn_add_period)
             self.btn_show_mrc.setValue(True)
-        self.mrc_selector.set_active(self.btn_addpeak.value())
+        self.mrc_selector.set_active(self.btn_add_period.value())
 
     @wlcalcmethod
     def _btn_delpeak_isclicked(self):
@@ -234,7 +234,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     def btn_show_mrc_isclicked(self):
         """Handle when the button to draw of hide the mrc is clicked."""
         if self.btn_show_mrc.value() is False:
-            self.btn_addpeak.setValue(False)
+            self.btn_add_period.setValue(False)
             self.btn_delpeak.setValue(False)
         self._draw_mrc()
 
@@ -261,7 +261,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
                     action, self.btn_show_mrc)
 
         # Setup the axes widget to add and remove recession periods.
-        wlcalc.register_navig_and_select_tool(self.btn_addpeak)
+        wlcalc.register_navig_and_select_tool(self.btn_add_period)
         wlcalc.register_navig_and_select_tool(self.btn_delpeak)
 
         self.mrc_selector = WLCalcVSpanSelector(
