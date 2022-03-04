@@ -57,15 +57,15 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
 
     def setup(self):
         # Setup MRC parameter widgets.
-        self.MRC_type = QComboBox()
-        self.MRC_type.addItems(['Linear', 'Exponential'])
-        self.MRC_type.setCurrentIndex(1)
+        self.cbox_mrc_type = QComboBox()
+        self.cbox_mrc_type.addItems(['Linear', 'Exponential'])
+        self.cbox_mrc_type.setCurrentIndex(1)
 
-        self.MRC_results = QTextEdit()
-        self.MRC_results.setReadOnly(True)
-        self.MRC_results.setMinimumHeight(25)
-        self.MRC_results.setMinimumWidth(100)
-        self.MRC_results.setSizePolicy(
+        self.txtedit_mrc_results = QTextEdit()
+        self.txtedit_mrc_results.setReadOnly(True)
+        self.txtedit_mrc_results.setMinimumHeight(25)
+        self.txtedit_mrc_results.setMinimumWidth(100)
+        self.txtedit_mrc_results.setSizePolicy(
             QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
 
         # Setup the toolbar.
@@ -77,7 +77,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             triggered=self.undo_mrc_period)
         self.btn_undo.setEnabled(False)
 
-        self.btn_clearPeak = create_toolbutton(
+        self.btn_clear_periods = create_toolbutton(
             parent=self,
             icon='clear_changes',
             iconsize=get_iconsize('normal'),
@@ -109,7 +109,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             'Calculate the Master Recession Curve (MRC).')
 
         mrc_tb = ToolBarWidget()
-        for btn in [self.btn_undo, self.btn_clearPeak, self.btn_add_period,
+        for btn in [self.btn_undo, self.btn_clear_periods, self.btn_add_period,
                     self.btn_del_period, self.btn_save_mrc]:
             mrc_tb.addWidget(btn)
 
@@ -118,9 +118,9 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
 
         row = 0
         layout.addWidget(QLabel('MRC Type :'), row, 0)
-        layout.addWidget(self.MRC_type, row, 1)
+        layout.addWidget(self.cbox_mrc_type, row, 1)
         row += 1
-        layout.addWidget(self.MRC_results, row, 0, 1, 3)
+        layout.addWidget(self.txtedit_mrc_results, row, 0, 1, 3)
         row += 1
         layout.addWidget(mrc_tb, row, 0, 1, 3)
         row += 1
@@ -303,7 +303,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             self.wldset.xldates,
             self.wldset.waterlevels,
             self._mrc_period_xdata,
-            self.MRC_type.currentIndex())
+            self.cbox_mrc_type.currentIndex())
         A = coeffs.A
         B = coeffs.B
         print('MRC Parameters: A={}, B={}'.format(
@@ -424,7 +424,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     def show_mrc_results(self):
         """Show MRC results if any."""
         if self.wldset is None:
-            self.MRC_results.setHtml('')
+            self.txtedit_mrc_results.setHtml('')
             return
 
         mrc_data = self.wldset.get_mrc()
@@ -453,4 +453,4 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
                     text += label.format('N/A')
                 else:
                     text += label.format('{:0.5f}'.format(value))
-        self.MRC_results.setHtml(text)
+        self.txtedit_mrc_results.setHtml(text)
