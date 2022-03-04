@@ -34,7 +34,7 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
-from gwhat.hydrocalc.recession.mainwidget import MasterRecessionCalcTool
+from gwhat.hydrocalc.recession.recession_tool import MasterRecessionCalcTool
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
@@ -99,7 +99,7 @@ class WLCalc(QWidget, SaveFileMixin):
         self.btn_pan.setValue(True)
         self.setup_ax_margins(None)
 
-        # Setup wlcalc tool.
+        # Setup wlcalc tools.
         self.mrc_eval_widget = MasterRecessionCalcTool(parent=self)
         self.install_tool(self.mrc_eval_widget)
 
