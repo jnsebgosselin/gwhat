@@ -39,6 +39,7 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
         self.useblit = self.canvas.supports_blit
         self.visible = True
         self.wlcalc = wlcalc
+        super().set_active(False)
 
     def set_active(self, active):
         """Set whether the axes widget is active."""
@@ -198,7 +199,6 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
-        super().set_active(False)
 
     # ---- WLCalcAxesWidgetBase interface
     def set_axeswidget_active(self, active):
