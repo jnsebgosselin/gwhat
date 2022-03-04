@@ -30,15 +30,14 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
     know what you are doing.
     """
 
-    _artists = []
-    _visible = {}
-
     def __init__(self, ax: Axes, wlcalc: QWidget):
         AxesWidget.__init__(self, ax)
         QObject.__init__(self)
         self.useblit = self.canvas.supports_blit
         self.visible = True
         self.wlcalc = wlcalc
+        self._artists = []
+        self._visible = {}
         super().set_active(False)
 
     def set_active(self, active):
@@ -72,7 +71,7 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
         """
         for artist in self._artists:
             artist.set_visible(self._visible[artist])
-            self.ax.draw_artist(artist)
+        self._update()
 
     def _update(self):
         for artist in self._artists:
