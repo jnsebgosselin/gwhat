@@ -91,7 +91,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             "Left-click on the graph to add new recession periods.")
 
         self.btn_delpeak = OnOffToolButton('pencil_del', size='normal')
-        self.btn_delpeak.clicked.connect(
+        self.btn_delpeak.sig_value_changed.connect(
             lambda: self._btn_delpeak_isclicked())
         self.btn_delpeak.setToolTip(
             "Left-click on a recession period to remove it.")
@@ -205,6 +205,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
         if self.btn_delpeak.value():
             self.wlcalc.toggle_navig_and_select_tools(self.btn_delpeak)
             self.btn_show_mrc.setValue(True)
+        self.mrc_remover.set_active(self.btn_delpeak.value())
         self.wlcalc.draw()
 
     @wlcalcmethod
