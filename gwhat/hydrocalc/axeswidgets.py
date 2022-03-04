@@ -36,8 +36,8 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
         self.useblit = self.canvas.supports_blit
         self.visible = True
         self.wlcalc = wlcalc
-        self._artists = []
-        self._visible = {}
+        self.__artists = []
+        self.__visible = {}
         super().set_active(False)
 
     def set_active(self, active):
@@ -48,8 +48,8 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
 
     def register_artist(self, artist):
         """Register given artist."""
-        self._artists.append(artist)
-        self._visible[artist] = False
+        self.__artists.append(artist)
+        self.__visible[artist] = False
 
     def clear(self):
         """
@@ -58,8 +58,8 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
         This method must be called by the canvas BEFORE making a copy of
         the canvas background.
         """
-        for artist in self._artists:
-            self._visible[artist] = artist.get_visible()
+        for artist in self.__artists:
+            self.__visible[artist] = artist.get_visible()
             artist.set_visible(False)
 
     def restore(self):
@@ -69,12 +69,12 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
         This method must be called by the canvas AFTER a copy has been made
         of the canvas background.
         """
-        for artist in self._artists:
-            artist.set_visible(self._visible[artist])
+        for artist in self.__artists:
+            artist.set_visible(self.__visible[artist])
         self._update()
 
     def _update(self):
-        for artist in self._artists:
+        for artist in self.__artists:
             self.ax.draw_artist(artist)
         return False
 
