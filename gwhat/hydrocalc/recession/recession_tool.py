@@ -103,9 +103,9 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             tip='Save calculated MRC to file.',
             triggered=lambda: self.save_mrc_tofile())
 
-        self.btn_MRCalc = QPushButton('Compute MRC')
-        self.btn_MRCalc.clicked.connect(self._btn_MRCalc_isClicked)
-        self.btn_MRCalc.setToolTip(
+        self.btn_calc_mrc = QPushButton('Compute MRC')
+        self.btn_calc_mrc.clicked.connect(self.calculate_mrc)
+        self.btn_calc_mrc.setToolTip(
             'Calculate the Master Recession Curve (MRC).')
 
         mrc_tb = ToolBarWidget()
@@ -127,7 +127,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
         layout.setRowMinimumHeight(row, 5)
         layout.setRowStretch(row, 100)
         row += 1
-        layout.addWidget(self.btn_MRCalc, row, 0, 1, 3)
+        layout.addWidget(self.btn_calc_mrc, row, 0, 1, 3)
         layout.setColumnStretch(2, 500)
 
         # This button needs to be added to WCalc toolbar.
