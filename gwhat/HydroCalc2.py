@@ -11,7 +11,6 @@
 import io
 import os.path as osp
 import datetime
-from typing import Any, Callable
 
 # ---- Third party imports
 import numpy as np
@@ -21,7 +20,7 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QTabWidget, QApplication, QWidget, QMainWindow,
-    QToolBar, QFrame, QMessageBox, QFileDialog)
+    QToolBar, QFrame, QMessageBox)
 
 import matplotlib as mpl
 from matplotlib.figure import Figure as MplFigure
