@@ -100,11 +100,18 @@ class WLCalc(QWidget, SaveFileMixin):
         self.setup_ax_margins(None)
 
         # Setup wlcalc tools.
+        self.brf_eval_widget = BRFManager(parent=self)
+        self.install_tool(self.brf_eval_widget)
+
         self.mrc_eval_widget = MasterRecessionCalcTool(parent=self)
         self.install_tool(self.mrc_eval_widget)
 
-        self.brf_eval_widget = BRFManager(parent=self)
-        self.install_tool(self.brf_eval_widget)
+        index = self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
+        self.tools_tabwidget.setTabToolTip(
+            index,
+            ("A tool to evaluate groundwater recharge and its "
+             "uncertainty from observed water levels and daily "
+             "weather data."))
 
         self.tools_tabwidget.setCurrentIndex(
             CONF.get('hydrocalc', 'current_tool_index'))
@@ -354,12 +361,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Setup the tools tab area.
         self.tools_tabwidget = QTabWidget()
-
-        self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
-        self.tools_tabwidget.setTabToolTip(
-            1, ("<p>A tool to evaluate groundwater recharge and its"
-                " uncertainty from observed water levels and daily "
-                " weather data.</p>"))
 
         # Setup the right panel.
         self.right_panel = QFrame()
