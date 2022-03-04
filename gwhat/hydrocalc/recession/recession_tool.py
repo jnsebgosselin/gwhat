@@ -230,34 +230,6 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
                         ls='-', alpha=0.1)
                     self._mrc_period_axvspans.append(axvspan)
 
-    def calculate_mrc(self):
-        if self.wldset is None:
-            return
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
-            self.wlcalc.time, self.wlcalc.water_lvl, self._mrc_period_xdata,
-            self.MRC_type.currentIndex())
-        A = coeffs.A
-        B = coeffs.B
-        print('MRC Parameters: A={}, B={}'.format(
-            'None' if pd.isnull(A) else '{:0.3f}'.format(coeffs.A),
-            'None' if pd.isnull(B) else '{:0.3f}'.format(coeffs.B)))
-
-        # Store and plot the results.
-        print('Saving MRC interpretation in dataset...')
-        self.wldset.set_mrc(
-            A, B, self._mrc_period_xdata,
-            self.wlcalc.time, hp,
-            std_err, r_squared, rmse)
-
-        self.show_mrc_results()
-        self.btn_save_mrc.setEnabled(True)
-        self._draw_mrc()
-        self.sig_new_mrc.emit()
-
-        QApplication.restoreOverrideCursor()
-
     def btn_show_mrc_isclicked(self):
         """Handle when the button to draw of hide the mrc is clicked."""
         if self.btn_show_mrc.value() is False:
@@ -320,9 +292,40 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
         pass
 
     # ---- MRC Tool Public Interface
+    def calculate_mrc(self):
+        if self.wldset is None:
+            return
+
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
+            self.wldset.xldates,
+            self.wldset.waterlevels,
+            self._mrc_period_xdata,
+            self.MRC_type.currentIndex())
+        A = coeffs.A
+        B = coeffs.B
+        print('MRC Parameters: A={}, B={}'.format(
+            'None' if pd.isnull(A) else '{:0.3f}'.format(coeffs.A),
+            'None' if pd.isnull(B) else '{:0.3f}'.format(coeffs.B)))
+
+        # Store and plot the results.
+        print('Saving MRC interpretation in dataset...')
+        self.wldset.set_mrc(
+            A, B, self._mrc_period_xdata,
+            self.wldset.xldates, hp,
+            std_err, r_squared, rmse)
+
+        self.show_mrc_results()
+        self.btn_save_mrc.setEnabled(True)
+        self._draw_mrc()
+        self.sig_new_mrc.emit()
+
+        QApplication.restoreOverrideCursor()
+
     def save_mrc_tofile(self, filename=None):
         """Save the master recession curve results to a file."""
-        if self.wldset is not None:
+        if self.wldset is None:
             return
 
         if filename is None:
