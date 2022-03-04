@@ -9,6 +9,7 @@
 
 # ---- Standard library imports
 from typing import Any, Callable
+from abc import abstractmethod
 
 # ---- Third party imports
 import numpy as np
@@ -21,37 +22,34 @@ from matplotlib.axes import Axes
 from matplotlib.widgets import AxesWidget
 
 
-class WLCalcVSpanHighlighter(AxesWidget, QObject):
-    sig_span_clicked = QSignal(float)
+class WLCalcAxesWidgetBase(AxesWidget, QObject):
+    """
+    Basic functionality for WLCalc axes widgets.
 
-    def __init__(self, ax: Axes, wlcalc: QWidget, tracked_axvspans: list,
-                 useblit: bool = True, onclicked: Callable = None,
-                 axvspan_color: str = 'red', axvline_color: str = 'black',
-                 ):
+    WARNING: Don't override any methods or attributes present here unless you
+    know what you are doing.
+    """
+
+    _artists = []
+    _visible = {}
+
+    def __init__(self, ax: Axes, wlcalc: QWidget):
         AxesWidget.__init__(self, ax)
         QObject.__init__(self)
+        self.useblit = self.canvas.supports_blit
         self.visible = True
-        self.useblit = useblit and self.canvas.supports_blit
         self.wlcalc = wlcalc
-        self.tracked_axvspans = tracked_axvspans
-
-        if onclicked is not None:
-            self.sig_span_clicked.connect(onclicked)
-
-        # Axes span highlight.
-        self.axvspan_highlight = ax.axvspan(
-            0, 1, visible=False, color='red', linewidth=1,
-            ls='-', alpha=0.3)
 
     def set_active(self, active):
-        """
-        Set whether the selector is active.
-        """
-        self.axvspan_highlight.xy = [
-            [np.inf, 1], [np.inf, 0], [np.inf, 0], [np.inf, 1]]
-        self.axvspan_highlight.set_visible(active)
+        """Set whether the axes widget is active."""
+        self.set_axeswidget_active(active)
         super().set_active(active)
         self.wlcalc.draw()
+
+    def register_artist(self, artist):
+        """Register given artist."""
+        self._artists.append(artist)
+        self._visible[artist] = False
 
     def clear(self):
         """
@@ -60,8 +58,9 @@ class WLCalcVSpanHighlighter(AxesWidget, QObject):
         This method must be called by the canvas BEFORE making a copy of
         the canvas background.
         """
-        self.__axvspan_highlight_visible = self.axvspan_highlight.get_visible()
-        self.axvspan_highlight.set_visible(False)
+        for artist in self._artists:
+            self._visible[artist] = artist.get_visible()
+            artist.set_visible(False)
 
     def restore(self):
         """
@@ -70,8 +69,65 @@ class WLCalcVSpanHighlighter(AxesWidget, QObject):
         This method must be called by the canvas AFTER a copy has been made
         of the canvas background.
         """
-        self.axvspan_highlight.set_visible(self.__axvspan_highlight_visible)
-        self.ax.draw_artist(self.axvspan_highlight)
+        for artist in self._artists:
+            artist.set_visible(self._visible[artist])
+            self.ax.draw_artist(artist)
+
+    def _update(self):
+        for artist in self._artists:
+            self.ax.draw_artist(artist)
+        return False
+
+
+class WLCalcAxesWidget(WLCalcAxesWidgetBase):
+    """
+    WLCalc axes widget class.
+
+    All axes widgets *must* inherit this class and reimplement its interface.
+    """
+
+    @abstractmethod
+    def set_axeswidget_active(active):
+        pass
+
+    @abstractmethod
+    def onmove(self, event):
+        """Handler that is called when the mouse cursor moves."""
+        pass
+
+    @abstractmethod
+    def onpress(self, event):
+        """Handler that is called when a mouse button is pressed."""
+        pass
+
+    @abstractmethod
+    def onrelease(self, event):
+        """Handler that is called when a mouse button is released."""
+        pass
+
+
+class WLCalcVSpanHighlighter(WLCalcAxesWidget):
+    sig_span_clicked = QSignal(float)
+
+    def __init__(self, ax: Axes, wlcalc: QWidget, tracked_axvspans: list,
+                 onclicked: Callable = None, highlight_color: str = 'red'):
+        super().__init__(ax, wlcalc)
+        self.tracked_axvspans = tracked_axvspans
+
+        if onclicked is not None:
+            self.sig_span_clicked.connect(onclicked)
+
+        # Axes span highlight.
+        self.axvspan_highlight = ax.axvspan(
+            0, 1, visible=False, color=highlight_color, linewidth=1,
+            ls='-', alpha=0.3)
+        self.register_artist(self.axvspan_highlight)
+
+    # ---- WLCalcAxesWidgetBase interface
+    def set_axeswidget_active(self, active):
+        self.axvspan_highlight.xy = [
+            [np.inf, 1], [np.inf, 0], [np.inf, 0], [np.inf, 1]]
+        self.axvspan_highlight.set_visible(active)
 
     def onmove(self, event):
         """Handler to draw the selector when the mouse cursor moves."""
@@ -117,22 +173,13 @@ class WLCalcVSpanHighlighter(AxesWidget, QObject):
     def onrelease(self, event):
         pass
 
-    def _update(self):
-        self.ax.draw_artist(self.axvspan_highlight)
-        return False
 
-
-class WLCalcVSpanSelector(AxesWidget, QObject):
+class WLCalcVSpanSelector(WLCalcAxesWidget):
     sig_span_selected = QSignal(tuple)
 
-    def __init__(self, ax: Axes, wlcalc: QWidget,
-                 useblit: bool = True, onselected: Callable = None,
+    def __init__(self, ax: Axes, wlcalc: QWidget, onselected: Callable = None,
                  axvspan_color: str = 'red', axvline_color: str = 'black'):
-        AxesWidget.__init__(self, ax)
-        QObject.__init__(self)
-        self.visible = True
-        self.useblit = useblit and self.canvas.supports_blit
-        self.wlcalc = wlcalc
+        super().__init__(ax, wlcalc)
 
         if onselected is not None:
             self.sig_span_selected.connect(onselected)
@@ -141,20 +188,20 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
             ax.get_xbound()[0], ax.get_xbound()[0], visible=False,
             color=axvspan_color, linewidth=1, ls='-', animated=self.useblit,
             alpha=0.1)
+        self.register_artist(self.axvspan)
 
         self.axvline = ax.axvline(
             ax.get_ybound()[0], visible=False, color=axvline_color,
             linewidth=1, ls='--', animated=self.useblit)
+        self.register_artist(self.axvline)
 
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
         super().set_active(False)
 
-    def set_active(self, active):
-        """
-        Set whether the selector is active.
-        """
+    # ---- WLCalcAxesWidgetBase interface
+    def set_axeswidget_active(self, active):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
@@ -168,36 +215,7 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
                            [np.inf, 1]]
         self.axvspan.set_visible(active)
 
-        super().set_active(active)
-        self.wlcalc.draw()
-
-    def clear(self):
-        """
-        Clear the selector.
-
-        This method must be called by the canvas BEFORE making a copy of
-        the canvas background.
-        """
-        self.__axvspan_visible = self.axvspan.get_visible()
-        self.__axvline_visible = self.axvline.get_visible()
-        self.axvspan.set_visible(False)
-        self.axvline.set_visible(False)
-
-    def restore(self):
-        """
-        Restore the selector.
-
-        This method must be called by the canvas AFTER a copy has been made
-        of the canvas background.
-        """
-        self.axvspan.set_visible(self.__axvspan_visible)
-        self.ax.draw_artist(self.axvspan)
-
-        self.axvline.set_visible(self.__axvline_visible)
-        self.ax.draw_artist(self.axvline)
-
     def onpress(self, event):
-        """Handler for the button_press_event event."""
         if event.button == 1 and event.xdata:
             if self._onpress_button in [None, event.button]:
                 self._onpress_button = event.button
@@ -280,8 +298,3 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
             self.axvline.set_visible(False)
             self.axvspan.set_visible(False)
         self._update()
-
-    def _update(self):
-        self.ax.draw_artist(self.axvline)
-        self.ax.draw_artist(self.axvspan)
-        return False
