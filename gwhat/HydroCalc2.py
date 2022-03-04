@@ -55,6 +55,7 @@ class WLCalc(QWidget, SaveFileMixin):
     MRC and ultimately estimate groundwater recharge.
     """
     sig_wldset_changed = QSignal()
+    sig_date_format_changed = QSignal()
 
     def __init__(self, datamanager, parent=None):
         QWidget.__init__(self, parent)
@@ -684,9 +685,9 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self._draw_obs_wl()
         self.draw_meas_wl()
-        self.draw_mrc()
         self.draw_weather()
         self.draw_glue_wl()
+        self.sig_date_format_changed.emit()
         self.draw()
 
     def setup_wl_style(self):
