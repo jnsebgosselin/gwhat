@@ -708,6 +708,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
     def draw(self):
         """Draw the canvas and save a snapshot of the background figure."""
+        xycoord_is_visible = self.xycoord.get_visible()
         self.xycoord.set_visible(False)
         for widget in self._axes_widgets:
             widget.clear()
@@ -715,6 +716,8 @@ class WLCalc(QWidget, SaveFileMixin):
         self.canvas.draw()
         self._figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
+        self.xycoord.set_visible(xycoord_is_visible)
+        self.fig.axes[0].draw_artist(self.xycoord)
         for widget in self._axes_widgets:
             widget.restore()
 
@@ -969,7 +972,6 @@ class WLCalc(QWidget, SaveFileMixin):
         for widget in self._axes_widgets:
             if widget.get_active():
                 widget.onpress(event)
-
         self.draw()
 
 
