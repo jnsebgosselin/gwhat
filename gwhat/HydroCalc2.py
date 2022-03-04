@@ -452,27 +452,6 @@ class WLCalc(QWidget, SaveFileMixin):
         QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
         buf.close()
 
-    # ---- MRC handlers
-    def save_mrc_tofile(self, filename=None):
-        """Save the master recession curve results to a file."""
-        if filename is None:
-            filename = osp.join(
-                self.dialog_dir,
-                "Well_{}_mrc_results.csv".format(self.wldset['Well']))
-
-        filename, filetype = QFileDialog.getSaveFileName(
-            self, "Save MRC results", filename, 'Text CSV (*.csv)')
-
-        if filename:
-            QApplication.setOverrideCursor(Qt.WaitCursor)
-            QApplication.processEvents()
-            try:
-                self.wldset.save_mrc_tofile(filename)
-            except PermissionError:
-                self.show_permission_error()
-                self.save_mrc_tofile(filename)
-            QApplication.restoreOverrideCursor()
-
     # ---- Navigation and selection tools
     def register_navig_and_select_tool(self, tool):
         """

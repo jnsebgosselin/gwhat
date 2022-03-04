@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 # ---- Standard library imports
+import os.path as osp
 
 # ---- Third party imports
 import pandas as pd
@@ -17,7 +18,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QWidget, QComboBox, QTextEdit, QSizePolicy, QPushButton, QGridLayout,
-    QLabel, QApplication)
+    QLabel, QApplication, QFileDialog)
 
 # ---- Local imports
 from gwhat.hydrocalc.recession.recession_calc import calculate_mrc
@@ -25,11 +26,12 @@ from gwhat.hydrocalc.axeswidgets import (
     WLCalcVSpanSelector, WLCalcVSpanHighlighter)
 from gwhat.hydrocalc.api import WLCalcTool, wlcalcmethod
 from gwhat.utils.qthelpers import create_toolbutton
-from gwhat.utils.icons import QToolButtonNormal, get_iconsize
+from gwhat.utils.icons import get_iconsize
 from gwhat.widgets.buttons import OnOffToolButton, ToolBarWidget
+from gwhat.widgets.fileio import SaveFileMixin
 
 
-class MasterRecessionCalcTool(WLCalcTool):
+class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     __toolname__ = 'mrc'
     __tooltitle__ = 'MRC'
     __tooltip__ = ("A tool to evaluate the master recession curve "
@@ -49,6 +51,8 @@ class MasterRecessionCalcTool(WLCalcTool):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        WLCalcTool.__init__(self, parent)
+        SaveFileMixin.__init__(self)
         self.setup()
 
     def setup(self):
@@ -315,7 +319,33 @@ class MasterRecessionCalcTool(WLCalcTool):
     def set_wxdset(self, wxdset):
         pass
 
-    # ---- MRC Tool Interface
+    # ---- MRC Tool Public Interface
+    def save_mrc_tofile(self, filename=None):
+        """Save the master recession curve results to a file."""
+        if self.wldset is not None:
+            return
+
+        if filename is None:
+            filename = osp.join(
+                self.dialog_dir,
+                "mrc_results ({}).csv".format(self.wldset['Well']))
+
+        filename, filetype = QFileDialog.getSaveFileName(
+            self.parent() or self,
+            "Save MRC results",
+            filename,
+            'Text CSV (*.csv)')
+
+        if filename:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            QApplication.processEvents()
+            try:
+                self.wldset.save_mrc_tofile(filename)
+            except PermissionError:
+                self.show_permission_error(widget=self.parent())
+                self.save_mrc_tofile(filename)
+            QApplication.restoreOverrideCursor()
+
     def load_mrc_from_wldset(self):
         """Load saved MRC results from the project hdf5 file."""
         if self.wldset is not None:

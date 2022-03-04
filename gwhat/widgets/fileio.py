@@ -27,9 +27,10 @@ class SaveFileMixin(object):
         """Set the default dialog directory to dirname."""
         set_select_file_dialog_dir(dirname)
 
-    def select_savefilename(self, title, fname, ffmat):
+    def select_savefilename(self, title, fname, ffmat, widget=None):
         """Open a dialog where the user can select a file name."""
-        fname, ftype = QFileDialog.getSaveFileName(self, title, fname, ffmat)
+        fname, ftype = QFileDialog.getSaveFileName(
+            widget or self, title, fname, ffmat)
         if fname:
             ftype = ftype.replace('*', '')
             fname = fname if fname.endswith(ftype) else fname + ftype
@@ -38,11 +39,11 @@ class SaveFileMixin(object):
         else:
             return None
 
-    def show_permission_error(self):
+    def show_permission_error(self, widget=None):
         """
         Show a warning message telling the user that the saving operation
         has failed.
         """
         QApplication.restoreOverrideCursor()
         msg = "The file is in use by another application or user."
-        QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+        QMessageBox.warning(widget or self, 'Warning', msg, QMessageBox.Ok)
