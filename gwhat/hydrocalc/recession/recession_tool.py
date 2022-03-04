@@ -37,22 +37,26 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     __tooltip__ = ("A tool to evaluate the master recession curve "
                    "of the hydrograph.")
 
-    # Whether it is the first time showEvent is called.
-    _first_show_event = True
-
-    # The WLCalc instance to which this tool is registered.
-    wlcalc = None
-
-    _mrc_period_xdata = []
-    _mrc_period_axvspans = []
-    _mrc_period_memory = [[], ]
-
     sig_new_mrc = QSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         WLCalcTool.__init__(self, parent)
         SaveFileMixin.__init__(self)
+
+        self._mrc_period_xdata = []
+        self._mrc_period_axvspans = []
+        self._mrc_period_memory = [[], ]
+
+        # Whether it is the first time showEvent is called.
+        self._first_show_event = True
+
+        # The WLCalc instance to which this tool is registered.
+        self.wlcalc = None
+
+        # The water level dataset currently registered to this tool.
+        self.wldset = None
+
         self.setup()
 
     def setup(self):
@@ -140,19 +144,6 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             self.get_option('show_mrc', True), silent=True)
 
     # ---- WLCalc integration
-    @property
-    def wldset(self):
-        return None if self.wlcalc is None else self.wlcalc.wldset
-
-    @wlcalcmethod
-    def _on_wldset_changed(self):
-        self._mrc_period_xdata = []
-        self._mrc_period_memory = [[], ]
-        self.btn_undo.setEnabled(False)
-        self.setEnabled(self.wldset is not None)
-        self.load_mrc_from_wldset()
-        self._draw_mrc()
-
     @wlcalcmethod
     def _on_period_selected(self, xdata):
         """
@@ -249,7 +240,6 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
         wlcalc.tools_tabwidget.setTabToolTip(index, self.tooltip())
         # wlcalc.tools_tabwidget.currentChanged.connect(
         #     lambda: self.toggle_brfperiod_selection(False))
-        wlcalc.sig_wldset_changed.connect(self._on_wldset_changed)
         wlcalc.sig_date_format_changed.connect(self._draw_mrc)
         wlcalc.sig_new_mrc = self.sig_new_mrc
 
@@ -287,7 +277,13 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
         super().close()
 
     def set_wldset(self, wldset):
-        pass
+        self.wldset = wldset
+        self._mrc_period_xdata = []
+        self._mrc_period_memory = [[], ]
+        self.btn_undo.setEnabled(False)
+        self.setEnabled(self.wldset is not None)
+        self.load_mrc_from_wldset()
+        self._draw_mrc()
 
     def set_wxdset(self, wxdset):
         pass

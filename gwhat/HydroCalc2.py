@@ -53,7 +53,6 @@ class WLCalc(QWidget, SaveFileMixin):
     i.e. display the data as a continuous line or individual dot, perform a
     MRC and ultimately estimate groundwater recharge.
     """
-    sig_wldset_changed = QSignal()
     sig_date_format_changed = QSignal()
 
     def __init__(self, datamanager, parent=None):
@@ -425,8 +424,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self.setup_hydrograph()
         self._navig_toolbar.update()
-
-        self.sig_wldset_changed.emit()
 
     def set_wxdset(self, wxdset):
         """Set the weather dataset."""
