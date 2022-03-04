@@ -230,8 +230,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
                         ls='-', alpha=0.1)
                     self._mrc_period_axvspans.append(axvspan)
 
-    @wlcalcmethod
-    def _btn_MRCalc_isClicked(self):
+    def calculate_mrc(self):
         if self.wldset is None:
             return
         QApplication.setOverrideCursor(Qt.WaitCursor)
