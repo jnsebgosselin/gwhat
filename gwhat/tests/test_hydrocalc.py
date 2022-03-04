@@ -108,7 +108,7 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
         (41440.604166666664, 41447.697916666664),
         (41543.958333333336, 41552.541666666664)]
     for coord in coordinates:
-        hydrocalc.add_mrcperiod(coord)
+        hydrocalc.tools['mrc'].add_mrcperiod(coord)
 
     # Calcul the MRC.
     mrc_data = hydrocalc.wldset.get_mrc()
@@ -117,7 +117,7 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
     assert len(mrc_data['recess']) == 0
     assert len(mrc_data['time']) == 0
 
-    hydrocalc.btn_MRCalc_isClicked()
+    hydrocalc.tools['mrc'].calculate_mrc()
 
     mrc_data = hydrocalc.wldset.get_mrc()
     assert abs(mrc_data['params'][0] - 0.07004324034418882) < 10**-5
@@ -136,7 +136,7 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
         return_value=(outfile, ffilter))
 
     assert not osp.exists(outfile + '.csv')
-    hydrocalc.save_mrc_tofile()
+    hydrocalc.tools['mrc'].save_mrc_tofile()
     assert osp.exists(outfile + '.csv')
     assert qfdialog_patcher.call_count == 1
 
