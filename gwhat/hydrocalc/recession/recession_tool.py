@@ -13,12 +13,16 @@ from __future__ import annotations
 
 # ---- Third party imports
 import pandas as pd
+from PyQt5.QtCore import Qt
+from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QWidget, QComboBox, QTextEdit, QSizePolicy, QPushButton, QGridLayout,
-    QLabel)
+    QLabel, QApplication)
 
 # ---- Local imports
-from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
+from gwhat.hydrocalc.recession.recession_calc import calculate_mrc
+from gwhat.hydrocalc.axeswidgets import (
+    WLCalcVSpanSelector, WLCalcVSpanHighlighter)
 from gwhat.hydrocalc.api import WLCalcTool, wlcalcmethod
 from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
@@ -40,6 +44,12 @@ class MasterRecessionCalcTool(WLCalcTool):
     _mrc_period_xdata = []
     _mrc_period_axvspans = []
     _mrc_period_memory = [[], ]
+
+    sig_new_mrc = QSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setup()
 
     def setup(self):
         # Setup MRC parameter widgets.
@@ -71,12 +81,14 @@ class MasterRecessionCalcTool(WLCalcTool):
             triggered=self.clear_all_mrcperiods)
 
         self.btn_addpeak = OnOffToolButton('pencil_add', size='normal')
-        self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
+        self.btn_addpeak.sig_value_changed.connect(
+            lambda: self._btn_addpeak_isclicked())
         self.btn_addpeak.setToolTip(
             "Left-click on the graph to add new recession periods.")
 
         self.btn_delpeak = OnOffToolButton('pencil_del', size='normal')
-        self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
+        self.btn_delpeak.clicked.connect(
+            lambda: self._btn_delpeak_isclicked())
         self.btn_delpeak.setToolTip(
             "Left-click on a recession period to remove it.")
 
@@ -88,7 +100,7 @@ class MasterRecessionCalcTool(WLCalcTool):
             triggered=lambda: self.save_mrc_tofile())
 
         self.btn_MRCalc = QPushButton('Compute MRC')
-        self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
+        self.btn_MRCalc.clicked.connect(self._btn_MRCalc_isClicked)
         self.btn_MRCalc.setToolTip(
             'Calculate the Master Recession Curve (MRC).')
 
@@ -114,6 +126,15 @@ class MasterRecessionCalcTool(WLCalcTool):
         layout.addWidget(self.btn_MRCalc, row, 0, 1, 3)
         layout.setColumnStretch(2, 500)
 
+        # This button needs to be added to WCalc toolbar.
+        self.btn_show_mrc = OnOffToolButton('mrc_calc', size='normal')
+        self.btn_show_mrc.setToolTip(
+            "Show or hide water levels predicted with the MRC.")
+        self.btn_show_mrc.sig_value_changed.connect(
+            self.btn_show_mrc_isclicked)
+        self.btn_show_mrc.setValue(
+            self.get_option('show_mrc', True), silent=True)
+
     # ---- WLCalc integration
     @property
     def wldset(self):
@@ -121,6 +142,10 @@ class MasterRecessionCalcTool(WLCalcTool):
 
     @wlcalcmethod
     def _on_wldset_changed(self):
+        self._mrc_period_xdata = []
+        self._mrc_period_memory = [[], ]
+        self.btn_undo.setEnabled(False)
+        self.setEnabled(self.wldset is not None)
         self.load_mrc_from_wldset()
         self._draw_mrc()
 
@@ -136,7 +161,6 @@ class MasterRecessionCalcTool(WLCalcTool):
             of the new selected recession period.
         """
         self.add_mrcperiod(xdata)
-        self.wlcalc._draw_mrc()
 
     @wlcalcmethod
     def _draw_mrc(self):
@@ -152,7 +176,7 @@ class MasterRecessionCalcTool(WLCalcTool):
     def _draw_mrc_wl(self):
         """Draw the water levels that were predicted with the MRC."""
         if (self.wldset is not None and
-                self.wlcalc.btn_show_mrc.value() and
+                self.btn_show_mrc.value() and
                 self.wldset.mrc_exists()):
             self._mrc_plt.set_visible(True)
             mrc_data = self.wldset.get_mrc()
@@ -162,6 +186,22 @@ class MasterRecessionCalcTool(WLCalcTool):
             self._mrc_plt.set_data(x, y)
         else:
             self._mrc_plt.set_visible(False)
+
+    @wlcalcmethod
+    def _btn_addpeak_isclicked(self):
+        """Handle when the button add_peak is clicked."""
+        if self.btn_addpeak.value():
+            self.wlcalc.toggle_navig_and_select_tools(self.btn_addpeak)
+            self.btn_show_mrc.setValue(True)
+        self.mrc_selector.set_active(self.btn_addpeak.value())
+
+    @wlcalcmethod
+    def _btn_delpeak_isclicked(self):
+        """Handle when the button btn_delpeak is clicked."""
+        if self.btn_delpeak.value():
+            self.wlcalc.toggle_navig_and_select_tools(self.btn_delpeak)
+            self.btn_show_mrc.setValue(True)
+        self.wlcalc.draw()
 
     @wlcalcmethod
     def _draw_mrc_periods(self):
@@ -186,25 +226,95 @@ class MasterRecessionCalcTool(WLCalcTool):
                         ls='-', alpha=0.1)
                     self._mrc_period_axvspans.append(axvspan)
 
+    @wlcalcmethod
+    def _btn_MRCalc_isClicked(self):
+        if self.wldset is None:
+            return
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
+            self.wlcalc.time, self.wlcalc.water_lvl, self._mrc_period_xdata,
+            self.MRC_type.currentIndex())
+        A = coeffs.A
+        B = coeffs.B
+        print('MRC Parameters: A={}, B={}'.format(
+            'None' if pd.isnull(A) else '{:0.3f}'.format(coeffs.A),
+            'None' if pd.isnull(B) else '{:0.3f}'.format(coeffs.B)))
+
+        # Store and plot the results.
+        print('Saving MRC interpretation in dataset...')
+        self.wldset.set_mrc(
+            A, B, self._mrc_period_xdata,
+            self.wlcalc.time, hp,
+            std_err, r_squared, rmse)
+
+        self.show_mrc_results()
+        self.btn_save_mrc.setEnabled(True)
+        self._draw_mrc()
+        self.sig_new_mrc.emit()
+
+        QApplication.restoreOverrideCursor()
+
+    def btn_show_mrc_isclicked(self):
+        """Handle when the button to draw of hide the mrc is clicked."""
+        if self.btn_show_mrc.value() is False:
+            self.btn_addpeak.setValue(False)
+            self.btn_delpeak.setValue(False)
+        self._draw_mrc()
+
     # ---- WLCalcTool API
     def is_registered(self):
         return self.wlcalc is not None
 
     def register_tool(self, wlcalc: QWidget):
+        # Setup wlcalc.
         self.wlcalc = wlcalc
+        index = wlcalc.tools_tabwidget.addTab(self, self.title())
+        wlcalc.tools_tabwidget.setTabToolTip(index, self.tooltip())
+        # wlcalc.tools_tabwidget.currentChanged.connect(
+        #     lambda: self.toggle_brfperiod_selection(False))
+        wlcalc.sig_wldset_changed.connect(self._on_wldset_changed)
+        wlcalc.sig_new_mrc = self.sig_new_mrc
+
+        # Add "Show MRC" button to WLCalc toolbar.
+        before_widget = wlcalc.btn_show_meas_wl
+        for action in wlcalc.toolbar.actions():
+            if wlcalc.toolbar.widgetForAction(action) == before_widget:
+                wlcalc.toolbar.insertWidget(
+                    action, self.btn_show_mrc)
+
+        # Setup the axes widget to add and remove recession periods.
         wlcalc.register_navig_and_select_tool(self.btn_addpeak)
         wlcalc.register_navig_and_select_tool(self.btn_delpeak)
 
-        wlcalc.sig_wldset_changed.connect(self._on_wldset_changed)
-
         self.mrc_selector = WLCalcVSpanSelector(
-            self.wlcalc.fig.axes[0], self, onselected=self._on_period_selected)
-        self.install_axeswidget(self.mrc_selector)
+            self.wlcalc.fig.axes[0], wlcalc,
+            onselected=self._on_period_selected)
+        wlcalc.install_axeswidget(self.mrc_selector)
+
+        self.mrc_remover = WLCalcVSpanHighlighter(
+            self.wlcalc.fig.axes[0], wlcalc, self._mrc_period_axvspans,
+            onclicked=self.remove_mrcperiod)
+        wlcalc.install_axeswidget(self.mrc_remover)
 
         # Init matplotlib artists.
         self._mrc_plt, = self.wlcalc.fig.axes[0].plot(
             [], [], color='red', clip_on=True,
             zorder=15, marker='None', linestyle='--')
+
+        self.load_mrc_from_wldset()
+        self._draw_mrc()
+
+    def close_tool(self):
+        self.set_option('show_mrc', self.btn_show_mrc.value())
+        super().close()
+
+    def set_wldset(self, wldset):
+        pass
+
+    def set_wxdset(self, wxdset):
+        pass
+
     # ---- MRC Tool Interface
     def load_mrc_from_wldset(self):
         """Load saved MRC results from the project hdf5 file."""
@@ -245,6 +355,37 @@ class MasterRecessionCalcTool(WLCalcTool):
 
         self._mrc_period_xdata.append((xmin, xmax))
         self._mrc_period_memory.append(self._mrc_period_xdata.copy())
+        self._draw_mrc()
+
+    def undo_mrc_period(self):
+        """
+        Undo the last operation performed by the user on the selection
+        of mrc periods.
+        """
+        if len(self._mrc_period_memory) > 1:
+            self._mrc_period_xdata = self._mrc_period_memory[-2].copy()
+            del self._mrc_period_memory[-1]
+            self._draw_mrc()
+
+    def clear_all_mrcperiods(self):
+        """Clear all mrc periods from the graph."""
+        if len(self._mrc_period_xdata) > 0:
+            self._mrc_period_xdata = []
+            self._mrc_period_memory.append([])
+        self._draw_mrc()
+
+    def remove_mrcperiod(self, xdata):
+        """
+        Remove the mrc period at xdata if any.
+        """
+        for i, period_xdata in enumerate(self._mrc_period_xdata):
+            period_xmin = period_xdata[0]
+            period_xmax = period_xdata[1]
+            if xdata >= period_xmin and xdata <= period_xmax:
+                del self._mrc_period_xdata[i]
+                self._mrc_period_memory.append(self._mrc_period_xdata.copy())
+                self._draw_mrc()
+                break
 
     def show_mrc_results(self):
         """Show MRC results if any."""
