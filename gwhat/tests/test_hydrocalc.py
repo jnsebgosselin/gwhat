@@ -8,7 +8,6 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard Libraries Imports
-import os
 import os.path as osp
 
 # ---- Third Party Libraries Imports
@@ -35,15 +34,10 @@ WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 
 
 # ---- Pytest Fixtures
-@pytest.fixture(scope="module")
-def projectpath(tmp_path_factory):
-    return tmp_path_factory.mktemp("project_test_hydrocalc")
-
-
-@pytest.fixture(scope="module")
-def project(projectpath):
+@pytest.fixture
+def project(tmp_path):
     # Create a project and add add the wldset to it.
-    project = ProjetReader(osp.join(projectpath, "project_test_hydrocalc.gwt"))
+    project = ProjetReader(osp.join(tmp_path, "project_test_hydrocalc.gwt"))
 
     # Add the weather dataset to the project.
     wxdset = WXDataFrame(WXFILENAME)
@@ -65,15 +59,22 @@ def datamanager(project):
 @pytest.fixture
 def hydrocalc(datamanager, qtbot):
     hydrocalc = WLCalc(datamanager)
-    qtbot.addWidget(hydrocalc)
     hydrocalc.show()
-    return hydrocalc
+
+    yield hydrocalc
+
+    # We need to explicitely close hydrocalc, the datamanager and the project
+    # to avoid 'Windows fatal exception: access violation' errors in
+    # other tests.
+    hydrocalc.close()
+    datamanager.projet.close()
+    datamanager.close()
 
 
 # =============================================================================
 # ---- Tests
 # =============================================================================
-def test_hydrocalc_init(hydrocalc, mocker):
+def test_hydrocalc_init(hydrocalc):
     assert hydrocalc
 
 
