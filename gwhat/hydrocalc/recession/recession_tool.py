@@ -241,7 +241,6 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
         # wlcalc.tools_tabwidget.currentChanged.connect(
         #     lambda: self.toggle_brfperiod_selection(False))
         wlcalc.sig_date_format_changed.connect(self._draw_mrc)
-        wlcalc.sig_new_mrc = self.sig_new_mrc
 
         # Add "Show MRC" button to WLCalc toolbar.
         before_widget = wlcalc.btn_show_meas_wl
