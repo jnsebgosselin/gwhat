@@ -45,7 +45,7 @@ def mainwindow(qtbot, mocker):
     mainwindow = MainWindow()
     # qtbot.addWidget(mainwindow)
     mainwindow.show()
-    qtbot.waitForWindowShown(mainwindow)
+    qtbot.waitExposed(mainwindow)
 
     return mainwindow
 

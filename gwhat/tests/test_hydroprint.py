@@ -86,7 +86,7 @@ def pagesetup(qtbot):
 def test_hydroprint_page_setup(hydroprint, mocker, qtbot, projectpath):
     """Test the Page Setup Window is shown correctly."""
     qtbot.mouseClick(hydroprint.btn_page_setup, Qt.LeftButton)
-    qtbot.waitForWindowShown(hydroprint.page_setup_win)
+    qtbot.waitExposed(hydroprint.page_setup_win)
 
 
 def test_autoplot_hydroprint(hydroprint):

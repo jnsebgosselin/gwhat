@@ -131,13 +131,18 @@ class BRFManager(WLCalcTool):
     __tooltip__ = ("A tool to evaluate the barometric "
                    "response function of wells.")
 
-    # Whether it is the first time showEvent is called.
-    _first_show_event = True
-
     def __init__(self, wldset=None, parent=None):
         super().__init__(parent)
-        self._bp_and_et_lags_are_linked = False
+        # Whether it is the first time showEvent is called.
+        self._first_show_event = True
+
+        # The WLCalc instance to which this tool is registered.
         self.wlcalc = None
+
+        # The water level dataset currently registered to this tool.
+        self.wldset = None
+
+        self._bp_and_et_lags_are_linked = False
         self._previous_toggled_navig_and_select_tool = None
         self.kgs_brf_installer = None
 

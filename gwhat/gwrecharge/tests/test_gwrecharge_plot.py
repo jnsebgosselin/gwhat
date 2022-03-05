@@ -43,7 +43,7 @@ def figstackmanager(qtbot):
     figstackmanager = FigureStackManager()
     qtbot.addWidget(figstackmanager)
     figstackmanager.show()
-    qtbot.waitForWindowShown(figstackmanager)
+    qtbot.waitExposed(figstackmanager)
     return figstackmanager
 
 

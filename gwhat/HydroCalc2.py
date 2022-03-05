@@ -9,27 +9,20 @@
 
 # ---- Standard library imports
 import io
-from time import perf_counter
-import csv
-import os
 import os.path as osp
 import datetime
-from typing import Any, Callable
 
 # ---- Third party imports
 import numpy as np
-import pandas as pd
 from qtpy.QtGui import QImage
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
-    QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
-    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame,
-    QMessageBox, QFileDialog)
+    QGridLayout, QTabWidget, QApplication, QWidget, QMainWindow,
+    QToolBar, QFrame, QMessageBox)
 
 import matplotlib as mpl
-import matplotlib.dates as mdates
 from matplotlib.figure import Figure as MplFigure
 from matplotlib.patches import Rectangle
 from matplotlib.transforms import ScaledTranslation
@@ -40,16 +33,14 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
-from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
-from gwhat.recession.recession_calc import calculate_mrc
+from gwhat.hydrocalc.recession.recession_tool import MasterRecessionCalcTool
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
-from gwhat.utils.qthelpers import create_toolbutton
-from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.widgets.buttons import OnOffToolButton, OnOffPushButton
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
@@ -62,7 +53,7 @@ class WLCalc(QWidget, SaveFileMixin):
     i.e. display the data as a continuous line or individual dot, perform a
     MRC and ultimately estimate groundwater recharge.
     """
-    sig_new_mrc = QSignal()
+    sig_date_format_changed = QSignal()
 
     def __init__(self, datamanager, parent=None):
         QWidget.__init__(self, parent)
@@ -107,9 +98,19 @@ class WLCalc(QWidget, SaveFileMixin):
         self.btn_pan.setValue(True)
         self.setup_ax_margins(None)
 
-        # Setup BRF calculation tool.
+        # Setup wlcalc tools.
         self.brf_eval_widget = BRFManager(parent=self)
         self.install_tool(self.brf_eval_widget)
+
+        self.mrc_eval_widget = MasterRecessionCalcTool(parent=self)
+        self.install_tool(self.mrc_eval_widget)
+
+        index = self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
+        self.tools_tabwidget.setTabToolTip(
+            index,
+            ("A tool to evaluate groundwater recharge and its "
+             "uncertainty from observed water levels and daily "
+             "weather data."))
 
         self.tools_tabwidget.setCurrentIndex(
             CONF.get('hydrocalc', 'current_tool_index'))
@@ -164,7 +165,6 @@ class WLCalc(QWidget, SaveFileMixin):
         ax1.tick_params(axis='y', direction='out')
 
         # ---- Setup axis labels
-
         ax0.set_ylabel('Water level (mbgs)', fontsize=14, labelpad=25,
                        va='top', color='black')
         ax0.set_xlabel('Time (days)', fontsize=14, labelpad=25,
@@ -193,10 +193,6 @@ class WLCalc(QWidget, SaveFileMixin):
             [], [], clip_on=True, ls='none', zorder=10, marker='+', ms=8,
             mec='red', mew=2, mfc='red')
 
-        # Recession.
-        self._mrc_plt, = ax0.plot([], [], color='red', clip_on=True,
-                                  zorder=15, marker='None', linestyle='--')
-
         # Rain.
         self.h_rain, = ax1.plot([], [])
 
@@ -224,11 +220,6 @@ class WLCalc(QWidget, SaveFileMixin):
             1, 0, '', ha='right', transform=ax0.transAxes + offset)
         self.xycoord.set_visible(False)
 
-        # Axes span highlight.
-        self.axvspan_highlight = self.fig.axes[0].axvspan(
-            0, 1, visible=False, color='red', linewidth=1,
-            ls='-', alpha=0.3)
-
     def _setup_toolbar(self):
         """Setup the main toolbar of the water level calc tool."""
 
@@ -241,8 +232,8 @@ class WLCalc(QWidget, SaveFileMixin):
             shortcut='Ctrl+C')
 
         # ---- Navigate data.
-        self.toolbar = NavigationToolbar2QT(self.canvas, parent=self)
-        self.toolbar.hide()
+        self._navig_toolbar = NavigationToolbar2QT(self.canvas, parent=self)
+        self._navig_toolbar.hide()
 
         self.btn_home = QToolButtonNormal(icons.get_icon('home'))
         self.btn_home.setToolTip('Reset original view.')
@@ -293,14 +284,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.btn_show_weather.sig_value_changed.connect(self.draw_weather)
         self.btn_show_weather.setValue(
             CONF.get('hydrocalc', 'show_weather', True), silent=True)
-
-        self.btn_show_mrc = OnOffToolButton('mrc_calc', size='normal')
-        self.btn_show_mrc.setToolTip(
-            "Show or hide water levels predicted with the MRC.")
-        self.btn_show_mrc.sig_value_changed.connect(
-            self.btn_show_mrc_isclicked)
-        self.btn_show_mrc.setValue(
-            CONF.get('hydrocalc', 'show_mrc', True), silent=True)
 
         self.btn_show_meas_wl = OnOffToolButton(
             'manual_measures', size='normal')
@@ -353,7 +336,7 @@ class WLCalc(QWidget, SaveFileMixin):
                     self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
-                    self.btn_show_mrc, self.btn_show_meas_wl, None,
+                    self.btn_show_meas_wl, None,
                     self.btn_rect_select, self.btn_clear_select,
                     self.btn_del_select, self.btn_undo_changes,
                     self.btn_clear_changes, self.btn_commit_changes]:
@@ -363,119 +346,20 @@ class WLCalc(QWidget, SaveFileMixin):
                 toolbar.addWidget(btn)
         return toolbar
 
-    def _setup_mrc_tool(self):
-        """Setup the tool to evaluate the MRC."""
-
-        # Setup the mrc period selector.
-        self.mrc_selector = WLCalcVSpanSelector(
-            self.fig.axes[0], self, onselected=self.add_mrcperiod)
-        self.install_axeswidget(self.mrc_selector)
-        self._mrc_period_xdata = []
-        self._mrc_period_axvspans = []
-        self._mrc_period_memory = [[], ]
-
-        # ---- MRC parameters
-        self.MRC_type = QComboBox()
-        self.MRC_type.addItems(['Linear', 'Exponential'])
-        self.MRC_type.setCurrentIndex(1)
-
-        self.MRC_results = QTextEdit()
-        self.MRC_results.setReadOnly(True)
-        self.MRC_results.setMinimumHeight(25)
-        self.MRC_results.setMinimumWidth(100)
-
-        self.MRC_results.setSizePolicy(
-            QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
-
-        # Setup the MRC toolbar
-        self.btn_undo = create_toolbutton(
-            parent=self,
-            icon='undo',
-            iconsize=get_iconsize('normal'),
-            tip='Undo',
-            triggered=self.undo_mrc_period)
-        self.btn_undo.setEnabled(False)
-
-        self.btn_clearPeak = create_toolbutton(
-            parent=self,
-            icon='clear_changes',
-            iconsize=get_iconsize('normal'),
-            tip='Clear all recession periods.',
-            triggered=self.clear_all_mrcperiods)
-
-        self.btn_addpeak = OnOffToolButton('pencil_add', size='normal')
-        self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
-        self.btn_addpeak.setToolTip(
-            "Left-click on the graph to add new recession periods.")
-        self.register_navig_and_select_tool(self.btn_addpeak)
-
-        self.btn_delpeak = OnOffToolButton('pencil_del', size='normal')
-        self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
-        self.btn_delpeak.setToolTip(
-            "Left-click on a recession period to remove it.")
-        self.register_navig_and_select_tool(self.btn_delpeak)
-
-        self.btn_save_mrc = create_toolbutton(
-            parent=self,
-            icon='save',
-            iconsize=get_iconsize('normal'),
-            tip='Save calculated MRC to file.',
-            triggered=lambda: self.save_mrc_tofile())
-
-        self.btn_MRCalc = QPushButton('Compute MRC')
-        self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
-        self.btn_MRCalc.setToolTip(
-            'Calculate the Master Recession Curve (MRC).')
-
-        mrc_tb = ToolBarWidget()
-        for btn in [self.btn_undo, self.btn_clearPeak, self.btn_addpeak,
-                    self.btn_delpeak, self.btn_save_mrc]:
-            mrc_tb.addWidget(btn)
-
-        # Setup the MRC Layout.
-        self.mrc_eval_widget = QWidget()
-        mrc_lay = QGridLayout(self.mrc_eval_widget)
-
-        row = 0
-        mrc_lay.addWidget(QLabel('MRC Type :'), row, 0)
-        mrc_lay.addWidget(self.MRC_type, row, 1)
-        row += 1
-        mrc_lay.addWidget(self.MRC_results, row, 0, 1, 3)
-        row += 1
-        mrc_lay.addWidget(mrc_tb, row, 0, 1, 3)
-        row += 1
-        mrc_lay.setRowMinimumHeight(row, 5)
-        mrc_lay.setRowStretch(row, 100)
-        row += 1
-        mrc_lay.addWidget(self.btn_MRCalc, row, 0, 1, 3)
-        mrc_lay.setColumnStretch(2, 500)
-
-        return self.mrc_eval_widget
-
     def __initUI__(self):
         # Setup the left widget.
         left_widget = QMainWindow()
 
-        toolbar = self._setup_toolbar()
-        toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
-        toolbar.setFloatable(False)
-        toolbar.setMovable(False)
-        toolbar.setIconSize(get_iconsize('normal'))
-        left_widget.addToolBar(Qt.TopToolBarArea, toolbar)
+        self.toolbar = self._setup_toolbar()
+        self.toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
+        self.toolbar.setFloatable(False)
+        self.toolbar.setMovable(False)
+        self.toolbar.setIconSize(get_iconsize('normal'))
+        left_widget.addToolBar(Qt.TopToolBarArea, self.toolbar)
         left_widget.setCentralWidget(self.fig_frame_widget)
 
         # Setup the tools tab area.
         self.tools_tabwidget = QTabWidget()
-        self.mrc_eval_widget = self._setup_mrc_tool()
-        self.tools_tabwidget.addTab(self.mrc_eval_widget, 'MRC')
-        self.tools_tabwidget.setTabToolTip(
-            0, ("<p>A tool to evaluate the master recession curve"
-                " of the hydrograph.</p>"))
-        self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
-        self.tools_tabwidget.setTabToolTip(
-            1, ("<p>A tool to evaluate groundwater recharge and its"
-                " uncertainty from observed water levels and daily "
-                " weather data.</p>"))
 
         # Setup the right panel.
         self.right_panel = QFrame()
@@ -533,15 +417,13 @@ class WLCalc(QWidget, SaveFileMixin):
         """Set the namespace for the water level dataset."""
         self._wldset = wldset
         self.rechg_eval_widget.set_wldset(wldset)
-        self.mrc_eval_widget.setEnabled(self.wldset is not None)
 
         # Setup BRF widget.
         for tool in self.tools.values():
             tool.set_wldset(wldset)
 
         self.setup_hydrograph()
-        self.toolbar.update()
-        self.load_mrc_from_wldset()
+        self._navig_toolbar.update()
 
     def set_wxdset(self, wxdset):
         """Set the weather dataset."""
@@ -552,8 +434,6 @@ class WLCalc(QWidget, SaveFileMixin):
         """Close this groundwater level calc window."""
         CONF.set('hydrocalc', 'current_tool_index',
                  self.tools_tabwidget.currentIndex())
-
-        CONF.set('hydrocalc', 'show_mrc', self.btn_show_mrc.value())
         CONF.set('hydrocalc', 'show_weather', self.btn_show_weather.value())
         CONF.set('hydrocalc', 'show_glue', self.btn_show_glue.value())
         CONF.set('hydrocalc', 'show_meas_wl', self.btn_show_meas_wl.value())
@@ -569,224 +449,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.fig.savefig(buf, dpi=300)
         QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
         buf.close()
-
-    # ---- MRC handlers
-    def add_mrcperiod(self, xdata):
-        """
-        Add a a new mrc period using the provided xdata.
-        """
-        try:
-            xmin = min(xdata)
-            xmax = max(xdata)
-        except TypeError:
-            return
-
-        for i in reversed(range(len(self._mrc_period_xdata))):
-            period_xdata = self._mrc_period_xdata[i]
-            if xmin >= period_xdata[0] and xmax <= period_xdata[1]:
-                # This means this mrc period is fully enclosed within
-                # another period previously selected by the user,
-                # so we discard it completely.
-                return
-
-            if period_xdata[0] >= xmin and period_xdata[0] <= xmax:
-                xmax = max(period_xdata[1], xmax)
-                del self._mrc_period_xdata[i]
-            elif period_xdata[1] >= xmin and period_xdata[1] <= xmax:
-                xmin = min(period_xdata[0], xmin)
-                del self._mrc_period_xdata[i]
-
-        self._mrc_period_xdata.append((xmin, xmax))
-        self._mrc_period_memory.append(self._mrc_period_xdata.copy())
-        self.draw_mrc()
-
-    def remove_mrcperiod(self, xdata):
-        """
-        Remove the mrc period at xdata if any.
-        """
-        for i, period_xdata in enumerate(self._mrc_period_xdata):
-            period_xmin = period_xdata[0] + (self.dt4xls2mpl * self.dformat)
-            period_xmax = period_xdata[1] + (self.dt4xls2mpl * self.dformat)
-            if xdata >= period_xmin and xdata <= period_xmax:
-                del self._mrc_period_xdata[i]
-                self._mrc_period_memory.append(self._mrc_period_xdata.copy())
-                self.draw_mrc()
-                break
-
-    def btn_show_mrc_isclicked(self):
-        """Handle when the button to draw of hide the mrc is clicked."""
-        if self.btn_show_mrc.value() is False:
-            self.btn_addpeak.setValue(False)
-            self.btn_delpeak.setValue(False)
-        self.draw_mrc()
-
-    def btn_MRCalc_isClicked(self):
-        if self.wldset is None:
-            return
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        coeffs, hp, std_err, r_squared, rmse = calculate_mrc(
-            self.time, self.water_lvl, self._mrc_period_xdata,
-            self.MRC_type.currentIndex())
-        A = coeffs.A
-        B = coeffs.B
-        print('MRC Parameters: A={}, B={}'.format(
-            'None' if pd.isnull(A) else '{:0.3f}'.format(coeffs.A),
-            'None' if pd.isnull(B) else '{:0.3f}'.format(coeffs.B)))
-
-        # Store and plot the results.
-        print('Saving MRC interpretation in dataset...')
-        self.wldset.set_mrc(
-            A, B, self._mrc_period_xdata,
-            self.time, hp,
-            std_err, r_squared, rmse)
-
-        self.show_mrc_results()
-        self.btn_save_mrc.setEnabled(True)
-        self.draw_mrc()
-        self.sig_new_mrc.emit()
-
-        QApplication.restoreOverrideCursor()
-
-    def show_mrc_results(self):
-        """Show MRC results if any."""
-        if self.wldset is None:
-            self.MRC_results.setHtml('')
-            return
-
-        mrc_data = self.wldset.get_mrc()
-
-        coeffs = mrc_data['params']
-        if pd.isnull(coeffs.A):
-            text = ''
-        else:
-            text = (
-                "∂h/∂t = -A · h + B<br>"
-                "A = {:0.5f} day<sup>-1</sup><br>"
-                "B = {:0.5f} m/day<br><br>"
-                "were ∂h/∂t is the recession rate in m/day, "
-                "h is the depth to water table in mbgs, "
-                "and A and B are the coefficients of the MRC.<br><br>"
-                "Goodness-of-fit statistics :<br>"
-                ).format(coeffs.A, coeffs.B)
-
-            fit_stats = {
-                'rmse': "RMSE = {} m<br>",
-                'r_squared': "r² = {}<br>",
-                'std_err': "S = {} m"}
-            for key, label in fit_stats.items():
-                value = mrc_data[key]
-                if value is None:
-                    text += label.format('N/A')
-                else:
-                    text += label.format('{:0.5f}'.format(value))
-        self.MRC_results.setHtml(text)
-
-    def load_mrc_from_wldset(self):
-        """Load saved MRC results from the project hdf5 file."""
-        if self.wldset is not None:
-            self._mrc_period_xdata = self.wldset.get_mrc()['peak_indx']
-            self._mrc_period_memory[0] = self._mrc_period_xdata.copy()
-            self.btn_save_mrc.setEnabled(True)
-        else:
-            self._mrc_period_xdata = []
-            self._mrc_period_memory = [[], ]
-            self.btn_save_mrc.setEnabled(False)
-        self.show_mrc_results()
-        self.draw_mrc()
-
-    def save_mrc_tofile(self, filename=None):
-        """Save the master recession curve results to a file."""
-        if filename is None:
-            filename = osp.join(
-                self.dialog_dir,
-                "Well_{}_mrc_results.csv".format(self.wldset['Well']))
-
-        filename, filetype = QFileDialog.getSaveFileName(
-            self, "Save MRC results", filename, 'Text CSV (*.csv)')
-
-        if filename:
-            QApplication.setOverrideCursor(Qt.WaitCursor)
-            QApplication.processEvents()
-            try:
-                self.wldset.save_mrc_tofile(filename)
-            except PermissionError:
-                self.show_permission_error()
-                self.save_mrc_tofile(filename)
-            QApplication.restoreOverrideCursor()
-
-    def undo_mrc_period(self):
-        """
-        Undo the last operation performed by the user on the selection
-        of mrc periods.
-        """
-        if len(self._mrc_period_memory) > 1:
-            self._mrc_period_xdata = self._mrc_period_memory[-2].copy()
-            del self._mrc_period_memory[-1]
-            self.draw_mrc()
-
-    def clear_all_mrcperiods(self):
-        """Clear all mrc periods from the graph."""
-        if len(self._mrc_period_xdata) > 0:
-            self._mrc_period_xdata = []
-            self._mrc_period_memory.append([])
-        self.draw_mrc()
-
-    def draw_mrc(self):
-        """
-        Draw the periods during which water levels recedes and draw the
-        water levels that were predicted with the MRC.
-        """
-        self._draw_mrc_wl()
-        self._draw_mrc_periods()
-        self.draw()
-
-    def _draw_mrc_wl(self):
-        """Draw the water levels that were predicted with the MRC."""
-        if (self.wldset is not None and self.btn_show_mrc.value() and
-                self.wldset.mrc_exists()):
-            self._mrc_plt.set_visible(True)
-            mrc_data = self.wldset.get_mrc()
-            self._mrc_plt.set_data(
-                mrc_data['time'] + self.dt4xls2mpl * self.dformat,
-                mrc_data['recess'])
-        else:
-            self._mrc_plt.set_visible(False)
-
-    def _draw_mrc_periods(self):
-        """Draw the periods that will be used to compute the MRC."""
-        self.btn_undo.setEnabled(len(self._mrc_period_memory) > 1)
-        for axvspan in self._mrc_period_axvspans:
-            axvspan.set_visible(False)
-        if self.wldset is not None and self.btn_show_mrc.value():
-            for i, xdata in enumerate(self._mrc_period_xdata):
-                xmin = xdata[0] + (self.dt4xls2mpl * self.dformat)
-                xmax = xdata[1] + (self.dt4xls2mpl * self.dformat)
-                try:
-                    axvspan = self._mrc_period_axvspans[i]
-                    axvspan.set_visible(True)
-                    axvspan.xy = [[xmin, 1], [xmin, 0],
-                                  [xmax, 0], [xmax, 1]]
-                except IndexError:
-                    axvspan = self.fig.axes[0].axvspan(
-                        xmin, xmax, visible=True, color='red', linewidth=1,
-                        ls='-', alpha=0.1)
-                    self._mrc_period_axvspans.append(axvspan)
-
-    # ---- Peaks handlers
-    def btn_addpeak_isclicked(self):
-        """Handle when the button add_peak is clicked."""
-        if self.btn_addpeak.value():
-            self.toggle_navig_and_select_tools(self.btn_addpeak)
-            self.btn_show_mrc.setValue(True)
-        self.mrc_selector.set_active(self.btn_addpeak.value())
-
-    def btn_delpeak_isclicked(self):
-        """Handle when the button btn_delpeak is clicked."""
-        if self.btn_delpeak.value():
-            self.toggle_navig_and_select_tools(self.btn_delpeak)
-            self.btn_show_mrc.setValue(True)
-        self.draw()
 
     # ---- Navigation and selection tools
     def register_navig_and_select_tool(self, tool):
@@ -824,11 +486,11 @@ class WLCalc(QWidget, SaveFileMixin):
         """Handle when the state of the button to zoom to rectangle changes."""
         if self.zoom_is_active:
             self.toggle_navig_and_select_tools(self.btn_zoom_to_rect)
-            if self.toolbar._active is None:
-                self.toolbar.zoom()
+            if self._navig_toolbar._active is None:
+                self._navig_toolbar.zoom()
         else:
-            if self.toolbar._active == 'ZOOM':
-                self.toolbar.zoom()
+            if self._navig_toolbar._active == 'ZOOM':
+                self._navig_toolbar.zoom()
 
     @property
     def pan_is_active(self):
@@ -840,11 +502,11 @@ class WLCalc(QWidget, SaveFileMixin):
         """Handle when the state of the button to pan the graph changes."""
         if self.pan_is_active:
             self.toggle_navig_and_select_tools(self.btn_pan)
-            if self.toolbar._active is None:
-                self.toolbar.pan()
+            if self._navig_toolbar._active is None:
+                self._navig_toolbar.pan()
         else:
-            if self.toolbar._active == 'PAN':
-                self.toolbar.pan()
+            if self._navig_toolbar._active == 'PAN':
+                self._navig_toolbar.pan()
 
     @property
     def rect_select_is_active(self):
@@ -867,7 +529,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
     def home(self):
         """Reset the orgininal view of the figure."""
-        self.toolbar.home()
+        self._navig_toolbar.home()
         if self.dformat == 0:
             ax0 = self.fig.axes[0]
             xfmt = mpl.ticker.ScalarFormatter()
@@ -918,10 +580,6 @@ class WLCalc(QWidget, SaveFileMixin):
     # ---- Drawing methods
     def setup_hydrograph(self):
         """Setup the hydrograph after a new wldset has been set."""
-        self._mrc_period_xdata = []
-        self._mrc_period_memory = [[], ]
-        self.btn_undo.setEnabled(False)
-
         self.clear_selected_wl()
         self._update_edit_toolbar_state()
 
@@ -1023,9 +681,9 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self._draw_obs_wl()
         self.draw_meas_wl()
-        self.draw_mrc()
         self.draw_weather()
         self.draw_glue_wl()
+        self.sig_date_format_changed.emit()
         self.draw()
 
     def setup_wl_style(self):
@@ -1046,14 +704,16 @@ class WLCalc(QWidget, SaveFileMixin):
 
     def draw(self):
         """Draw the canvas and save a snapshot of the background figure."""
+        xycoord_is_visible = self.xycoord.get_visible()
         self.xycoord.set_visible(False)
-        self.axvspan_highlight.set_visible(False)
         for widget in self._axes_widgets:
             widget.clear()
 
         self.canvas.draw()
         self._figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
+        self.xycoord.set_visible(xycoord_is_visible)
+        self.fig.axes[0].draw_artist(self.xycoord)
         for widget in self._axes_widgets:
             widget.restore()
 
@@ -1195,15 +855,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self.fig.axes[0].draw_artist(self._rect_selector)
 
     # ----- Mouse Event Handlers
-    def is_all_btn_raised(self):
-        """
-        Return whether all of the tool buttons that can block the panning and
-        zooming of the graph are raised.
-        """
-        return(self.btn_delpeak.autoRaise() and
-               self.btn_addpeak.autoRaise() and
-               not self.brf_eval_widget.is_brfperiod_selection_toggled())
-
     def on_fig_leave(self, event):
         """Handle when the mouse cursor leaves the graph."""
         self.draw()
@@ -1211,11 +862,11 @@ class WLCalc(QWidget, SaveFileMixin):
     def on_axes_enter(self, event):
         """Handle when the mouse cursor enters a new axe."""
         if self.rect_select_is_active:
-            self.toolbar.set_cursor(2)
+            self._navig_toolbar.set_cursor(2)
 
     def on_axes_leave(self, event):
         """Handle when the mouse cursor leaves an axe."""
-        self.toolbar.set_cursor(1)
+        self._navig_toolbar.set_cursor(1)
 
     def on_rect_select(self):
         """
@@ -1273,25 +924,6 @@ class WLCalc(QWidget, SaveFileMixin):
         if self.rect_select_is_active and self.__mouse_btn_is_pressed:
             self._draw_rect_selection(x, y)
 
-        # Draw mrc period highlight.
-        if self.btn_delpeak.value() and len(self._mrc_period_axvspans) > 0:
-            if event.xdata:
-                for xdata in self._mrc_period_xdata:
-                    xdata_min = xdata[0] + (self.dt4xls2mpl * self.dformat)
-                    xdata_max = xdata[1] + (self.dt4xls2mpl * self.dformat)
-                    if event.xdata >= xdata_min and event.xdata <= xdata_max:
-                        self.axvspan_highlight.set_visible(True)
-                        self.axvspan_highlight.xy = [[xdata_min, 1],
-                                                     [xdata_min, 0],
-                                                     [xdata_max, 0],
-                                                     [xdata_max, 1]]
-                        break
-                else:
-                    self.axvspan_highlight.set_visible(False)
-            else:
-                self.axvspan_highlight.set_visible(False)
-            ax0.draw_artist(self.axvspan_highlight)
-
         # Update all axes widget.
         for widget in self._axes_widgets:
             if widget.get_active():
@@ -1309,9 +941,9 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Disconnect the pan and zoom callback before drawing the canvas again.
         if self.pan_is_active:
-            self.toolbar.release_pan(event)
+            self._navig_toolbar.release_pan(event)
         if self.zoom_is_active:
-            self.toolbar.release_zoom(event)
+            self._navig_toolbar.release_zoom(event)
         if self.rect_select_is_active:
             self._rect_selection[1] = (event.xdata, event.ydata)
             self._rect_selector.set_visible(False)
@@ -1329,19 +961,13 @@ class WLCalc(QWidget, SaveFileMixin):
         self.__mouse_btn_is_pressed = True
         if event.x is None or event.y is None or self.wldset is None:
             return
-
-        # Remove mrc period.
-        if self.btn_delpeak.value() and len(self._mrc_period_xdata) > 0:
-            self.axvspan_highlight.set_visible(False)
-            self.remove_mrcperiod(event.xdata)
-        elif self.rect_select_is_active:
+        if self.rect_select_is_active:
             self._rect_selection[0] = (event.xdata, event.ydata)
 
         # Update all axes widget.
         for widget in self._axes_widgets:
             if widget.get_active():
                 widget.onpress(event)
-
         self.draw()
 
 
