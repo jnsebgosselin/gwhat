@@ -40,7 +40,6 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     sig_new_mrc = QSignal()
 
     def __init__(self, parent=None):
-        super().__init__(parent)
         WLCalcTool.__init__(self, parent)
         SaveFileMixin.__init__(self)
 
