@@ -102,8 +102,8 @@ class WLCalc(QWidget, SaveFileMixin):
         self.brf_eval_widget = BRFManager(parent=self)
         self.install_tool(self.brf_eval_widget)
 
-        self.mrc_eval_widget = MasterRecessionCalcTool(parent=self)
-        self.install_tool(self.mrc_eval_widget)
+        # self.mrc_eval_widget = MasterRecessionCalcTool(parent=self)
+        # self.install_tool(self.mrc_eval_widget)
 
         index = self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
         self.tools_tabwidget.setTabToolTip(
