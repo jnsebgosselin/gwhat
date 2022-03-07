@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 
 # ---- Standard library imports
@@ -32,9 +33,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 
 # ---- Local imports
+from gwhat.hydrocalc.api import WLCalcTool, wlcalcmethod
+from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector
+from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.layout import HSep
 from gwhat.config.gui import FRAME_SYLE
-from gwhat.config.main import CONF
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_icon
 from gwhat.utils.dates import qdatetime_from_xldate
@@ -122,32 +125,43 @@ class KGSBRFInstaller(QFrame):
         QApplication.restoreOverrideCursor()
 
 
-class BRFManager(QFrame):
-    sig_brfperiod_changed = QSignal(tuple)
-    sig_select_brfperiod_requested = QSignal(bool)
+class BRFManager(WLCalcTool):
+    __toolname__ = 'brf'
+    __tooltitle__ = 'BRF'
+    __tooltip__ = ("A tool to evaluate the barometric "
+                   "response function of wells.")
 
     def __init__(self, wldset=None, parent=None):
-        super(BRFManager, self).__init__(parent)
-        self._brfperiod_selection_toggled = False
+        super().__init__(parent)
+        # Whether it is the first time showEvent is called.
+        self._first_show_event = True
+
+        # The WLCalc instance to which this tool is registered.
+        self.wlcalc = None
+
+        # The water level dataset currently registered to this tool.
+        self.wldset = None
+
         self._bp_and_et_lags_are_linked = False
+        self._previous_toggled_navig_and_select_tool = None
+        self.kgs_brf_installer = None
 
         self.viewer = BRFViewer(wldset, parent)
-        self.viewer.set_language(CONF.get('brf', 'graphs_labels_language'))
-        if CONF.get('brf', 'graph_opt_panel_is_visible', False):
+        self.viewer.set_language(self.get_option('graphs_labels_language'))
+        if self.get_option('graph_opt_panel_is_visible', False):
             self.viewer.toggle_graphpannel()
         self.viewer.sig_import_params_in_manager_request.connect(
             self.import_current_viewer_brf_parameters)
 
-        self.kgs_brf_installer = None
-        self.__initGUI__()
+        self.setup()
 
-    def __initGUI__(self):
+    def setup(self):
         self.setContentsMargins(10, 10, 10, 10)
 
         # Detrend and Correct Options
         self.baro_spinbox = QSpinBox()
         self.baro_spinbox.setRange(0, 9999)
-        self.baro_spinbox.setValue(CONF.get('brf', 'nbr_of_baro_lags'))
+        self.baro_spinbox.setValue(self.get_option('nbr_of_baro_lags'))
         self.baro_spinbox.setKeyboardTracking(True)
         self.baro_spinbox.valueChanged.connect(
             lambda value: self._handle_lag_value_changed(self.baro_spinbox))
@@ -155,17 +169,17 @@ class BRFManager(QFrame):
         self.earthtides_spinbox = QSpinBox()
         self.earthtides_spinbox.setRange(0, 9999)
         self.earthtides_spinbox.setValue(
-            CONF.get('brf', 'nbr_of_earthtides_lags'))
+            self.get_option('nbr_of_earthtides_lags'))
         self.earthtides_spinbox.setKeyboardTracking(True)
         self.earthtides_spinbox.setEnabled(
-            CONF.get('brf', 'compute_with_earthtides'))
+            self.get_option('compute_with_earthtides'))
         self.earthtides_spinbox.valueChanged.connect(
             lambda value: self._handle_lag_value_changed(
                 self.earthtides_spinbox))
 
         self.earthtides_cbox = QCheckBox('No. of ET lags :')
         self.earthtides_cbox.setChecked(
-            CONF.get('brf', 'compute_with_earthtides'))
+            self.get_option('compute_with_earthtides'))
         self.earthtides_cbox.toggled.connect(
             lambda: self.earthtides_spinbox.setEnabled(
                 self.earthtides_cbox.isChecked()))
@@ -178,11 +192,11 @@ class BRFManager(QFrame):
             lambda checked: self.toggle_link_bp_and_et_lags(
                 not self._bp_and_et_lags_are_linked))
         self.toggle_link_bp_and_et_lags(
-            CONF.get('brf', 'bp_and_et_lags_are_linked', False))
+            self.get_option('bp_and_et_lags_are_linked', False))
 
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
         self.detrend_waterlevels_cbox.setChecked(
-            CONF.get('brf', 'detrend_waterlevels'))
+            self.get_option('detrend_waterlevels'))
 
         # Lags spinboxes layout.
         lags_layout = QGridLayout()
@@ -208,26 +222,22 @@ class BRFManager(QFrame):
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
         self.date_start_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
-        self.date_start_edit.dateChanged.connect(
-            lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
-        self.date_start_edit.dateChanged.connect(
-            lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
+        self.date_start_edit.dateChanged.connect(self._plot_brfperiod)
+        self.date_start_edit.dateChanged.connect(self._plot_brfperiod)
 
         self.date_end_edit = QDateTimeEdit()
         self.date_end_edit.setCalendarPopup(True)
         self.date_end_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
-        self.date_end_edit.dateChanged.connect(
-            lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
-        self.date_end_edit.dateChanged.connect(
-            lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
+        self.date_end_edit.dateChanged.connect(self._plot_brfperiod)
+        self.date_end_edit.dateChanged.connect(self._plot_brfperiod)
 
-        self._select_brfperiod_btn = QPushButton('Select')
+        self._select_brfperiod_btn = OnOffPushButton('Select')
         self._select_brfperiod_btn.setIcon(get_icon('select_range'))
         self._select_brfperiod_btn.setToolTip(
             "Select a BRF calculation period.")
         self._select_brfperiod_btn.setCheckable(True)
         self._select_brfperiod_btn.setFocusPolicy(Qt.NoFocus)
-        self._select_brfperiod_btn.toggled.connect(
+        self._select_brfperiod_btn.sig_value_changed.connect(
             self.toggle_brfperiod_selection)
 
         # Setup BRF date range layout.
@@ -268,26 +278,135 @@ class BRFManager(QFrame):
         if not KGSBRFInstaller().kgsbrf_is_installed():
             self.__install_kgs_brf_installer()
 
-    # ---- Public API
-    def close(self):
-        """"Clos this brf manager"""
-        CONF.set('brf', 'graphs_labels_language', self.viewer.get_language())
-        CONF.set('brf', 'graph_opt_panel_is_visible',
-                 self.viewer._graph_opt_panel_is_visible)
+    def showEvent(self, event):
+        if self._first_show_event:
+            self._first_show_event = False
+            self._plot_brfperiod()
+        super().showEvent(event)
+
+    # ---- WLCalc integration
+    @wlcalcmethod
+    def _on_period_selected(self, xdata):
+        """
+        Handle when a period is selected for the BRF calculations.
+
+        Parameters
+        ----------
+        xdata : 2-tuple
+            A 2-tuple of floats containing the time, in numerical Excel format,
+            of the period over which the BRF is to be calculated.
+        """
+        brfperiod = []
+        for x in xdata:
+            brfperiod.append(self.wlcalc.time[
+                np.argmin(np.abs(x - self.wlcalc.time))])
+        self.set_brfperiod(brfperiod)
+        self.toggle_brfperiod_selection(False)
+
+    @wlcalcmethod
+    def _plot_brfperiod(self):
+        """
+        Plot on the graph the vertical lines that are used to define the period
+        over which the BRF is evaluated.
+        """
+        if not self.is_brfperiod_selection_toggled() and self.isVisible():
+            brfperiod = self.get_brfperiod()
+        else:
+            brfperiod = [None, None]
+
+        for x, vline in zip(brfperiod, [self._axvline1, self._axvline2]):
+            if x is None:
+                vline.set_visible(False)
+            else:
+                vline.set_visible(True)
+                vline.set_xdata(
+                    x + self.wlcalc.dt4xls2mpl * self.wlcalc.dformat)
+        self.wlcalc.draw()
+
+    @wlcalcmethod
+    def toggle_brfperiod_selection(self, value):
+        """
+        Toggle on or off the option to select the BRF calculation period on
+        the graph.
+        """
+        if self.wlcalc.wldset is None:
+            self._period_selector.set_active(False)
+            self._select_brfperiod_btn.setValue(False, silent=True)
+            if value is True:
+                self.wlcalc.emit_warning(
+                    "Please import a valid water level dataset first.")
+            return
+
+        self._period_selector.set_active(value)
+        self._select_brfperiod_btn.setValue(value, silent=True)
+        if value is True:
+            self.wlcalc.toggle_navig_and_select_tools(
+                self._select_brfperiod_btn)
+        self._plot_brfperiod()
+
+    # ---- WLCalcTool API
+    def is_registered(self):
+        return self.wlcalc is not None
+
+    def register_tool(self, wlcalc: QWidget):
+        self.wlcalc = wlcalc
+        index = wlcalc.tools_tabwidget.addTab(self, self.title())
+        wlcalc.tools_tabwidget.setTabToolTip(index, self.tooltip())
+        wlcalc.tools_tabwidget.currentChanged.connect(
+            lambda: self.toggle_brfperiod_selection(False))
+
+        wlcalc.register_navig_and_select_tool(
+            self._select_brfperiod_btn)
+
+        self._period_selector = WLCalcVSpanSelector(
+            wlcalc.fig.axes[0], wlcalc, onselected=self._on_period_selected,
+            axvspan_color='#009900')
+        wlcalc.install_axeswidget(self._period_selector)
+
+        # Init axvline artists to plot the BRF period.
+        ax = wlcalc.fig.axes[0]
+        self._axvline1 = ax.axvline(0, color='#009900', lw=1)
+        self._axvline2 = ax.axvline(0, color='#009900', lw=1)
+
+        self._plot_brfperiod()
+
+    def close_tool(self):
+        self.set_option('graphs_labels_language', self.viewer.get_language())
+        self.set_option('graph_opt_panel_is_visible',
+                        self.viewer._graph_opt_panel_is_visible)
         self.viewer.close()
 
-        CONF.set('brf', 'bp_and_et_lags_are_linked',
-                 self._bp_and_et_lags_are_linked)
-        CONF.set('brf', 'compute_with_earthtides',
-                 self.earthtides_cbox.isChecked())
-        CONF.set('brf', 'nbr_of_earthtides_lags',
-                 self.earthtides_spinbox.value())
-        CONF.set('brf', 'nbr_of_baro_lags',
-                 self.baro_spinbox.value())
-        CONF.set('brf', 'detrend_waterlevels',
-                 self.detrend_waterlevels_cbox.isChecked())
+        self.set_option('bp_and_et_lags_are_linked',
+                        self._bp_and_et_lags_are_linked)
+        self.set_option('compute_with_earthtides',
+                        self.earthtides_cbox.isChecked())
+        self.set_option('nbr_of_earthtides_lags',
+                        self.earthtides_spinbox.value())
+        self.set_option('nbr_of_baro_lags',
+                        self.baro_spinbox.value())
+        self.set_option('detrend_waterlevels',
+                        self.detrend_waterlevels_cbox.isChecked())
         super().close()
 
+    def set_wldset(self, wldset):
+        self.wldset = wldset
+        self.viewer.set_wldset(wldset)
+        self.toggle_brfperiod_selection(False)
+        self.setEnabled(wldset is not None)
+        if wldset is not None:
+            xldates = self.wldset.xldates
+            self.set_daterange((xldates[0], xldates[-1]))
+
+            # Set the period over which the BRF would be evaluated.
+            saved_brfperiod = wldset.get_brfperiod()
+            self.set_brfperiod((saved_brfperiod[0] or np.floor(xldates[0]),
+                                saved_brfperiod[1] or np.floor(xldates[-1])))
+        self._plot_brfperiod()
+
+    def set_wxdset(self, wxdset):
+        pass
+
+    # ---- BRF Tool Interface
     @property
     def nlag_baro(self):
         """Return the number of lags to use for barometric correction."""
@@ -350,21 +469,6 @@ class BRFManager(QFrame):
                 widget.blockSignals(False)
         self.wldset.save_brfperiod(period)
 
-    def set_wldset(self, wldset):
-        """Set the namespace for the wldset in the widget."""
-        self.wldset = wldset
-        self.viewer.set_wldset(wldset)
-        self.toggle_brfperiod_selection(False)
-        self.setEnabled(wldset is not None)
-        if wldset is not None:
-            xldates = self.wldset.xldates
-            self.set_daterange((xldates[0], xldates[-1]))
-
-            # Set the period over which the BRF would be evaluated.
-            saved_brfperiod = wldset.get_brfperiod()
-            self.set_brfperiod((saved_brfperiod[0] or np.floor(xldates[0]),
-                                saved_brfperiod[1] or np.floor(xldates[-1])))
-
     def set_daterange(self, daterange):
         """
         Set the minimum and maximum value of the date_start_edit and
@@ -381,20 +485,9 @@ class BRFManager(QFrame):
             widget.setMaximumDateTime(qdatetime_from_xldate(daterange[1]))
             widget.blockSignals(False)
 
-    def toggle_brfperiod_selection(self, toggle):
-        """
-        Toggle the brf selection on or off in the gui.
-        """
-        self._brfperiod_selection_toggled = toggle
-        if toggle is True:
-            self.sig_select_brfperiod_requested.emit(toggle)
-        self._select_brfperiod_btn.blockSignals(True)
-        self._select_brfperiod_btn.setChecked(toggle)
-        self._select_brfperiod_btn.blockSignals(False)
-
     def is_brfperiod_selection_toggled(self):
         """Return whether the BRF period selection is toggled."""
-        return self._brfperiod_selection_toggled
+        return self._select_brfperiod_btn.value()
 
     def toggle_link_bp_and_et_lags(self, toggle):
         """
@@ -436,7 +529,7 @@ class BRFManager(QFrame):
         xls_date_end = xldate_from_datetime_tuple(
             brfdata.date_end.timetuple()[:6], 0)
         self.set_brfperiod((xls_date_start, xls_date_end))
-        self.sig_brfperiod_changed.emit((xls_date_start, xls_date_end))
+        self._plot_brfperiod()
 
     def _handle_lag_value_changed(self, sender):
         """
@@ -1076,8 +1169,6 @@ class BRFOptionsPanel(QWidget):
 
         self._graphconf_changed()
 
-
-# %% if __name__ == "__main__"
 
 if __name__ == "__main__":
     import gwhat.projet.reader_projet as prd

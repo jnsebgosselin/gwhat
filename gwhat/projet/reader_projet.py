@@ -10,9 +10,11 @@
 from __future__ import division, unicode_literals
 
 # ---- Standard library imports
+import csv
 import os
 import os.path as osp
 from shutil import copyfile
+from collections import namedtuple
 
 # ---- Third party imports
 import h5py
@@ -22,7 +24,7 @@ import datetime
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase, METEO_VARIABLES
-from gwhat.projet.reader_waterlvl import WLDataFrameBase, WLDataset
+from gwhat.projet.reader_waterlvl import WLDatasetBase, WLDataFrame
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
@@ -218,7 +220,7 @@ class ProjetReader(object):
         if name in self.wldsets:
             self.set_last_opened_wldset(name)
             print('done')
-            return WLDataFrameHDF5(self.db['wldsets/%s' % name])
+            return WLDatasetHDF5(self.db['wldsets/%s' % name])
         else:
             print('failed')
             return None
@@ -273,14 +275,16 @@ class ProjetReader(object):
             mmeas.create_dataset('Time', data=np.array([]), maxshape=(None,))
             mmeas.create_dataset('WL', data=np.array([]), maxshape=(None,))
 
+            print('New dataset created sucessfully')
+        except Exception as e:
+            print('Unable to save dataset to project db because of the '
+                  'following error:')
+            print(e)
+            del self.db['wldsets'][name]
+        finally:
             self.db.flush()
 
-            print('New dataset created sucessfully')
-        except Exception:
-            print('Unable to save dataset to project db')
-            del self.db['wldsets'][name]
-
-        return WLDataFrameHDF5(grp)
+        return WLDatasetHDF5(grp)
 
     def del_wldset(self, name):
         """Delete the specified water level dataset."""
@@ -387,7 +391,7 @@ class ProjetReader(object):
         self.db.flush()
 
 
-class WLDataFrameHDF5(WLDataFrameBase):
+class WLDatasetHDF5(WLDatasetBase):
     """
     This is a wrapper around the h5py group that is used to store
     water level datasets. It mimick the structure of the DataFrame that
@@ -396,7 +400,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
     """
 
     def __init__(self, hdf5group, *args, **kwargs):
-        super(WLDataFrameHDF5, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__load_dataset__(hdf5group)
 
     def __load_dataset__(self, hdf5group):
@@ -411,7 +415,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
                 columns.append(colname)
         data = np.vstack(tuple(data)).transpose()
         columns = tuple(columns)
-        self._dataf = WLDataset(data, columns)
+        self._dataf = WLDataFrame(data, columns)
 
         # Setup the structure for the Master Recession Curve
         if 'mrc' not in list(self.dset.keys()):
@@ -518,13 +522,14 @@ class WLDataFrameHDF5(WLDataFrameBase):
         return grp['Time'][...], grp['WL'][...]
 
     # ---- Master Recession Curve
-    def set_mrc(self, A, B, peak_indx, time, recess):
+    def set_mrc(self, A, B, periods, time, recess,
+                std_err, r_squared, rmse):
         """Save the mrc results to the hdf5 project file."""
         self.dset['mrc/params'][:] = (A, B)
 
-        peak_indx = np.array(peak_indx).flatten()
-        self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
-        self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
+        periods = np.array(periods).flatten()
+        self.dset['mrc/peak_indx'].resize(np.shape(periods))
+        self.dset['mrc/peak_indx'][:] = np.array(periods)
 
         self.dset['mrc/time'].resize(np.shape(time))
         self.dset['mrc/time'][:] = time
@@ -533,6 +538,9 @@ class WLDataFrameHDF5(WLDataFrameBase):
         self.dset['mrc/recess'][:] = recess
 
         self.dset['mrc'].attrs['exists'] = 1
+        self.dset['mrc'].attrs['std_err'] = std_err
+        self.dset['mrc'].attrs['r_squared'] = r_squared
+        self.dset['mrc'].attrs['rmse'] = rmse
 
         self.dset.file.flush()
 
@@ -544,11 +552,19 @@ class WLDataFrameHDF5(WLDataFrameBase):
         peak_indx = list(map(
             tuple, peak_indx[:n * m].reshape((n, m))
             ))
-        return {
-            'params': self['mrc/params'].tolist(),
+        coeffs = self['mrc/params'].tolist()
+
+        mrc_data = {
+            'params': namedtuple('Coeffs', ['A', 'B'])(*coeffs),
             'peak_indx': peak_indx,
             'time': self['mrc/time'].copy(),
             'recess': self['mrc/recess'].copy()}
+        for key in ['std_err', 'r_squared', 'rmse']:
+            try:
+                mrc_data[key] = self.dset['mrc'].attrs[key]
+            except KeyError:
+                mrc_data[key] = None
+        return mrc_data
 
     def mrc_exists(self):
         """Return whether a mrc results is saved in the hdf5 project file."""
@@ -556,33 +572,50 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
     def save_mrc_tofile(self, filename):
         """Save the master recession curve results to a file."""
-        fcontent = []
+        if not filename.lower().endswith('.csv'):
+            filename += '.csv'
 
-        # Format the file header.
+        mrc_data = self.get_mrc()
+
+        # Prepare the file header.
+        fheader = []
         keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
                 'Elevation', 'Municipality']
         for key in keys:
-            fcontent.append([key, self[key]])
+            fheader.append([key, self[key]])
 
-        # Format the mrc results summary.
-        A, B = self['mrc/params']
-        fcontent.extend([
-            [''],
-            ['dh/dt(mm/d) = -%f*h(mbgs) + %f' % (A, B)],
-            ['A (1/d)', A],
-            ['B (m/d)', B],
-            ['RMSE (m)', calcul_rmse(self['WL'], self['mrc/recess'])],
-            [''],
-            ['Observed and Predicted Water Level'],
-            ['Time', 'hrecess(mbgs)', 'hobs(mbgs)']
-            ])
+        fheader.extend([
+            [],
+            ['∂h/∂t = -A * h + B'],
+            ['A (1/day)', mrc_data['params'].A],
+            ['B (m/day)', mrc_data['params'].B],
+            []])
 
-        # Format the observed and simulated data.
-        data = np.vstack([self['Time'], self['WL'], self['mrc/recess']])
-        data = nan_as_text_tolist(np.array(data).transpose())
-        fcontent.extend(data)
+        labels = ['RMSE (m)', 'R-squared', 'S (m)']
+        keys = ['rmse', 'r_squared', 'std_err']
+        for label, key in zip(labels, keys):
+            value = mrc_data[key]
+            if value is None:
+                fheader.append([label, "N/A"])
+            else:
+                fheader.append([label, "{:0.5f} m".format(value)])
+        fheader.append([])
+        fheader.append([['Observed and Predicted Water Level']])
 
-        save_content_to_file(filename, fcontent)
+        # Save the observed and simulated data to the CSV file.
+        df = pd.DataFrame(
+            np.vstack([self['WL'], self['mrc/recess']]).transpose(),
+            columns=['h_obs(mbgs)', 'h_sim(mbgs)'],
+            index=pd.to_datetime(self['Time']))
+        df.index.name = 'Time'
+        df.to_csv(filename)
+
+        # Add the header to the CSV file.
+        with open(filename, 'r') as csvfile:
+            fdata = list(csv.reader(csvfile))
+        with open(filename, 'w', encoding='utf8') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', lineterminator='\n')
+            writer.writerows(fheader + fdata)
 
     # ---- GLUE data
     def glue_idnums(self):
@@ -718,6 +751,10 @@ class WLDataFrameHDF5(WLDataFrameBase):
                 'sdB', 'SumB', 'sdSumB']
         dataf = pd.DataFrame({key: grp[key][...] for key in keys if
                               key in grp.keys()})
+
+        # TODO: we should use pandas dataframe attrs to stock these values
+        # instead, once this become a supported feature.
+        # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.attrs.html
         dataf.date_start = datetime.datetime.strptime(
             grp.attrs['date start'], "%Y-%m-%dT%H:%M:%S")
         dataf.date_end = datetime.datetime.strptime(

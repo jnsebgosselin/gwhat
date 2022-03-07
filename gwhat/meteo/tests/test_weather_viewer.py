@@ -41,7 +41,7 @@ def weather_viewer(qtbot, wxdataset):
     weather_viewer.set_weather_dataset(wxdataset)
     weather_viewer.show()
     qtbot.addWidget(weather_viewer)
-    qtbot.waitForWindowShown(weather_viewer)
+    qtbot.waitExposed(weather_viewer)
 
     return weather_viewer
 

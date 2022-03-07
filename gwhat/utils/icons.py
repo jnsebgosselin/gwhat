@@ -48,11 +48,7 @@ GWHAT_ICONS = {
     'select_range': 'select_range',
     'toggleMode': 'toggleMode2',
     'undo': 'undo',
-    'clear_search': 'clear-search',
     'mrc_calc': 'MRCalc',
-    'edit': 'edit',
-    'add_point': 'add_point',
-    'erase': 'erase',
     'erase2': 'erase2',
     'showDataDots': 'show_datadots',
     'stratigraphy': 'stratigraphy',
@@ -139,6 +135,12 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1, 'rotated': 90}],
     'models_dist': [
         ('mdi.chart-bell-curve',),
+        {'color': COLOR, 'scale_factor': 1.2}],
+    'pencil_add': [
+        ('mdi.pencil-plus',),
+        {'color': COLOR, 'scale_factor': 1.2}],
+    'pencil_del': [
+        ('mdi.pencil-minus',),
         {'color': COLOR, 'scale_factor': 1.2}],
     'pan': [
         ('mdi.pan',),

@@ -29,7 +29,7 @@ from gwhat.utils.icons import QToolButtonSmall
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import calc_dist_from_coord
-from gwhat.projet.reader_waterlvl import WLDataFrame
+from gwhat.projet.reader_waterlvl import WLDataset
 from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
 from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.widgets.buttons import ToolBarWidget
@@ -267,11 +267,11 @@ class DataManager(QWidget):
         Receives the new water level dataset, saves it in the project and
         update the GUI.
         """
-        print("Saving the new water level dataset in the project...", end=" ")
+        print("Saving the new water level dataset in the project...")
         self.projet.add_wldset(name, dataset)
         self.update_wldsets(name)
         self.wldset_changed()
-        print("done")
+        print("New water level dataset saved in the project successfully.")
 
     def update_wldsets(self, name=None):
         self.wldsets_cbox.blockSignals(True)
@@ -707,7 +707,7 @@ class NewDatasetDialog(QDialog):
 
         try:
             if self._datatype == 'water level':
-                self._dataset = WLDataFrame(filename)
+                self._dataset = WLDataset(filename)
             elif self._datatype == 'daily weather':
                 self._dataset = WXDataFrame(filename)
         except Exception as e:

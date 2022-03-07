@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import QApplication
 
 # ---- Local Libraries Imports
 from gwhat.meteo.weather_reader import WXDataFrame
-from gwhat.projet.reader_waterlvl import WLDataFrame
+from gwhat.projet.reader_waterlvl import WLDataset
 from gwhat.HydroPrint2 import (HydroprintGUI, PageSetupWin, QFileDialog,
                                QMessageBox)
 from gwhat.projet.manager_data import DataManager
@@ -52,7 +52,7 @@ def project(projectpath):
         project.add_wxdset(wxdset.metadata['Station Name'], wxdset)
 
     # Add the water level dataset to the project.
-    wldset = WLDataFrame(WLFILENAME)
+    wldset = WLDataset(WLFILENAME)
     project.add_wldset(wldset['Well'], wldset)
     return project
 
@@ -83,16 +83,10 @@ def pagesetup(qtbot):
 
 
 # ---- Test HydroprintGUI
-def test_hydroprint_init(hydroprint, mocker, qtbot, projectpath):
-    """Test the initialization of the hydroprint plugin."""
-    # Assert that the water_level_measurement file was initialize correctly.
-    output_dir = os.path.join(projectpath, "Water Levels")
-    filename = os.path.join(output_dir, "waterlvl_manual_measurements.csv")
-    assert os.path.exists(filename)
-
-    # Assert that the Page Setup Window is shown correctly.
+def test_hydroprint_page_setup(hydroprint, mocker, qtbot, projectpath):
+    """Test the Page Setup Window is shown correctly."""
     qtbot.mouseClick(hydroprint.btn_page_setup, Qt.LeftButton)
-    qtbot.waitForWindowShown(hydroprint.page_setup_win)
+    qtbot.waitExposed(hydroprint.page_setup_win)
 
 
 def test_autoplot_hydroprint(hydroprint):
