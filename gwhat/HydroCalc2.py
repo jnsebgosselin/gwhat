@@ -486,10 +486,10 @@ class WLCalc(QWidget, SaveFileMixin):
         """Handle when the state of the button to zoom to rectangle changes."""
         if self.zoom_is_active:
             self.toggle_navig_and_select_tools(self.btn_zoom_to_rect)
-            if self._navig_toolbar._active is None:
+            if self._navig_toolbar.mode.name == 'NONE':
                 self._navig_toolbar.zoom()
         else:
-            if self._navig_toolbar._active == 'ZOOM':
+            if self._navig_toolbar.mode.name == 'ZOOM':
                 self._navig_toolbar.zoom()
 
     @property
@@ -502,10 +502,10 @@ class WLCalc(QWidget, SaveFileMixin):
         """Handle when the state of the button to pan the graph changes."""
         if self.pan_is_active:
             self.toggle_navig_and_select_tools(self.btn_pan)
-            if self._navig_toolbar._active is None:
+            if self._navig_toolbar.mode.name == 'NONE':
                 self._navig_toolbar.pan()
         else:
-            if self._navig_toolbar._active == 'PAN':
+            if self._navig_toolbar.mode.name == 'PAN':
                 self._navig_toolbar.pan()
 
     @property
