@@ -106,7 +106,7 @@ class KGSBRFInstaller(QFrame):
 
         print("Installing KGS_BRF software...", end=" ")
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        url = "http://www.kgs.ku.edu/HighPlains/OHP/index_program/KGS_BRF.zip"
+        url = "https://www.kgs.ku.edu/HighPlains/OHP/index_program/KGS_BRF.zip"
         request = requests.get(url)
         zfile = zipfile.ZipFile(io.BytesIO(request .content))
 
