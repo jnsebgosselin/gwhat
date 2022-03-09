@@ -47,27 +47,6 @@ def worker_updates_bot(qtbot):
     return worker_updates, qtbot
 
 
-# Tests AboutWhat
-# -------------------------------
-
-
-def test_tabwidget_and_about_window(tabwidget_bot):
-    """Test the showing and closing of the About GWHAT window."""
-    tabwidget, qtbot = tabwidget_bot
-    tabwidget.show()
-
-    assert tabwidget.about_win is None
-
-    # Show about window and assert it was created and showed correctly.
-    qtbot.mouseClick(tabwidget.about_btn, Qt.LeftButton)
-    qtbot.addWidget(tabwidget.about_btn)
-    assert tabwidget.about_win
-    assert tabwidget.about_win.isVisible()
-
-    # Close the about window and assert it was closed correctly.
-    qtbot.mouseClick(tabwidget.about_win.ok_btn, Qt.LeftButton)
-    assert not tabwidget.about_win.isVisible()
-
 
 # Tests ManagerUpdates and WorkerUpdates
 # --------------------------------------
