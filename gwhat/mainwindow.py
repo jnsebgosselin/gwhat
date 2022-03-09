@@ -21,7 +21,7 @@ app = create_qapplication()
 from gwhat import __namever__, __appname__
 from gwhat.widgets.splash import SplashScrn
 splash = SplashScrn()
-splash.showMessage("Starting %s..." % __namever__)
+splash.showMessage(f"Starting {__namever__}...")
 
 # ---- Standard library imports
 import platform
