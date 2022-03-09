@@ -44,6 +44,7 @@ import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
 from gwhat.widgets.about import AboutWhat
 from gwhat.widgets.tabwidget import TabWidget
+from gwhat.widgets.console import StreamConsole
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
 from gwhat.utils import icons
@@ -97,14 +98,7 @@ class MainWindow(QMainWindow):
         Setup the GUI of the main window.
         """
         splash.showMessage("Initializing main window...")
-        self.main_console = QTextBrowser()
-        self.main_console.setReadOnly(True)
-        self.main_console.setLineWrapMode(QTextEdit.NoWrap)
-        self.main_console.setOpenExternalLinks(True)
 
-        fontsize = CONF.get('main', 'fontsize_console')
-        self.main_console.setStyleSheet(
-            "QWidget {font-style: Regular; font-size: %s;}" % fontsize)
         # Setup mainwindow tab widget.
         self.tab_widget = TabWidget()
         self.tab_widget.setCornerWidget(self.pmanager)
@@ -129,12 +123,22 @@ class MainWindow(QMainWindow):
                 QUrl(__project_url__ + "/issues")))
         self.tab_widget.add_button(self.bug_btn)
 
+        # Setup GWHAT message console.
+        self.console = StreamConsole()
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
         msg = ('Please help GWHAT by reporting bugs on our '
                '<a href="https://github.com/jnsebgosselin/gwhat/issues">'
                'Issues Tracker</a>.')
         self.write2console('<font color=black>%s</font>' % msg)
+
+        self.btn_console = create_toolbutton(
+            self,
+            icon='console',
+            text="Console...",
+            tip="GWHAT console...",
+            triggered=lambda: self.console.show())
+        self.tab_widget.add_button(self.btn_console)
 
         # Setup the tab plot hydrograph.
         splash.showMessage("Initializing plot hydrograph...")
@@ -157,16 +161,6 @@ class MainWindow(QMainWindow):
         self.tab_widget.setCurrentIndex(
             CONF.get('main', 'mainwindow_current_tab'))
         self.sync_datamanagers()
-
-        # Setup the splitter widget.
-        self._splitter = QSplitter(Qt.Vertical, parent=self)
-        self._splitter.addWidget(self.tab_widget)
-        self._splitter.addWidget(self.main_console)
-
-        self._splitter.setCollapsible(0, True)
-        self._splitter.setStretchFactor(0, 100)
-        # Force initially the main_console to its minimal height.
-        self._splitter.setSizes([100, 1])
 
         # Setup the layout of the main widget.
         main_widget = QWidget()
@@ -196,7 +190,7 @@ class MainWindow(QMainWindow):
         in the console must go through.
         """
         textime = '<font color=black>[%s] </font>' % ctime()[4:-8]
-        self.main_console.append(textime + text)
+        self.console.write(textime + text)
 
     def sync_datamanagers(self):
         """
@@ -238,6 +232,7 @@ class MainWindow(QMainWindow):
         self.dmanager.close()
 
         print('Closing GWHAT')
+        self.console.close()
         if self.about_win is not None:
             self.about_win.close()
         self.tab_hydrocalc.close()
@@ -276,11 +271,6 @@ class MainWindow(QMainWindow):
             hexstate = hexstate_to_qbytearray(hexstate)
             self.restoreState(hexstate)
 
-        hexstate = CONF.get('main', 'splitter/state', None)
-        if hexstate:
-            hexstate = hexstate_to_qbytearray(hexstate)
-            self._splitter.restoreState(hexstate)
-
     def _save_window_state(self):
         """
         Save the state of this mainwindow’s toolbars and dockwidgets to
@@ -288,9 +278,6 @@ class MainWindow(QMainWindow):
         """
         hexstate = qbytearray_to_hexstate(self.saveState())
         CONF.set('main', 'window/state', hexstate)
-
-        hexstate = qbytearray_to_hexstate(self._splitter.saveState())
-        CONF.set('main', 'splitter/state', hexstate)
 
     # ---- Handlers
     def _handle_except(self, log_msg):
