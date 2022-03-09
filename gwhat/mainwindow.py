@@ -177,6 +177,19 @@ class MainWindow(QMainWindow):
         main_grid.addWidget(
             self.tab_hydrocalc.rechg_eval_widget.progressbar, 3, 0)
 
+    def show_about_dialog(self):
+        """
+        Create and show the About GWHAT window when the about button
+        is clicked.
+        """
+        pytesting = os.environ.get('GWHAT_PYTEST', 'False') == 'True'
+        if self.about_win is None:
+            self.about_win = AboutWhat(self, pytesting)
+        if pytesting:
+            self.about_win.show()
+        else:
+            self.about_win.exec_()
+
     def write2console(self, text):
         """
         This function is the bottle neck through which all messages writen
@@ -225,6 +238,8 @@ class MainWindow(QMainWindow):
         self.dmanager.close()
 
         print('Closing GWHAT')
+        if self.about_win is not None:
+            self.about_win.close()
         self.tab_hydrocalc.close()
         self.tab_hydrograph.close()
         event.accept()
