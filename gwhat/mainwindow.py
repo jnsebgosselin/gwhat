@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+# -----------------------------------------------------------------------------
 # Copyright © 2014-2021 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
@@ -12,16 +12,7 @@
 # and iterate often. When creating a UI, you will make mistakes. Just keep
 # moving forward, and remember to keep your UI out of the way.
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
-
-print('Starting GWHAT...')
-
-from gwhat.utils.qthelpers import create_qapplication
-app = create_qapplication()
-
-from gwhat import __namever__, __appname__
-from gwhat.widgets.splash import SplashScrn
-splash = SplashScrn()
-splash.showMessage("Starting %s..." % __namever__)
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
 import platform
@@ -36,9 +27,9 @@ from qtpy.QtWidgets import (
     QMainWindow, QTextEdit, QSplitter, QWidget, QGridLayout, QTextBrowser)
 
 # ---- Local imports
+from gwhat import __namever__, __appname__
 from gwhat.config.main import CONF
 from gwhat.config.ospath import save_path_to_configs, get_path_from_configs
-
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
 from gwhat.widgets.tabwidget import TabWidget
@@ -53,8 +44,10 @@ freeze_support()
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, except_hook=None):
+    def __init__(self, except_hook=None, splash=None):
         super().__init__()
+        self.splash = splash
+        self.except_hook = except_hook
         if except_hook is not None:
             except_hook.sig_except_caught.connect(self._handle_except)
 
@@ -68,7 +61,7 @@ class MainWindow(QMainWindow):
                 myappid)
 
         # Setup the project manager. and data managers.
-        splash.showMessage("Initializing project and data managers...")
+        self.show_splash_message("Initializing project and data managers...")
         self.pmanager = ProjetManager(self)
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
 
@@ -78,7 +71,6 @@ class MainWindow(QMainWindow):
 
         # Generate the GUI.
         self.__initUI__()
-        splash.finish(self)
         self._restore_window_geometry()
         self._restore_window_state()
 
@@ -94,7 +86,7 @@ class MainWindow(QMainWindow):
         Setup the GUI of the main window.
         """
         # Setup the main console.
-        splash.showMessage("Initializing main window...")
+        self.show_splash_message("Initializing main window...")
         self.main_console = QTextBrowser()
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QTextEdit.NoWrap)
@@ -112,13 +104,13 @@ class MainWindow(QMainWindow):
         self.write2console('<font color=black>%s</font>' % msg)
 
         # Setup the tab plot hydrograph.
-        splash.showMessage("Initializing plot hydrograph...")
+        self.show_splash_message("Initializing plot hydrograph...")
         self.tab_hydrograph = HydroPrint.HydroprintGUI(
             self.dmanager, parent=self)
         self.tab_hydrograph.ConsoleSignal.connect(self.write2console)
 
         # Setup the tab analyse hydrograph.
-        splash.showMessage("Initializing analyse hydrograph...")
+        self.show_splash_message("Initializing analyse hydrograph...")
         self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
         self.tab_hydrocalc.tools['mrc'].sig_new_mrc.connect(
             self.tab_hydrograph.mrc_wl_changed)
@@ -188,6 +180,11 @@ class MainWindow(QMainWindow):
         # Update the GUI.
         self.tab_hydrograph.setEnabled(True)
         self.tab_hydrocalc.setEnabled(True)
+
+    def show_splash_message(self, message):
+        """Set splash text."""
+        if self.splash is not None:
+            self.splash.showMessage(message)
 
     # ---- Qt method override/extension
     def closeEvent(self, event):
@@ -296,8 +293,20 @@ def except_hook(cls, exception, traceback):
 
 
 if __name__ == '__main__':
+    from gwhat.utils.qthelpers import create_qapplication
+    app = create_qapplication()
+
+    from gwhat.widgets.splash import SplashScrn
+    splash = SplashScrn()
+    splash.showMessage(f"Starting {__namever__}...")
+
     sys.excepthook = except_hook
     except_hook = ExceptHook()
-    main = MainWindow(except_hook)
+
+    print("Initializing MainWindow...")
+    main = MainWindow(except_hook, splash)
+    splash.finish(main)
     main.show()
+    print("Successfully initialized MainWindow.")
+
     sys.exit(app.exec_())
