@@ -25,7 +25,7 @@ from multiprocessing import freeze_support
 # ---- Third party imports
 from qtpy.QtCore import QObject, Signal, QUrl
 from PyQt5.QtGui import QDesktopServices
-from qtpy.QtWidgets import QMainWindow, QWidget, QGridLayout, QTextBrowser
+from qtpy.QtWidgets import QMainWindow, QWidget, QGridLayout
 
 # ---- Local imports
 from gwhat import __namever__, __appname__, __project_url__
@@ -90,12 +90,6 @@ class MainWindow(QMainWindow):
         Setup the GUI of the main window.
         """
         self.show_splash_message("Initializing main window...")
-
-        # Setup the main console.
-        self.main_console = QTextBrowser()
-        self.main_console.setReadOnly(True)
-        self.main_console.setLineWrapMode(QTextBrowser.NoWrap)
-        self.main_console.setOpenExternalLinks(True)
 
         # Setup mainwindow tab widget.
         self.tab_widget = TabWidget()
