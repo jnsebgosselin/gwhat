@@ -1,40 +1,39 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Aug  4 01:50:50 2017
-@author: jsgosselin
-"""
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
-
 import sys
-import os.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+import os
+import os.path as osp
+sys.path.append(osp.dirname(osp.dirname(osp.realpath(__file__))))
 
 # ---- Third parties imports
-
 import pytest
 from flaky import flaky
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget
 
 # ---- Local imports
-
 from gwhat.widgets.tabwidget import TabWidget
 from gwhat.widgets.updates import WorkerUpdates
 import gwhat.widgets.updates
 
 
-# Qt Test Fixtures
-# --------------------------------
-
-
+# =============================================================================
+# ---- Fixtures
+# =============================================================================
 @pytest.fixture
 def tabwidget_bot(qtbot):
     tabwidget = TabWidget()
     tabwidget.addTab(QWidget(), 'Tab#1')
     tabwidget.addTab(QWidget(), 'Tab#2')
     tabwidget.addTab(QWidget(), 'Tab#3')
-    tabwidget._pytesting = True
 
     qtbot.addWidget(tabwidget)
 
@@ -47,11 +46,9 @@ def worker_updates_bot(qtbot):
     return worker_updates, qtbot
 
 
-
-# Tests ManagerUpdates and WorkerUpdates
-# --------------------------------------
-
-
+# =============================================================================
+# ---- Tests
+# =============================================================================
 @flaky(max_runs=3)
 @pytest.mark.skipif(not os.name == 'nt', reason="It fails often on Travis")
 def test_worker_updates(worker_updates_bot):
@@ -97,15 +94,16 @@ def test_update_manager(tabwidget_bot):
     assert tabwidget.about_win.manager_updates
     qtbot.addWidget(tabwidget.about_win.manager_updates)
 
-    qtbot.waitSignal(tabwidget.about_win.manager_updates.thread_updates.started)
-    qtbot.waitSignal(tabwidget.about_win.manager_updates.worker_updates.sig_ready)
-    qtbot.waitSignal(tabwidget.about_win.manager_updates.thread_updates.finished)
-    qtbot.waitUntil(lambda: not tabwidget.about_win.manager_updates.thread_updates.isRunning(),
-                    timeout=10000)
+    qtbot.waitSignal(
+        tabwidget.about_win.manager_updates.thread_updates.started)
+    qtbot.waitSignal(
+        tabwidget.about_win.manager_updates.worker_updates.sig_ready)
+    qtbot.waitSignal(
+        tabwidget.about_win.manager_updates.thread_updates.finished)
+    qtbot.waitUntil(
+        lambda: not tabwidget.about_win.manager_updates.thread_updates.isRunning(),
+        timeout=10000)
 
-
-# Tests TabWidget
-# --------------------------------------
 
 def test_tabwidget_index_memory(tabwidget_bot):
     tabwidget, qtbot = tabwidget_bot
@@ -122,5 +120,5 @@ def test_tabwidget_index_memory(tabwidget_bot):
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
+    pytest.main(['-x', osp.basename(__file__), '-v', '-rw'])
     # pytest.main()
