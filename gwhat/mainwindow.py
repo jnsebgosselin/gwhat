@@ -41,6 +41,7 @@ from gwhat.config.ospath import save_path_to_configs, get_path_from_configs
 
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
+from gwhat.widgets.about import AboutWhat
 from gwhat.widgets.tabwidget import TabWidget
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
@@ -105,6 +106,16 @@ class MainWindow(QMainWindow):
         # Setup mainwindow tab widget.
         self.tab_widget = TabWidget()
         self.tab_widget.setCornerWidget(self.pmanager)
+
+        # Setup About GWHAT.
+        self.about_win = None
+        self.about_btn = create_toolbutton(
+            self,
+            icon='info',
+            text="About...",
+            tip='About GWHAT...',
+            triggered=lambda: self.show_about_dialog())
+        self.tab_widget.add_button(self.about_btn)
 
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
