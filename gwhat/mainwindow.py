@@ -24,6 +24,7 @@ splash = SplashScrn()
 splash.showMessage(f"Starting {__namever__}...")
 
 # ---- Standard library imports
+import os
 import platform
 import sys
 import traceback
@@ -31,14 +32,14 @@ from time import ctime
 from multiprocessing import freeze_support
 
 # ---- Third party imports
-from qtpy.QtCore import Qt, QObject, Signal
-from qtpy.QtWidgets import (
-    QMainWindow, QTextEdit, QSplitter, QWidget, QGridLayout, QTextBrowser)
+from qtpy.QtCore import QObject, Signal, QUrl
+from PyQt5.QtGui import QDesktopServices
+from qtpy.QtWidgets import QMainWindow, QWidget, QGridLayout
 
 # ---- Local imports
+from gwhat import __project_url__
 from gwhat.config.main import CONF
 from gwhat.config.ospath import save_path_to_configs, get_path_from_configs
-
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
 from gwhat.widgets.about import AboutWhat
@@ -47,7 +48,8 @@ from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
 from gwhat.utils import icons
 from gwhat.utils.qthelpers import (
-    qbytearray_to_hexstate, hexstate_to_qbytearray)
+    create_toolbutton, qbytearray_to_hexstate, hexstate_to_qbytearray)
+
 
 freeze_support()
 
@@ -116,6 +118,16 @@ class MainWindow(QMainWindow):
             tip='About GWHAT...',
             triggered=lambda: self.show_about_dialog())
         self.tab_widget.add_button(self.about_btn)
+
+        # Setup report bug button.
+        self.bug_btn = create_toolbutton(
+            self,
+            icon='report_bug',
+            text="Report...",
+            tip='Report issue...',
+            triggered=lambda: QDesktopServices.openUrl(
+                QUrl(__project_url__ + "/issues")))
+        self.tab_widget.add_button(self.bug_btn)
 
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
