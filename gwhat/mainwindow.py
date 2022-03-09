@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         self.dmanager.sig_new_console_msg.connect(self.write2console)
 
         # Generate the GUI.
-        self.__initUI__()
+        self.setup()
         splash.finish(self)
         self._restore_window_geometry()
         self._restore_window_state()
@@ -89,11 +89,10 @@ class MainWindow(QMainWindow):
             self.tab_hydrograph.setEnabled(False)
             self.tab_hydrocalc.setEnabled(False)
 
-    def __initUI__(self):
+    def setup(self):
         """
         Setup the GUI of the main window.
         """
-        # Setup the main console.
         splash.showMessage("Initializing main window...")
         self.main_console = QTextBrowser()
         self.main_console.setReadOnly(True)
@@ -103,6 +102,9 @@ class MainWindow(QMainWindow):
         fontsize = CONF.get('main', 'fontsize_console')
         self.main_console.setStyleSheet(
             "QWidget {font-style: Regular; font-size: %s;}" % fontsize)
+        # Setup mainwindow tab widget.
+        self.tab_widget = TabWidget()
+        self.tab_widget.setCornerWidget(self.pmanager)
 
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
@@ -115,21 +117,19 @@ class MainWindow(QMainWindow):
         splash.showMessage("Initializing plot hydrograph...")
         self.tab_hydrograph = HydroPrint.HydroprintGUI(
             self.dmanager, parent=self)
+        self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
         self.tab_hydrograph.ConsoleSignal.connect(self.write2console)
 
         # Setup the tab analyse hydrograph.
         splash.showMessage("Initializing analyse hydrograph...")
         self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
+        self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         self.tab_hydrocalc.tools['mrc'].sig_new_mrc.connect(
             self.tab_hydrograph.mrc_wl_changed)
         self.tab_hydrocalc.rechg_eval_widget.sig_new_gluedf.connect(
             self.tab_hydrograph.glue_wl_changed)
 
         # Add each tab to the tab widget.
-        self.tab_widget = TabWidget()
-        self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
-        self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
-        self.tab_widget.setCornerWidget(self.pmanager)
         self.tab_widget.currentChanged.connect(self.sync_datamanagers)
         self.tab_widget.setCurrentIndex(
             CONF.get('main', 'mainwindow_current_tab'))
@@ -149,9 +149,9 @@ class MainWindow(QMainWindow):
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
 
-        mainGrid = QGridLayout(main_widget)
-        mainGrid.addWidget(self._splitter, 0, 0)
-        mainGrid.addWidget(
+        main_grid = QGridLayout(main_widget)
+        main_grid.addWidget(self.tab_widget, 0, 0)
+        main_grid.addWidget(
             self.tab_hydrocalc.rechg_eval_widget.progressbar, 3, 0)
 
     def write2console(self, text):
