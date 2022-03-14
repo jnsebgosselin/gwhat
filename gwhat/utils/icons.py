@@ -97,6 +97,9 @@ FA_ICONS = {
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
                       'color': COLOR}]}],
+    'console': [
+        ('mdi.console',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'content_duplicate': [
         ('mdi.content-duplicate',),
         {'color': COLOR, 'scale_factor': 1.2}],

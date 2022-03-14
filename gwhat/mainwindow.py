@@ -15,6 +15,7 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard library imports
+import os
 import platform
 import sys
 import traceback
@@ -22,22 +23,25 @@ from time import ctime
 from multiprocessing import freeze_support
 
 # ---- Third party imports
-from qtpy.QtCore import Qt, QObject, Signal
-from qtpy.QtWidgets import (
-    QMainWindow, QTextEdit, QSplitter, QWidget, QGridLayout, QTextBrowser)
+from qtpy.QtCore import QObject, Signal, QUrl
+from PyQt5.QtGui import QDesktopServices
+from qtpy.QtWidgets import QMainWindow, QWidget, QGridLayout
 
 # ---- Local imports
-from gwhat import __namever__, __appname__
+from gwhat import __namever__, __appname__, __project_url__
 from gwhat.config.main import CONF
 from gwhat.config.ospath import save_path_to_configs, get_path_from_configs
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
+from gwhat.widgets.about import AboutWhat
 from gwhat.widgets.tabwidget import TabWidget
+from gwhat.widgets.console import StreamConsole
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
 from gwhat.utils import icons
 from gwhat.utils.qthelpers import (
-    qbytearray_to_hexstate, hexstate_to_qbytearray)
+    create_toolbutton, qbytearray_to_hexstate, hexstate_to_qbytearray)
+
 
 freeze_support()
 
@@ -70,7 +74,7 @@ class MainWindow(QMainWindow):
         self.dmanager.sig_new_console_msg.connect(self.write2console)
 
         # Generate the GUI.
-        self.__initUI__()
+        self.setup()
         self._restore_window_geometry()
         self._restore_window_state()
 
@@ -81,21 +85,38 @@ class MainWindow(QMainWindow):
             self.tab_hydrograph.setEnabled(False)
             self.tab_hydrocalc.setEnabled(False)
 
-    def __initUI__(self):
+    def setup(self):
         """
         Setup the GUI of the main window.
         """
-        # Setup the main console.
         self.show_splash_message("Initializing main window...")
-        self.main_console = QTextBrowser()
-        self.main_console.setReadOnly(True)
-        self.main_console.setLineWrapMode(QTextEdit.NoWrap)
-        self.main_console.setOpenExternalLinks(True)
 
-        fontsize = CONF.get('main', 'fontsize_console')
-        self.main_console.setStyleSheet(
-            "QWidget {font-style: Regular; font-size: %s;}" % fontsize)
+        # Setup mainwindow tab widget.
+        self.tab_widget = TabWidget()
+        self.tab_widget.setCornerWidget(self.pmanager)
 
+        # Setup About GWHAT.
+        self.about_win = None
+        self.about_btn = create_toolbutton(
+            self,
+            icon='info',
+            text="About...",
+            tip='About GWHAT...',
+            triggered=lambda: self.show_about_dialog())
+        self.tab_widget.add_button(self.about_btn)
+
+        # Setup report bug button.
+        self.bug_btn = create_toolbutton(
+            self,
+            icon='report_bug',
+            text="Report...",
+            tip='Report issue...',
+            triggered=lambda: QDesktopServices.openUrl(
+                QUrl(__project_url__ + "/issues")))
+        self.tab_widget.add_button(self.bug_btn)
+
+        # Setup GWHAT message console.
+        self.console = StreamConsole()
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
         msg = ('Please help GWHAT by reporting bugs on our '
@@ -103,48 +124,57 @@ class MainWindow(QMainWindow):
                'Issues Tracker</a>.')
         self.write2console('<font color=black>%s</font>' % msg)
 
+        self.btn_console = create_toolbutton(
+            self,
+            icon='console',
+            text="Console...",
+            tip="GWHAT console...",
+            triggered=lambda: self.console.show())
+        self.tab_widget.add_button(self.btn_console)
+
         # Setup the tab plot hydrograph.
         self.show_splash_message("Initializing plot hydrograph...")
         self.tab_hydrograph = HydroPrint.HydroprintGUI(
             self.dmanager, parent=self)
+        self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
         self.tab_hydrograph.ConsoleSignal.connect(self.write2console)
 
         # Setup the tab analyse hydrograph.
         self.show_splash_message("Initializing analyse hydrograph...")
         self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
+        self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         self.tab_hydrocalc.tools['mrc'].sig_new_mrc.connect(
             self.tab_hydrograph.mrc_wl_changed)
         self.tab_hydrocalc.rechg_eval_widget.sig_new_gluedf.connect(
             self.tab_hydrograph.glue_wl_changed)
 
         # Add each tab to the tab widget.
-        self.tab_widget = TabWidget()
-        self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
-        self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
-        self.tab_widget.setCornerWidget(self.pmanager)
         self.tab_widget.currentChanged.connect(self.sync_datamanagers)
         self.tab_widget.setCurrentIndex(
             CONF.get('main', 'mainwindow_current_tab'))
         self.sync_datamanagers()
 
-        # Setup the splitter widget.
-        self._splitter = QSplitter(Qt.Vertical, parent=self)
-        self._splitter.addWidget(self.tab_widget)
-        self._splitter.addWidget(self.main_console)
-
-        self._splitter.setCollapsible(0, True)
-        self._splitter.setStretchFactor(0, 100)
-        # Force initially the main_console to its minimal height.
-        self._splitter.setSizes([100, 1])
-
         # Setup the layout of the main widget.
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
 
-        mainGrid = QGridLayout(main_widget)
-        mainGrid.addWidget(self._splitter, 0, 0)
-        mainGrid.addWidget(
+        main_grid = QGridLayout(main_widget)
+        main_grid.addWidget(self.tab_widget, 0, 0)
+        main_grid.addWidget(
             self.tab_hydrocalc.rechg_eval_widget.progressbar, 3, 0)
+
+    def show_about_dialog(self):
+        """
+        Create and show the About GWHAT window when the about button
+        is clicked.
+        """
+        pytesting = os.environ.get('GWHAT_PYTEST', 'False') == 'True'
+        if self.about_win is None:
+            self.about_win = AboutWhat(self, pytesting)
+        if pytesting:
+            self.about_win.show()
+        else:
+            self.about_win.exec_()
 
     def write2console(self, text):
         """
@@ -152,7 +182,7 @@ class MainWindow(QMainWindow):
         in the console must go through.
         """
         textime = '<font color=black>[%s] </font>' % ctime()[4:-8]
-        self.main_console.append(textime + text)
+        self.console.write(textime + text)
 
     def sync_datamanagers(self):
         """
@@ -199,6 +229,9 @@ class MainWindow(QMainWindow):
         self.dmanager.close()
 
         print('Closing GWHAT')
+        self.console.close()
+        if self.about_win is not None:
+            self.about_win.close()
         self.tab_hydrocalc.close()
         self.tab_hydrograph.close()
         event.accept()
@@ -235,11 +268,6 @@ class MainWindow(QMainWindow):
             hexstate = hexstate_to_qbytearray(hexstate)
             self.restoreState(hexstate)
 
-        hexstate = CONF.get('main', 'splitter/state', None)
-        if hexstate:
-            hexstate = hexstate_to_qbytearray(hexstate)
-            self._splitter.restoreState(hexstate)
-
     def _save_window_state(self):
         """
         Save the state of this mainwindow’s toolbars and dockwidgets to
@@ -247,9 +275,6 @@ class MainWindow(QMainWindow):
         """
         hexstate = qbytearray_to_hexstate(self.saveState())
         CONF.set('main', 'window/state', hexstate)
-
-        hexstate = qbytearray_to_hexstate(self._splitter.saveState())
-        CONF.set('main', 'splitter/state', hexstate)
 
     # ---- Handlers
     def _handle_except(self, log_msg):
