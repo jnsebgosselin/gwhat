@@ -14,6 +14,7 @@ os.environ['GWHAT_PYTEST'] = 'True'
 
 # ---- Third party imports
 import pytest
+from qtpy.QtCore import Qt
 
 # ---- Local imports
 from gwhat import __rootdir__
@@ -43,11 +44,11 @@ def mainwindow(qtbot, mocker):
     mocker.patch.object(QMessageBox, 'exec_', return_value=QMessageBox.Ok)
 
     mainwindow = MainWindow()
-    # qtbot.addWidget(mainwindow)
     mainwindow.show()
     qtbot.waitExposed(mainwindow)
 
-    return mainwindow
+    yield mainwindow
+    mainwindow.close()
 
 
 # =============================================================================
@@ -90,6 +91,20 @@ def test_restart_mainwindow(mainwindow, qtbot, mocker, project):
     assert mainwindow.pmanager.projet.filename == project.filename
     assert (get_path_from_configs('main', 'last_project_filepath') ==
             project.filename)
+
+
+def test_about_window(mainwindow, qtbot):
+    """Test the showing and closing of the About GWHAT window."""
+    assert mainwindow.about_win is None
+
+    # Show about window and assert it was created and showed correctly.
+    qtbot.mouseClick(mainwindow.about_btn, Qt.LeftButton)
+    assert mainwindow.about_win
+    assert mainwindow.about_win.isVisible()
+
+    # Close the about window and assert it was closed correctly.
+    qtbot.mouseClick(mainwindow.about_win.ok_btn, Qt.LeftButton)
+    assert not mainwindow.about_win.isVisible()
 
 
 if __name__ == "__main__":

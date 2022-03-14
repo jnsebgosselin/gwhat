@@ -38,12 +38,12 @@ class AboutWhat(QDialog):
                             Qt.CustomizeWindowHint |
                             Qt.WindowCloseButtonHint)
 
+        self.manager_updates = ManagerUpdates(self)
+
         self.__initUI__()
 
     def __initUI__(self):
         """Initialize the GUI."""
-        self.manager_updates = None
-
         # ---- AboutTextBox
 
         self.AboutTextBox = QTextBrowser()
@@ -59,13 +59,12 @@ class AboutWhat(QDialog):
         self.set_html_in_AboutTextBox()
 
         # ---- toolbar
-
         self.ok_btn = QPushButton('OK')
         self.ok_btn.clicked.connect(self.close)
 
         self.btn_check_updates = QPushButton(' Check for Updates ')
         self.btn_check_updates.clicked.connect(
-                self._btn_check_updates_isclicked)
+            self._btn_check_updates_isclicked)
 
         toolbar = QGridLayout()
         toolbar.addWidget(self.btn_check_updates, 0, 1)
@@ -74,7 +73,6 @@ class AboutWhat(QDialog):
         toolbar.setColumnStretch(0, 100)
 
         # ---- Main Grid
-
         grid = QGridLayout()
         grid.setSpacing(10)
 
@@ -90,7 +88,7 @@ class AboutWhat(QDialog):
     @QSlot()
     def _btn_check_updates_isclicked(self):
         """Handles when the button to check for updates is clicked."""
-        self.manager_updates = ManagerUpdates(self, self._pytesting)
+        self.manager_updates.start_updates_check()
 
     def set_html_in_AboutTextBox(self):
         """Set the text in the About GWHAT text browser widget."""
@@ -99,7 +97,7 @@ class AboutWhat(QDialog):
 
         width = 750
         filename = os.path.join(
-                __rootdir__, 'ressources', 'WHAT_banner_750px.png')
+            __rootdir__, 'ressources', 'WHAT_banner_750px.png')
 
         # http://doc.qt.io/qt-4.8/richtext-html-subset.html
 

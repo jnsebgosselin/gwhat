@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
-# Copyright (c) 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
@@ -18,16 +18,14 @@
 # https://github.com/ipython/ipython
 #
 # See gwhat/__init__.py for more details.
+# -----------------------------------------------------------------------------
 
-
-# ---- Imports: standard libraries
-
+# ---- Standard imports
 import re
 from distutils.version import LooseVersion
 
 
-# ---- Imports: third parties
-
+# ---- Third party imports
 from PyQt5.QtCore import QObject, Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -35,10 +33,8 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QMessageBox
 import requests
 
-# ---- Imports: local
-
-from gwhat import (__version__, __releases_url__, __releases_api__,
-                   __appname__, __namever__)
+# ---- Local imports
+from gwhat import __version__, __releases_url__, __releases_api__, __namever__
 from gwhat.utils import icons
 
 
@@ -48,9 +44,8 @@ class ManagerUpdates(QMessageBox):
     and displays the ressults in a message box.
     """
 
-    def __init__(self, parent=None, pytesting=False):
-        super(ManagerUpdates, self).__init__(parent)
-        self._pytesting = pytesting
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
         self.setWindowTitle('GWHAT updates')
         self.setWindowIcon(icons.get_icon('master'))
@@ -68,8 +63,6 @@ class ManagerUpdates(QMessageBox):
         self.worker_updates.moveToThread(self.thread_updates)
         self.thread_updates.started.connect(self.worker_updates.start)
         self.worker_updates.sig_ready.connect(self._receive_updates_check)
-
-        self.start_updates_check()
 
     def start_updates_check(self):
         """Check if updates are available."""
@@ -108,12 +101,8 @@ class ManagerUpdates(QMessageBox):
                        ) % (__namever__, __releases_url__, url_m, url_t)
         self.setText(msg)
         self.setIcon(icn)
-
         QApplication.restoreOverrideCursor()
-        if self._pytesting is False:
-            self.exec_()
-        else:
-            self.show()
+        self.exec_()
 
 
 class WorkerUpdates(QObject):
@@ -244,4 +233,5 @@ if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     updates_worker = ManagerUpdates()
+    updates_worker.show()
     sys.exit(app.exec_())
