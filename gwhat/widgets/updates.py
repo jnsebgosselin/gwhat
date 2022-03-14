@@ -45,7 +45,7 @@ class ManagerUpdates(QMessageBox):
     """
 
     def __init__(self, parent=None):
-        super(ManagerUpdates, self).__init__(parent)
+        super().__init__(parent)
 
         self.setWindowTitle('GWHAT updates')
         self.setWindowIcon(icons.get_icon('master'))
@@ -63,8 +63,6 @@ class ManagerUpdates(QMessageBox):
         self.worker_updates.moveToThread(self.thread_updates)
         self.thread_updates.started.connect(self.worker_updates.start)
         self.worker_updates.sig_ready.connect(self._receive_updates_check)
-
-        self.start_updates_check()
 
     def start_updates_check(self):
         """Check if updates are available."""
