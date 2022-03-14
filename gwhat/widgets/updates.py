@@ -44,9 +44,8 @@ class ManagerUpdates(QMessageBox):
     and displays the ressults in a message box.
     """
 
-    def __init__(self, parent=None, pytesting=False):
+    def __init__(self, parent=None):
         super(ManagerUpdates, self).__init__(parent)
-        self._pytesting = pytesting
 
         self.setWindowTitle('GWHAT updates')
         self.setWindowIcon(icons.get_icon('master'))
@@ -104,12 +103,8 @@ class ManagerUpdates(QMessageBox):
                        ) % (__namever__, __releases_url__, url_m, url_t)
         self.setText(msg)
         self.setIcon(icn)
-
         QApplication.restoreOverrideCursor()
-        if self._pytesting is False:
-            self.exec_()
-        else:
-            self.show()
+        self.exec_()
 
 
 class WorkerUpdates(QObject):
@@ -240,4 +235,5 @@ if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     updates_worker = ManagerUpdates()
+    updates_worker.show()
     sys.exit(app.exec_())

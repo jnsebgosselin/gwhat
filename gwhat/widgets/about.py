@@ -90,7 +90,7 @@ class AboutWhat(QDialog):
     @QSlot()
     def _btn_check_updates_isclicked(self):
         """Handles when the button to check for updates is clicked."""
-        self.manager_updates = ManagerUpdates(self, self._pytesting)
+        self.manager_updates = ManagerUpdates(self)
 
     def set_html_in_AboutTextBox(self):
         """Set the text in the About GWHAT text browser widget."""
