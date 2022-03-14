@@ -38,12 +38,12 @@ class AboutWhat(QDialog):
                             Qt.CustomizeWindowHint |
                             Qt.WindowCloseButtonHint)
 
+        self.manager_updates = ManagerUpdates(self)
+
         self.__initUI__()
 
     def __initUI__(self):
         """Initialize the GUI."""
-        self.manager_updates = None
-
         # ---- AboutTextBox
 
         self.AboutTextBox = QTextBrowser()
@@ -88,7 +88,7 @@ class AboutWhat(QDialog):
     @QSlot()
     def _btn_check_updates_isclicked(self):
         """Handles when the button to check for updates is clicked."""
-        self.manager_updates = ManagerUpdates(self)
+        self.manager_updates.start_updates_check()
 
     def set_html_in_AboutTextBox(self):
         """Set the text in the About GWHAT text browser widget."""
