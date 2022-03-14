@@ -59,13 +59,12 @@ class AboutWhat(QDialog):
         self.set_html_in_AboutTextBox()
 
         # ---- toolbar
-
         self.ok_btn = QPushButton('OK')
         self.ok_btn.clicked.connect(self.close)
 
         self.btn_check_updates = QPushButton(' Check for Updates ')
         self.btn_check_updates.clicked.connect(
-                self._btn_check_updates_isclicked)
+            self._btn_check_updates_isclicked)
 
         toolbar = QGridLayout()
         toolbar.addWidget(self.btn_check_updates, 0, 1)
@@ -74,7 +73,6 @@ class AboutWhat(QDialog):
         toolbar.setColumnStretch(0, 100)
 
         # ---- Main Grid
-
         grid = QGridLayout()
         grid.setSpacing(10)
 
@@ -99,7 +97,7 @@ class AboutWhat(QDialog):
 
         width = 750
         filename = os.path.join(
-                __rootdir__, 'ressources', 'WHAT_banner_750px.png')
+            __rootdir__, 'ressources', 'WHAT_banner_750px.png')
 
         # http://doc.qt.io/qt-4.8/richtext-html-subset.html
 
