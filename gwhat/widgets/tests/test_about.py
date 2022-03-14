@@ -38,24 +38,19 @@ def test_about_dialog_updates(about_dialog, qtbot, mocker):
     Test that the button to check for updates in the Aoubt GWHAT dialog
     is working as expected.
     """
-    assert about_dialog.manager_updates is None
-
     # Click on the button to check for updates and assert that the manager
     # is initialized and showed correctly.
-    mocker.patch.object(QMessageBox, 'exec_', return_value=QMessageBox.Ok)
+    qmsgbox_patcher = mocker.patch.object(
+        QMessageBox, 'exec_', return_value=QMessageBox.Ok)
 
-    qtbot.mouseClick(about_dialog.btn_check_updates, Qt.LeftButton)
-    assert about_dialog.manager_updates
-
-    qtbot.waitSignal(
-        about_dialog.manager_updates.thread_updates.started)
-    qtbot.waitSignal(
-        about_dialog.manager_updates.worker_updates.sig_ready)
-    qtbot.waitSignal(
-        about_dialog.manager_updates.thread_updates.finished)
+    signal = about_dialog.manager_updates.thread_updates.finished
+    with qtbot.waitSignal(signal):
+        qtbot.mouseClick(about_dialog.btn_check_updates, Qt.LeftButton)
     qtbot.waitUntil(
         lambda: not about_dialog.manager_updates.thread_updates.isRunning(),
         timeout=10000)
+
+    assert qmsgbox_patcher.call_count == 1
 
 
 if __name__ == "__main__":
