@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
-# Copyright (c) 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
@@ -18,16 +18,14 @@
 # https://github.com/ipython/ipython
 #
 # See gwhat/__init__.py for more details.
+# -----------------------------------------------------------------------------
 
-
-# ---- Imports: standard libraries
-
+# ---- Standard imports
 import re
 from distutils.version import LooseVersion
 
 
-# ---- Imports: third parties
-
+# ---- Third party imports
 from PyQt5.QtCore import QObject, Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -35,10 +33,8 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QMessageBox
 import requests
 
-# ---- Imports: local
-
-from gwhat import (__version__, __releases_url__, __releases_api__,
-                   __appname__, __namever__)
+# ---- Local imports
+from gwhat import __version__, __releases_url__, __releases_api__, __namever__
 from gwhat.utils import icons
 
 
