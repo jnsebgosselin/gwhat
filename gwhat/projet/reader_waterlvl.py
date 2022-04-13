@@ -303,10 +303,10 @@ class WLDatasetBase(Mapping):
         return len(self._dataf)
 
     def __setitem__(self, key, value):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __iter__(self):
-        return NotImplementedError
+        raise NotImplementedError
 
     # ---- Attributes
     @property
@@ -404,6 +404,9 @@ class WLDataset(WLDatasetBase):
             return self._dataf.filename
 
         return self.dset.__getitem__(key)
+
+    def __setitem__(self, key, value):
+        self._dataf.attrs[key] = value
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
