@@ -105,6 +105,27 @@ def test_read_waterlvl(ext):
     assert list(dataset['Time']) == expected_results
 
 
+def test_set_waterlvl_dataset():
+    """
+    Test that modifying water level datasets is working as expected.
+    """
+    filename = osp.join(DATADIR, 'water_level_datafile.csv')
+    dataset = WLDataset(filename)
+
+    expected_results = {
+        'Well': "test_well_name",
+        'Well ID': "test_well_id",
+        'Province': 'test_prov',
+        'Latitude': 45.678,
+        'Longitude': -76.543,
+        'Elevation': 123.23,
+        'Municipality': 'test_municipality'}
+
+    for key, value in expected_results.items():
+        dataset[key] = value
+        assert dataset[key] == expected_results[key]
+
+
 @pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
 def test_load_waterlvl_measurements(datatmpdir, ext):
     filename = osp.join(datatmpdir, "waterlvl_manual_measurements" + ext)
