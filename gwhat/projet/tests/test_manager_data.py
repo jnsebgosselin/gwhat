@@ -125,7 +125,67 @@ def test_delete_weather_data(datamanager, mocker, qtbot):
 
 def test_import_waterlevel_data(datamanager, mocker, qtbot):
     """
-    Test that importing water level data in gwhat projects is
+    Test that importing a water level dataset in a gwhat project is
+    working as expected.
+
+    Regression test for jnsebgosselin/gwhat#416
+    """
+    datamanager.new_waterlvl_win.setModal(False)
+    new_waterlvl_dialog = datamanager.new_waterlvl_win
+
+    # Mock the file dialog to return the path of the weather datafiles.
+    mocker.patch.object(
+        QFileDialog, 'exec_', return_value=True)
+    mocker.patch.object(
+        QFileDialog, 'selectedFiles',
+        return_value=[WLFILENAME, WLFILENAME2, WLFILENAME3])
+
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_loaded):
+        qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
+
+    assert new_waterlvl_dialog.directory.text() == WLFILENAME
+    assert new_waterlvl_dialog.name == "PO01 - Calixa-Lavallée"
+    assert new_waterlvl_dialog.station_name == "PO01 - Calixa-Lavallée"
+    assert new_waterlvl_dialog.station_id == "3040002"
+    assert new_waterlvl_dialog.province == "QC"
+    assert new_waterlvl_dialog.latitude == 45.74581
+    assert new_waterlvl_dialog.longitude == -73.28024
+    assert new_waterlvl_dialog.altitude == 19.51
+
+    # Change dataset info in the UI.
+    new_waterlvl_dialog._dset_name.setText("test_dataset_name")
+    new_waterlvl_dialog._stn_name.setText("test_well_name")
+    new_waterlvl_dialog._sid.setText("test_well_id")
+    new_waterlvl_dialog._lat.setValue(45.678)
+    new_waterlvl_dialog._lon.setValue(-76.543)
+    new_waterlvl_dialog._alt.setValue(123.23)
+    new_waterlvl_dialog._prov.setText("test_prov")
+
+    assert new_waterlvl_dialog.name == "test_dataset_name"
+    assert new_waterlvl_dialog.station_name == "test_well_name"
+    assert new_waterlvl_dialog.station_id == "test_well_id"
+    assert new_waterlvl_dialog.province == "test_prov"
+    assert new_waterlvl_dialog.latitude == 45.678
+    assert new_waterlvl_dialog.longitude == -76.543
+    assert new_waterlvl_dialog.altitude == 123.23
+
+    # Import the water level dataset into the project.
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_imported):
+        qtbot.mouseClick(new_waterlvl_dialog.btn_ok, Qt.LeftButton)
+
+    wldset = datamanager.get_current_wldset()
+    assert wldset.name == "test_dataset_name"
+    assert wldset['Well'] == "test_well_name"
+    assert wldset['Well ID'] == "test_well_id"
+    assert wldset['Province'] == "test_prov"
+    assert wldset['Latitude'] == 45.678
+    assert wldset['Longitude'] == -76.543
+    assert wldset['Elevation'] == 123.23
+
+
+def test_import_multiple_waterlevel_data(datamanager, mocker, qtbot):
+    """
+    Test that importing multiple water level datasets in a gwhat project is
     working as expected.
     """
     datamanager.new_waterlvl_win.setModal(False)
