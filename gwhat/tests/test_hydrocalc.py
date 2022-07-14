@@ -84,6 +84,18 @@ def test_copy_to_clipboard(hydrocalc, qtbot):
     assert not QApplication.clipboard().image().isNull()
 
 
+def test_calc_mrc_if_empty(hydrocalc, tmp_path, qtbot, mocker):
+    """
+    Test that the tool to calculate the MRC is working as expected.
+
+    Regression test for gwhat/issues#415
+    """
+    mrc_tool = hydrocalc.tools['mrc']
+    assert len(mrc_tool._mrc_period_xdata) == 0
+
+    qtbot.mouseClick(mrc_tool.btn_calc_mrc, Qt.LeftButton)
+
+    
 def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
     """
     Test that the tool to calculate the MRC is working as expected.
