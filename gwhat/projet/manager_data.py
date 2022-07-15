@@ -756,7 +756,9 @@ class NewDatasetDialog(QDialog):
                 self._alt.setValue(self._dataset['Elevation'])
                 self._stn_name.setText(self._dataset['Well'])
                 self._sid.setText(self._dataset['Well ID'])
-                dsetname = self._dataset['Well']
+                dsetname = '{} ({})'.format(
+                    self._dataset['Well'],
+                    self._dataset['Well ID'])
             elif self._datatype == 'daily weather':
                 self._prov.setText(self._dataset.metadata['Location'])
                 self._lat.setValue(self._dataset.metadata['Latitude'])
