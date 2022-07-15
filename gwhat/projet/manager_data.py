@@ -769,7 +769,7 @@ class NewDatasetDialog(QDialog):
                 dsetname = self._dataset.metadata['Station Name']
                 dsetname = '{} ({})'.format(
                     self._dataset.metadata['Station Name'],
-                    self._dataset.metadata['Station ID'])                
+                    self._dataset.metadata['Station ID'])
             # We replace the invalid characters to avoid problems when
             # saving the dataset to the hdf5 format.
             for char in INVALID_CHARS:
