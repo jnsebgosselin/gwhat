@@ -221,8 +221,10 @@ def test_import_multiple_waterlevel_data(datamanager, mocker, qtbot):
         qtbot.mouseClick(new_waterlvl_dialog.btn_ok, Qt.LeftButton)
 
     assert datamanager.wldataset_count() == 1
-    assert datamanager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée (3040002)"
-    assert datamanager.get_current_wldset().name == "PO01 - Calixa-Lavallée (3040002)"
+    assert (datamanager.wldsets_cbox.currentText() ==
+            "PO01 - Calixa-Lavallée (3040002)")
+    assert (datamanager.get_current_wldset().name ==
+            "PO01 - Calixa-Lavallée (3040002)")
 
     # Assert that the dataset from the second input data file was loaded
     # as expected.
@@ -245,8 +247,10 @@ def test_import_multiple_waterlevel_data(datamanager, mocker, qtbot):
         qtbot.mouseClick(new_waterlvl_dialog.btn_skip, Qt.LeftButton)
 
     assert datamanager.wldataset_count() == 1
-    assert datamanager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée (3040002)"
-    assert datamanager.get_current_wldset().name == "PO01 - Calixa-Lavallée (3040002)"
+    assert (datamanager.wldsets_cbox.currentText() ==
+            "PO01 - Calixa-Lavallée (3040002)")
+    assert (datamanager.get_current_wldset().name ==
+            "PO01 - Calixa-Lavallée (3040002)")
 
     # Assert that the dataset from the second input data file was loaded
     # as expected.
