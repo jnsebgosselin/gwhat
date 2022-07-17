@@ -72,7 +72,7 @@ def test_import_weather_data(datamanager, mocker, qtbot):
     with qtbot.waitSignal(new_weather_dialog.sig_new_dataset_loaded):
         qtbot.mouseClick(datamanager.btn_load_meteo, Qt.LeftButton)
 
-    assert new_weather_dialog.name == "IBERVILLE"
+    assert new_weather_dialog.name == "IBERVILLE (7023270)"
     assert new_weather_dialog.station_name == "IBERVILLE"
     assert new_weather_dialog.station_id == "7023270"
     assert new_weather_dialog.province == "QUEBEC"
@@ -84,8 +84,8 @@ def test_import_weather_data(datamanager, mocker, qtbot):
     with qtbot.waitSignal(new_weather_dialog.sig_new_dataset_imported):
         qtbot.mouseClick(new_weather_dialog.btn_ok, Qt.LeftButton)
     assert datamanager.wxdataset_count() == 1
-    assert datamanager.wxdsets_cbox.currentText() == "IBERVILLE"
-    assert datamanager.get_current_wxdset().name == "IBERVILLE"
+    assert datamanager.wxdsets_cbox.currentText() == "IBERVILLE (7023270)"
+    assert datamanager.get_current_wxdset().name == "IBERVILLE (7023270)"
 
 
 def test_delete_weather_data(datamanager, mocker, qtbot):
@@ -144,7 +144,7 @@ def test_import_waterlevel_data(datamanager, mocker, qtbot):
         qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
 
     assert new_waterlvl_dialog.directory.text() == WLFILENAME
-    assert new_waterlvl_dialog.name == "PO01 - Calixa-Lavallée"
+    assert new_waterlvl_dialog.name == "PO01 - Calixa-Lavallée (3040002)"
     assert new_waterlvl_dialog.station_name == "PO01 - Calixa-Lavallée"
     assert new_waterlvl_dialog.station_id == "3040002"
     assert new_waterlvl_dialog.province == "QC"
@@ -202,7 +202,7 @@ def test_import_multiple_waterlevel_data(datamanager, mocker, qtbot):
         qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
 
     assert new_waterlvl_dialog.directory.text() == WLFILENAME
-    assert new_waterlvl_dialog.name == "PO01 - Calixa-Lavallée"
+    assert new_waterlvl_dialog.name == "PO01 - Calixa-Lavallée (3040002)"
     assert new_waterlvl_dialog.station_name == "PO01 - Calixa-Lavallée"
     assert new_waterlvl_dialog.station_id == "3040002"
     assert new_waterlvl_dialog.province == "QC"
@@ -221,13 +221,15 @@ def test_import_multiple_waterlevel_data(datamanager, mocker, qtbot):
         qtbot.mouseClick(new_waterlvl_dialog.btn_ok, Qt.LeftButton)
 
     assert datamanager.wldataset_count() == 1
-    assert datamanager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
-    assert datamanager.get_current_wldset().name == "PO01 - Calixa-Lavallée"
+    assert (datamanager.wldsets_cbox.currentText() ==
+            "PO01 - Calixa-Lavallée (3040002)")
+    assert (datamanager.get_current_wldset().name ==
+            "PO01 - Calixa-Lavallée (3040002)")
 
     # Assert that the dataset from the second input data file was loaded
     # as expected.
     assert new_waterlvl_dialog.directory.text() == WLFILENAME2
-    assert new_waterlvl_dialog.name == "test_well_02"
+    assert new_waterlvl_dialog.name == "test_well_02 (3040002)"
     assert new_waterlvl_dialog.station_name == "test_well_02"
     assert new_waterlvl_dialog.station_id == "3040002"
     assert new_waterlvl_dialog.province == "QC"
@@ -245,13 +247,15 @@ def test_import_multiple_waterlevel_data(datamanager, mocker, qtbot):
         qtbot.mouseClick(new_waterlvl_dialog.btn_skip, Qt.LeftButton)
 
     assert datamanager.wldataset_count() == 1
-    assert datamanager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
-    assert datamanager.get_current_wldset().name == "PO01 - Calixa-Lavallée"
+    assert (datamanager.wldsets_cbox.currentText() ==
+            "PO01 - Calixa-Lavallée (3040002)")
+    assert (datamanager.get_current_wldset().name ==
+            "PO01 - Calixa-Lavallée (3040002)")
 
     # Assert that the dataset from the second input data file was loaded
     # as expected.
     assert new_waterlvl_dialog.directory.text() == WLFILENAME3
-    assert new_waterlvl_dialog.name == "test_well_03"
+    assert new_waterlvl_dialog.name == "test_well_03 (3040003)"
     assert new_waterlvl_dialog.station_name == "test_well_03"
     assert new_waterlvl_dialog.station_id == "3040003"
     assert new_waterlvl_dialog.province == "QC"
@@ -269,8 +273,8 @@ def test_import_multiple_waterlevel_data(datamanager, mocker, qtbot):
         qtbot.mouseClick(new_waterlvl_dialog.btn_ok, Qt.LeftButton)
 
     assert datamanager.wldataset_count() == 2
-    assert datamanager.wldsets_cbox.currentText() == "test_well_03"
-    assert datamanager.get_current_wldset().name == "test_well_03"
+    assert datamanager.wldsets_cbox.currentText() == "test_well_03 (3040003)"
+    assert datamanager.get_current_wldset().name == "test_well_03 (3040003)"
 
     assert not new_waterlvl_dialog.isVisible()
 
