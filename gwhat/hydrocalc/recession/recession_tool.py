@@ -289,6 +289,12 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     def calculate_mrc(self):
         if self.wldset is None:
             return
+        if len(self._mrc_period_xdata) == 0:
+            message = (
+                "The MRC cannot be assessed because no recession period has "
+                "been selected on the hydrograph.")
+            QMessageBox.warning(self, 'Warning', message, QMessageBox.Ok)
+            return
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
