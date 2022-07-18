@@ -14,7 +14,7 @@ import os.path as osp
 import numpy as np
 import pytest
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QApplication, QFileDialog
+from qtpy.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 
 # ---- Local Libraries Imports
@@ -82,6 +82,37 @@ def test_copy_to_clipboard(hydrocalc, qtbot):
 
     qtbot.mouseClick(hydrocalc.btn_copy_to_clipboard, Qt.LeftButton)
     assert not QApplication.clipboard().image().isNull()
+
+
+def test_calc_mrc_if_empty(hydrocalc, tmp_path, qtbot, mocker):
+    """
+    Test that the tool to calculate the MRC is working as expected when
+    no recession period is selected.
+
+    Regression test for gwhat/issues#415
+    """
+    mrc_tool = hydrocalc.tools['mrc']
+    assert len(mrc_tool._mrc_period_xdata) == 0
+
+    qmsgbox_patcher = mocker.patch.object(
+        QMessageBox, 'warning', return_value=QMessageBox.Ok)
+
+    # Try to compute the MRC when no recession period is selected.
+    qtbot.mouseClick(mrc_tool.btn_calc_mrc, Qt.LeftButton)
+    assert qmsgbox_patcher.call_count == 1
+
+    # Select one recession period on the hydrograph and compute the MRC.
+    hydrocalc.tools['mrc'].add_mrcperiod(
+        (41384.260416666664, 41414.114583333336))
+
+    qtbot.mouseClick(mrc_tool.btn_calc_mrc, Qt.LeftButton)
+    assert qmsgbox_patcher.call_count == 1
+
+    # Clear all recession period and try computing the MRC again.
+    qtbot.mouseClick(mrc_tool.btn_clear_periods, Qt.LeftButton)
+
+    qtbot.mouseClick(mrc_tool.btn_calc_mrc, Qt.LeftButton)
+    assert qmsgbox_patcher.call_count == 2
 
 
 def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):

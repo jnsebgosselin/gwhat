@@ -14,11 +14,10 @@ import os.path as osp
 
 # ---- Third party imports
 import pandas as pd
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtWidgets import (
     QWidget, QComboBox, QTextEdit, QSizePolicy, QPushButton, QGridLayout,
-    QLabel, QApplication, QFileDialog)
+    QLabel, QApplication, QFileDialog, QMessageBox)
 
 # ---- Local imports
 from gwhat.hydrocalc.recession.recession_calc import calculate_mrc
@@ -37,7 +36,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     __tooltip__ = ("A tool to evaluate the master recession curve "
                    "of the hydrograph.")
 
-    sig_new_mrc = QSignal()
+    sig_new_mrc = Signal()
 
     def __init__(self, parent=None):
         WLCalcTool.__init__(self, parent)
@@ -289,6 +288,12 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     # ---- MRC Tool Public Interface
     def calculate_mrc(self):
         if self.wldset is None:
+            return
+        if len(self._mrc_period_xdata) == 0:
+            message = (
+                "The MRC cannot be assessed because no recession period "
+                "is currently selected on the hydrograph.")
+            QMessageBox.warning(self, 'Warning', message, QMessageBox.Ok)
             return
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
