@@ -291,8 +291,8 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
             return
         if len(self._mrc_period_xdata) == 0:
             message = (
-                "The MRC cannot be assessed because no recession period has "
-                "been selected on the hydrograph.")
+                "The MRC cannot be assessed because no recession period "
+                "is currently selected on the hydrograph.")
             QMessageBox.warning(self, 'Warning', message, QMessageBox.Ok)
             return
 
