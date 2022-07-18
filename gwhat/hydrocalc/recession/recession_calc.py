@@ -132,7 +132,7 @@ def calculate_mrc(t, h, periods: list(tuple), mrctype: int = 1):
 
         # In order to return a consistent signature regardless of the type
         # of the MRC equation, we return a value of 0 for the coefficient A.
-        coeffs = namedtuple('Coeffs', ['B', 'A'])('B', 'A')(coeffs[0], 0)
+        coeffs = namedtuple('Coeffs', ['B', 'A'])(coeffs[0], 0)
 
     hp = np.zeros(len(t)) * np.nan
     hp[index_seg] = predict_recession(
