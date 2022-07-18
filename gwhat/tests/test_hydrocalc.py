@@ -119,6 +119,8 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
     """
     Test that the tool to calculate the MRC is working as expected.
     """
+    mrc_tool = hydrocalc.tools['mrc']
+
     assert hydrocalc.dformat == 1  # Matplotlib date format
     hydrocalc.switch_date_format()
     assert hydrocalc.dformat == 0  # Excel date format
@@ -133,20 +135,34 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
         (41440.604166666664, 41447.697916666664),
         (41543.958333333336, 41552.541666666664)]
     for coord in coordinates:
-        hydrocalc.tools['mrc'].add_mrcperiod(coord)
+        mrc_tool.add_mrcperiod(coord)
 
-    # Calcul the MRC.
     mrc_data = hydrocalc.wldset.get_mrc()
     assert np.isnan(mrc_data['params']).all()
     assert len(mrc_data['peak_indx']) == 0
     assert len(mrc_data['recess']) == 0
     assert len(mrc_data['time']) == 0
 
-    hydrocalc.tools['mrc'].calculate_mrc()
+    # Compute the MRC using the Exponential type.
+    assert mrc_tool.cbox_mrc_type.currentText() == 'Exponential'
+    qtbot.mouseClick(mrc_tool.btn_calc_mrc, Qt.LeftButton)
 
     mrc_data = hydrocalc.wldset.get_mrc()
-    assert abs(mrc_data['params'][0] - 0.07004324034418882) < 10**-5
-    assert abs(mrc_data['params'][1] - 0.25679183844863535) < 10**-5
+    assert abs(mrc_data['params'][0] == 0.07004324034418882) < 10**-5
+    assert abs(mrc_data['params'][1] == 0.25679183844863535) < 10**-5
+    assert len(mrc_data['peak_indx']) == 7
+    assert len(mrc_data['recess']) == 343
+    assert len(mrc_data['time']) == 343
+    assert np.sum(~np.isnan(mrc_data['recess'])) == 123
+
+    # Compute the MRC using the Linear type.
+    mrc_tool.cbox_mrc_type.setCurrentIndex(0)
+    assert mrc_tool.cbox_mrc_type.currentText() == 'Linear'
+    qtbot.mouseClick(mrc_tool.btn_calc_mrc, Qt.LeftButton)
+
+    mrc_data = hydrocalc.wldset.get_mrc()
+    assert mrc_data['params'][0] == 0
+    assert abs(mrc_data['params'][1] - 0.019866789904866653) < 10**-5
     assert len(mrc_data['peak_indx']) == 7
     assert len(mrc_data['recess']) == 343
     assert len(mrc_data['time']) == 343
