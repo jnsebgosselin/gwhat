@@ -18,7 +18,7 @@ from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtCore import pyqtSlot as QSlot
 from qtpy.QtWidgets import (
     QDialog, QTextBrowser, QPushButton, QGridLayout, QWidget, QApplication,
-    QDesktopWidget, QLabel, QVBoxLayout, QFrame)
+    QDesktopWidget, QLabel, QVBoxLayout, QFrame, QTabWidget)
 
 # ---- Local imports
 from gwhat import (__version__, __appname__, __date__, __project_url__,
@@ -62,14 +62,27 @@ class AboutWhat(QDialog):
             font_family = "Ubuntu"
         font_size = 11
 
-        self.label_text = QLabel(
+        # Setup the toolbar.
+        self.ok_btn = QPushButton('OK')
+        self.ok_btn.clicked.connect(self.close)
+
+        self.btn_check_updates = QPushButton(' Check for Updates ')
+        self.btn_check_updates.clicked.connect(
+            self._btn_check_updates_isclicked)
+
+        toolbar = QGridLayout()
+        toolbar.addWidget(self.btn_check_updates, 0, 1)
+        toolbar.addWidget(self.ok_btn, 0, 2)
+        toolbar.setContentsMargins(0, 0, 0, 0)
+        toolbar.setColumnStretch(0, 100)
+
+        label_general = QLabel(
             """
             <div style='font-family: "{font_family}";
                         font-size: {font_size}pt;
                         font-weight: normal;
                         '>
             <p>
-            <br>
             GWHAT version {gwhat_version}, released on {release_date}
             <br>
             Copyright &copy; 2014-2022
@@ -90,7 +103,28 @@ class AboutWhat(QDialog):
               https://www.geostack.ca
             </a>
             </p>
-            <hr>
+            </div>
+            """.format(
+                gwhat_url=__project_url__,
+                gwhat_namever=__namever__,
+                gwhat_version=__version__,
+                release_date=__date__,
+                font_family=font_family,
+                font_size=font_size,
+            )
+        )
+        label_general.setWordWrap(True)
+        label_general.setAlignment(Qt.AlignTop)
+        label_general.setOpenExternalLinks(True)
+        label_general.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label_general.setMargin(10)
+
+        label_license = QLabel(
+            """
+            <div style='font-family: "{font_family}";
+                        font-size: {font_size}pt;
+                        font-weight: normal;
+                        '>
             <p>
             {gwhat_namever} is free software: you can redistribute it and/or
             modify it under the terms
@@ -117,32 +151,21 @@ class AboutWhat(QDialog):
 
             </div>
             """.format(
-                gwhat_url=__project_url__,
                 gwhat_namever=__namever__,
-                gwhat_version=__version__,
-                release_date=__date__,
                 font_family=font_family,
                 font_size=font_size,
             )
         )
-        self.label_text.setWordWrap(True)
-        self.label_text.setAlignment(Qt.AlignTop)
-        self.label_text.setOpenExternalLinks(True)
-        self.label_text.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label_license.setWordWrap(True)
+        label_license.setAlignment(Qt.AlignTop)
+        label_license.setOpenExternalLinks(True)
+        label_license.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label_license.setMargin(10)
 
-        # ---- toolbar
-        self.ok_btn = QPushButton('OK')
-        self.ok_btn.clicked.connect(self.close)
-
-        self.btn_check_updates = QPushButton(' Check for Updates ')
-        self.btn_check_updates.clicked.connect(
-            self._btn_check_updates_isclicked)
-
-        toolbar = QGridLayout()
-        toolbar.addWidget(self.btn_check_updates, 0, 1)
-        toolbar.addWidget(self.ok_btn, 0, 2)
-        toolbar.setContentsMargins(0, 0, 0, 0)
-        toolbar.setColumnStretch(0, 100)
+        # Setup the tabbar widget.
+        tab_widget = QTabWidget()
+        tab_widget.addTab(label_general, 'Overview')
+        tab_widget.addTab(label_license, 'License')
 
         # Setup the content layout.
         content_frame = QFrame(self)
@@ -150,13 +173,11 @@ class AboutWhat(QDialog):
             "QFrame {background-color: white}")
         content_layout = QVBoxLayout(content_frame)
         content_layout.addWidget(label_banner)
-        content_layout.addWidget(self.label_text)
+        content_layout.addWidget(tab_widget)
         content_layout.setContentsMargins(15, 15, 15, 15)
 
         # Setup the main layout.
         layout = QVBoxLayout(self)
-        layout.setSpacing(10)
-
         layout.addWidget(content_frame)
         layout.addLayout(toolbar)
 
