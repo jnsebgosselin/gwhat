@@ -78,8 +78,9 @@ class AboutWhat(QDialog):
             </a>
             <br>
             Licensed under the terms of the GNU General Public License Version 3
+            <br>
+            <a href="{gwhat_url}">{gwhat_url}</a>
             </p>
-
             <p>
             Created and maintained by Jean-S&eacute;bastien Gosselin
             <br>
@@ -89,7 +90,7 @@ class AboutWhat(QDialog):
               https://www.geostack.ca
             </a>
             </p>
-            <br>
+            <hr>
             <p>
             {gwhat_namever} is free software: you can redistribute it and/or
             modify it under the terms
@@ -116,6 +117,7 @@ class AboutWhat(QDialog):
 
             </div>
             """.format(
+                gwhat_url=__project_url__,
                 gwhat_namever=__namever__,
                 gwhat_version=__version__,
                 release_date=__date__,
