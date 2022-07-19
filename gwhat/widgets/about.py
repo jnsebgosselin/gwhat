@@ -137,7 +137,7 @@ class AboutWhat(QDialog):
                 <br>
                 <p1 align="right">
                   GWHAT version %s released on %s<br>
-                  Copyright 2014-2018
+                  Copyright 2014-2022
                   <a href="https://github.com/jnsebgosselin/gwhat/graphs/contributors">
                     GWHAT Project Contributors
                   </a>
