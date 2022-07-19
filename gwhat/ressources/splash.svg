@@ -2,24 +2,24 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg3336"
    style="enable-background:new"
    height="806.96411"
    width="1958.3138"
    version="1.1"
-   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
    sodipodi:docname="splash.svg"
-   inkscape:export-filename="C:\Users\User\gwhat\gwhat\ressources\splash.png"
+   inkscape:export-filename="C:\Users\jean-\Documents\Projets\gwhat\gwhat\ressources\splash.png"
    inkscape:export-xdpi="31.663383"
-   inkscape:export-ydpi="31.663383">
+   inkscape:export-ydpi="31.663383"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -30,13 +30,13 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1920"
-     inkscape:window-height="1017"
+     inkscape:window-height="1009"
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:zoom="0.37348482"
-     inkscape:cx="472.08514"
-     inkscape:cy="-87.058398"
+     inkscape:cx="472.5761"
+     inkscape:cy="-85.67952"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -48,7 +48,8 @@
      showguides="true"
      inkscape:guide-bbox="true"
      units="px"
-     inkscape:snap-global="true">
+     inkscape:snap-global="true"
+     inkscape:pagecheckerboard="0">
     <sodipodi:guide
        position="-455.57492,526.79609"
        orientation="1,0"
@@ -181,7 +182,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -243,7 +244,7 @@
   </g>
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.01319695px;line-height:150;font-family:'liberation sans';-inkscape-font-specification:'liberation sans Bold';letter-spacing:25px;word-spacing:0px;fill:#2a2a2a;fill-opacity:1;stroke:none;stroke-width:1.0666666;enable-background:new"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.0132px;line-height:150;font-family:'liberation sans';-inkscape-font-specification:'liberation sans Bold';letter-spacing:25px;word-spacing:0px;fill:#2a2a2a;fill-opacity:1;stroke:none;stroke-width:1.06667;enable-background:new"
      x="28.639874"
      y="442.07666"
      id="text3084-4-2"
@@ -252,10 +253,10 @@
        x="28.639874"
        y="442.07666"
        id="tspan3086-5-7"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:394.62020874px;line-height:150;font-family:'liberation sans';-inkscape-font-specification:'liberation sans Bold';letter-spacing:25px;word-spacing:0px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.0666666"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:394.62px;line-height:150;font-family:'liberation sans';-inkscape-font-specification:'liberation sans Bold';letter-spacing:25px;word-spacing:0px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.06667"><tspan
          x="28.639874"
          y="442.07666"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:150;font-family:'liberation sans';-inkscape-font-specification:'liberation sans Bold';letter-spacing:25px;word-spacing:0px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.0666666"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:150;font-family:'liberation sans';-inkscape-font-specification:'liberation sans Bold';letter-spacing:25px;word-spacing:0px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.06667"
          id="tspan3088-9-3">GWHA</tspan></tspan></text>
   <rect
      x="-36.317749"
@@ -333,7 +334,7 @@
      ry="265.82245" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:89.34528351px;line-height:0%;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:8.19424248px;fill:#2a2a2a;fill-opacity:1;stroke:none;stroke-width:1.97762287"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:89.3453px;line-height:0%;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:8.19424px;fill:#2a2a2a;fill-opacity:1;stroke:none;stroke-width:1.97762"
      x="43.000397"
      y="673.73761"
      id="text3090"
@@ -342,10 +343,10 @@
        x="43.000397"
        y="673.73761"
        id="tspan3092"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.04190826px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:3.00000001px;word-spacing:12.00000003px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762287"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.0419px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:3px;word-spacing:12px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762"><tspan
          x="43.000397"
          y="673.73761"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.04190826px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:3.00000001px;word-spacing:12.00000003px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762287"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.0419px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:3px;word-spacing:12px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762"
          id="tspan3094">Ground-Water Hydrograph Analysis Toolbox</tspan></tspan></text>
   <g
      style="enable-background:new"
@@ -356,12 +357,12 @@
        id="text3090-4"
        y="-404.06998"
        x="-110.26708"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:58.63801575px;line-height:0%;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:5.3779459px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.29792953;enable-background:new"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:58.638px;line-height:0%;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:5.37795px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.29793;enable-background:new"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:55.15736771px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:6.28264475px;fill:#ffffff;fill-opacity:1;stroke-width:1.29792953"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:55.1574px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:6.28264px;fill:#ffffff;fill-opacity:1;stroke-width:1.29793"
          id="tspan3092-0"
          y="-404.06998"
          x="-110.26708"
-         sodipodi:role="line">Version 0.5.0</tspan></text>
+         sodipodi:role="line">Version 0.5.1</tspan></text>
   </g>
 </svg>
