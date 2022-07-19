@@ -53,11 +53,11 @@ import os
 import sys
 
 
-version_info = (0, 5, 0)
+version_info = (0, 5, 1)
 __version__ = '.'.join(map(str, version_info))
 __appname__ = 'GWHAT'
 __namever__ = __appname__ + " " + __version__
-__date__ = '07/10/2020'
+__date__ = '18/07/2022'
 __project_url__ = "https://github.com/jnsebgosselin/gwhat"
 __issues_url__ = __project_url__ + "/issues"
 __releases_url__ = __project_url__ + "/releases"
