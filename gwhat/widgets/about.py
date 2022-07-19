@@ -10,12 +10,15 @@
 # ---- Standard library imports
 import platform
 import os
+import os.path as osp
 
 # ---- Third party imports
+from qtpy.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtCore import pyqtSlot as QSlot
-from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
-                             QWidget, QApplication, QDesktopWidget)
+from qtpy.QtWidgets import (
+    QDialog, QTextBrowser, QPushButton, QGridLayout, QWidget, QApplication,
+    QDesktopWidget, QLabel, QVBoxLayout, QFrame)
 
 # ---- Local imports
 from gwhat import (__version__, __appname__, __date__, __project_url__,
@@ -32,6 +35,7 @@ class AboutWhat(QDialog):
         self.setWindowTitle('About %s' % __appname__)
         self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumSize(800, 700)
+        self.setFixedWidth(850)
         self.setWindowFlags(Qt.Window |
                             Qt.CustomizeWindowHint |
                             Qt.WindowCloseButtonHint)
@@ -42,19 +46,86 @@ class AboutWhat(QDialog):
 
     def __initUI__(self):
         """Initialize the GUI."""
+        pixmap = QPixmap(osp.join(
+            __rootdir__, 'ressources', 'WHAT_banner_750px.png'))
+        label_banner = QLabel(self)
+        label_banner.setPixmap(pixmap)
+        label_banner.setPixmap(
+            pixmap.scaledToWidth(600, Qt.SmoothTransformation))
+        label_banner.setAlignment(Qt.AlignTop)
+
         # ---- AboutTextBox
+        if platform.system() == 'Windows':
+            font_family = "Segoe UI"  # "Cambria" #"Calibri" #"Segoe UI""
+        elif platform.system() == 'Linux':
+            font_family = "Ubuntu"
+        font_size = 11
 
-        self.AboutTextBox = QTextBrowser()
-        self.AboutTextBox.installEventFilter(self)
-        self.AboutTextBox.setReadOnly(True)
-        self.AboutTextBox.setFixedWidth(850)
-        self.AboutTextBox.setFrameStyle(0)
-        self.AboutTextBox.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.AboutTextBox.setOpenExternalLinks(True)
+        self.label_text = QLabel(
+            """
+            <div style='font-family: "{font_family}";
+                        font-size: {font_size}pt;
+                        font-weight: normal;
+                        '>
+            <p>
+            <br>
+            GWHAT version {gwhat_version}, released on {release_date}
+            <br>
+            Copyright &copy; 2014-2022
+            <a href="https://github.com/jnsebgosselin/gwhat/graphs/contributors">
+              GWHAT Project Contributors
+            </a>
+            <br>
+            Licensed under the terms of the GNU General Public License Version 3
+            </p>
 
-        self.AboutTextBox.setStyleSheet('QTextEdit {background-color:"white"}')
-        self.AboutTextBox.document().setDocumentMargin(0)
-        self.set_html_in_AboutTextBox()
+            <p>
+            Created and maintained by Jean-S&eacute;bastien Gosselin
+            <br>
+            Geoscientific Developer at Géostack
+            <br>
+            <a href="https://www.geostack.ca/">
+              https://www.geostack.ca
+            </a>
+            </p>
+            <br>
+            <p>
+            {gwhat_namever} is free software: you can redistribute it and/or
+            modify it under the terms
+            of the GNU General Public License as published by the
+            Free Software Foundation, either version 3 of the
+            License, or (at your option) any later version.
+            </p>
+            <p>
+            This program is distributed in the hope that it will be
+            useful, but WITHOUT ANY WARRANTY; without even the
+            implied warranty of MERCHANTABILITY or FITNESS FOR A
+            PARTICULAR PURPOSE. See the GNU General Public
+            License for more details.
+            </p>
+            <p>
+            You should have received a copy of the GNU General
+            Public License along with this program.  If not, see
+            <a href="http://www.gnu.org/licenses">
+              http://www.gnu.org/licenses
+            </a>.
+            </p>
+
+
+
+            </div>
+            """.format(
+                gwhat_namever=__namever__,
+                gwhat_version=__version__,
+                release_date=__date__,
+                font_family=font_family,
+                font_size=font_size,
+            )
+        )
+        self.label_text.setWordWrap(True)
+        self.label_text.setAlignment(Qt.AlignTop)
+        self.label_text.setOpenExternalLinks(True)
+        self.label_text.setTextInteractionFlags(Qt.TextBrowserInteraction)
 
         # ---- toolbar
         self.ok_btn = QPushButton('OK')
@@ -70,123 +141,31 @@ class AboutWhat(QDialog):
         toolbar.setContentsMargins(0, 0, 0, 0)
         toolbar.setColumnStretch(0, 100)
 
-        # ---- Main Grid
-        grid = QGridLayout()
-        grid.setSpacing(10)
+        # Setup the content layout.
+        content_frame = QFrame(self)
+        content_frame.setStyleSheet(
+            "QFrame {background-color: white}")
+        content_layout = QVBoxLayout(content_frame)
+        content_layout.addWidget(label_banner)
+        content_layout.addWidget(self.label_text)
+        content_layout.setContentsMargins(15, 15, 15, 15)
 
-        grid.addWidget(self.AboutTextBox, 0, 1)
-        grid.addLayout(toolbar, 1, 1)
+        # Setup the main layout.
+        layout = QVBoxLayout(self)
+        layout.setSpacing(10)
 
-        grid.setColumnStretch(1, 500)
-        grid.setContentsMargins(10, 10, 10, 10)
+        layout.addWidget(content_frame)
+        layout.addLayout(toolbar)
 
-        self.setLayout(grid)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSizeConstraint(layout.SetFixedSize)
+
         self.ok_btn.setFocus()
 
     @QSlot()
     def _btn_check_updates_isclicked(self):
         """Handles when the button to check for updates is clicked."""
         self.manager_updates.start_updates_check()
-
-    def set_html_in_AboutTextBox(self):
-        """Set the text in the About GWHAT text browser widget."""
-
-        # ---- Header logo
-
-        width = 750
-        filename = os.path.join(
-            __rootdir__, 'ressources', 'WHAT_banner_750px.png')
-
-        # http://doc.qt.io/qt-4.8/richtext-html-subset.html
-
-        if platform.system() == 'Windows':
-            fontfamily = "Segoe UI"  # "Cambria" #"Calibri" #"Segoe UI""
-        elif platform.system() == 'Linux':
-            fontfamily = "Ubuntu"
-
-        html = """
-               <html>
-               <head>
-               <style>
-               p {font-size: 16px;
-                  font-family: "%s";
-                  margin-right:50px;
-                  margin-left:50px;
-                  }
-               p1 {font-size: 16px;
-                   font-family: "%s";
-                   margin-right:50px;
-                   margin-left:50px;
-                   }
-               </style>
-               </head>
-               <body>
-               """ % (fontfamily, fontfamily)
-
-        # ---- Banner
-
-        html += """
-                <p align="left">
-                  <br><img src="file:///%s" width="%d"><br>
-                </p>
-                """ % (filename, width)
-
-        # ---- Copyrights
-
-        html += """
-                <br>
-                <p1 align="right">
-                  GWHAT version %s released on %s<br>
-                  Copyright 2014-2022
-                  <a href="https://github.com/jnsebgosselin/gwhat/graphs/contributors">
-                    GWHAT Project Contributors
-                  </a>
-                  <br>
-                  Licensed under the terms of the GNU General Public License Version 3
-                  <br>
-                  <a href="%s">%s</a>
-                  <br>
-                  <br>
-                  Created and maintained by Jean-S&eacute;bastien Gosselin
-                  <br>
-                  Geoscientific Developer at Géostack
-                  <br>
-                  <a href="https://www.geostack.ca/">
-                    https://www.geostack.ca
-                  </a>
-                  <br>
-                </p1>
-                """ % (__version__, __date__,
-                       __project_url__, __project_url__)
-
-        # ---- License
-
-        html += """
-                <p align="justify">
-                  %s is free software: you can redistribute it and/or
-                  modify it under the terms
-                  of the GNU General Public License as published by the
-                  Free Software Foundation, either version 3 of the
-                  License, or (at your option) any later version.
-                </p>
-                <p align="justify">
-                  This program is distributed in the hope that it will be
-                  useful, but WITHOUT ANY WARRANTY; without even the
-                  implied warranty of MERCHANTABILITY or FITNESS FOR A
-                  PARTICULAR PURPOSE. See the GNU General Public
-                  License for more details.
-                </p>
-                <p align="justify">
-                  You should have received a copy of the GNU General
-                  Public License along with this program.  If not, see
-                  <a href="http://www.gnu.org/licenses">
-                    http://www.gnu.org/licenses
-                  </a>.
-                </p>
-                </body>
-                """ % __namever__
-
-        self.AboutTextBox.setHtml(html)
 
     def eventFilter(self, obj, event):
         # http://stackoverflow.com/questions/13788452/
@@ -200,12 +179,8 @@ class AboutWhat(QDialog):
         else:
             return QWidget.eventFilter(self, obj, event)
 
-    def show(self):
-        super(AboutWhat, self).show()
-        self.setFixedSize(self.size())
 
-
-if __name__ == '__main__':                                   # pragma: no cover
+if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
