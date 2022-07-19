@@ -80,6 +80,7 @@ class AboutWhat(QDialog):
             <div style='font-family: "{font_family}";
                         font-size: {font_size}pt;
                         font-weight: normal;
+                        line-height:1.1;
                         '>
             <p>
             GWHAT version {gwhat_version}, released on {release_date}
