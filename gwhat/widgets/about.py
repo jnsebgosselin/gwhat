@@ -146,15 +146,13 @@ class AboutWhat(QDialog):
                   <br>
                   <a href="%s">%s</a>
                   <br>
+                  <br>
                   Created and maintained by Jean-S&eacute;bastien Gosselin
                   <br>
-                  Geoscientific Developer at
-                  <a href="https://www.geostack.ca/">
-                    Géostack
-                  </a><br>
+                  Geoscientific Developer at Géostack
                   <br>
-                  <a href="mailto:jsgosselin@geostack.ca">
-                    jsgosselin@geostack.ca
+                  <a href="https://www.geostack.ca/">
+                    https://www.geostack.ca
                   </a>
                   <br>
                 </p1>
