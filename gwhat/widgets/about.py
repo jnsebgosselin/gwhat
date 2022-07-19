@@ -146,21 +146,15 @@ class AboutWhat(QDialog):
                   <br>
                   <a href="%s">%s</a>
                   <br>
+                  Created and maintained by Jean-S&eacute;bastien Gosselin
                   <br>
-                  Created by Jean-S&eacute;bastien Gosselin
+                  Geoscientific Developer at
+                  <a href="https://www.geostack.ca/">
+                    Géostack
+                  </a><br>
                   <br>
-                  <a href="mailto:jean-sebastien.gosselin@ete.inrs.ca">
-                    jean-sebastien.gosselin@ete.inrs.ca
-                  </a>
-                  <br>
-                  <br>
-                  Developped and maintained by Jean-S&eacute;bastien Gosselin
-                  <br>
-                  Institut National de la Recherche Scientifique<br>
-                  Research Center Eau-Terre-Environnement, Quebec City,
-                  QC, Canada<br>
-                  <a href="http://www.ete.inrs.ca/">
-                    http://www.ete.inrs.ca
+                  <a href="mailto:jsgosselin@geostack.ca">
+                    jsgosselin@geostack.ca
                   </a>
                   <br>
                 </p1>
@@ -195,8 +189,6 @@ class AboutWhat(QDialog):
                 """ % __namever__
 
         self.AboutTextBox.setHtml(html)
-
-    # =========================================================================
 
     def eventFilter(self, obj, event):
         # http://stackoverflow.com/questions/13788452/
