@@ -127,6 +127,9 @@ FA_ICONS = {
     'info': [
         ('mdi.information-outline',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'information': [
+        ('mdi.information-variant',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'language': [
         ('mdi.web',),
         {'color': COLOR, 'scale_factor': 1.3}],
