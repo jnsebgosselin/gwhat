@@ -106,7 +106,6 @@ class AboutWhat(QDialog):
             </div>
             """.format(
                 gwhat_url=__project_url__,
-                gwhat_namever=__namever__,
                 gwhat_version=__version__,
                 release_date=__date__,
                 font_family=font_family,
