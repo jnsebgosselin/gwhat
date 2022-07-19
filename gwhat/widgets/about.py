@@ -33,7 +33,8 @@ class AboutWhat(QDialog):
         super(AboutWhat, self).__init__(parent)
         self._pytesting = pytesting
         self.setWindowTitle('About %s' % __appname__)
-        self.setWindowIcon(icons.get_icon('master'))
+        self.setWindowIcon(icons.get_icon('information'))
+
         self.setMinimumSize(800, 700)
         self.setFixedWidth(850)
         self.setWindowFlags(Qt.Window |
