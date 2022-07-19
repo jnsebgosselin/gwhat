@@ -9,7 +9,6 @@
 
 # ---- Standard library imports
 import platform
-import os
 import os.path as osp
 
 # ---- Third party imports
@@ -17,7 +16,7 @@ from qtpy.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtCore import pyqtSlot as QSlot
 from qtpy.QtWidgets import (
-    QDialog, QTextBrowser, QPushButton, QGridLayout, QWidget, QApplication,
+    QDialog, QPushButton, QGridLayout, QWidget, QApplication,
     QDesktopWidget, QLabel, QVBoxLayout, QFrame, QTabWidget)
 
 # ---- Local imports
