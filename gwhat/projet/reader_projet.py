@@ -407,9 +407,22 @@ class WLDatasetHDF5(WLDatasetBase):
         self.dset = hdf5group
         self._undo_stack = []
 
-        columns = []
-        data = []
-        for colname in ['Time', 'WL', 'BP', 'ET']:
+        # Make older datasets compatible with newer format.
+        if isinstance(self.dset['Time'][0], (int, float)):
+            # Time needs to be converted from Excel numeric dates
+            # to ISO date strings (see PR #276).
+            print('Saving time as ISO date strings instead of Excel dates...',
+                  end=' ')
+            strtimes = xldates_to_strftimes(self.dset['Time'])
+            del self.dset['Time']
+            self.dset.create_dataset('Time', data=strtimes)
+            self.dset.file.flush()
+            print('done')
+
+        # Setup the WLDataFrame.
+        columns = ['Time']
+        data = [self.dset['Time'].asstr()[...]]
+        for colname in ['WL', 'BP', 'ET']:
             if len(self.dset[colname][...]):
                 data.append(self.dset[colname][...])
                 columns.append(colname)
@@ -417,8 +430,9 @@ class WLDatasetHDF5(WLDatasetBase):
         columns = tuple(columns)
         self._dataf = WLDataFrame(data, columns)
 
-        # Setup the structure for the Master Recession Curve
+        # Make older datasets compatible with newer format.
         if 'mrc' not in list(self.dset.keys()):
+            # Setup the structure for the Master Recession Curve
             mrc = self.dset.create_group('mrc')
             mrc.attrs['exists'] = 0
             mrc.create_dataset('params', data=(np.nan, np.nan),
@@ -430,32 +444,6 @@ class WLDatasetHDF5(WLDatasetBase):
             mrc.create_dataset('time', data=np.array([]),
                                dtype='float64', maxshape=(None,))
             self.dset.file.flush()
-
-        # Make older datasets compatible with newer format.
-        if isinstance(self.dset['Time'][0], (int, float)):
-            # Time needs to be converted from Excel numeric dates
-            # to ISO date strings (see PR #276).
-            print('Saving time as ISO date strings instead of Excel dates...',
-                  end=' ')
-            del self.dset['Time']
-            self.dset.create_dataset(
-                'Time',
-                data=np.array(self.strftime, dtype=h5py.string_dtype())
-                )
-            self.dset.file.flush()
-            print('done')
-        if isinstance(self.dset['Time'][0], bytes):
-            # This means this dataset was created with gwhat<=0.5.1 using
-            # and older version of h5py. We need to convert the bytes to
-            # strings.
-            print('Converting time from bytes to strings...', end=' ')
-            del self.dset['Time']
-            self.dset.create_dataset(
-                'Time',
-                data=np.array(self.strftime, dtype=h5py.string_dtype())
-                )
-            self.dset.file.flush()
-            print('done')
         if 'Well ID' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
             self.dset.attrs['Well ID'] = ""
