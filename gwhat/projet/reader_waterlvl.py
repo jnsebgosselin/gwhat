@@ -303,10 +303,10 @@ class WLDatasetBase(Mapping):
         return len(self._dataf)
 
     def __setitem__(self, key, value):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __iter__(self):
-        return NotImplementedError
+        raise NotImplementedError
 
     # ---- Attributes
     @property
@@ -399,11 +399,17 @@ class WLDataset(WLDatasetBase):
         elif key in COLUMNS:
             return self.data[key].values
         elif key in HEADER.keys():
-            return self._dataf.attrs[key]
+            return self.data.attrs[key]
         elif key == 'filename':
-            return self._dataf.filename
+            return self.data.filename
 
         return self.dset.__getitem__(key)
+
+    def __setitem__(self, key, value):
+        if key in HEADER.keys():
+            self.data.attrs[key] = value
+        else:
+            raise KeyError(key)
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""

@@ -756,7 +756,9 @@ class NewDatasetDialog(QDialog):
                 self._alt.setValue(self._dataset['Elevation'])
                 self._stn_name.setText(self._dataset['Well'])
                 self._sid.setText(self._dataset['Well ID'])
-                dsetname = self._dataset['Well']
+                dsetname = '{} ({})'.format(
+                    self._dataset['Well'],
+                    self._dataset['Well ID'])
             elif self._datatype == 'daily weather':
                 self._prov.setText(self._dataset.metadata['Location'])
                 self._lat.setValue(self._dataset.metadata['Latitude'])
@@ -765,7 +767,9 @@ class NewDatasetDialog(QDialog):
                 self._stn_name.setText(self._dataset.metadata['Station Name'])
                 self._sid.setText(self._dataset.metadata['Station ID'])
                 dsetname = self._dataset.metadata['Station Name']
-
+                dsetname = '{} ({})'.format(
+                    self._dataset.metadata['Station Name'],
+                    self._dataset.metadata['Station ID'])
             # We replace the invalid characters to avoid problems when
             # saving the dataset to the hdf5 format.
             for char in INVALID_CHARS:
@@ -818,20 +822,7 @@ class NewDatasetDialog(QDialog):
                 del_dset(self.name)
 
         # Update dataset attributes from UI and emit dataset.
-        if self._datatype == 'water level':
-            self._dataset['Well'] = self.station_name
-            self._dataset['Well ID'] = self.station_id
-            self._dataset['Province'] = self.province
-            self._dataset['Latitude'] = self.latitude
-            self._dataset['Longitude'] = self.longitude
-            self._dataset['Elevation'] = self.altitude
-        elif self._datatype == 'daily weather':
-            self._dataset.metadata['Station Name'] = self.station_name
-            self._dataset.metadata['Station ID'] = self.station_id
-            self._dataset.metadata['Location'] = self.province
-            self._dataset.metadata['Latitude'] = self.latitude
-            self._dataset.metadata['Longitude'] = self.longitude
-            self._dataset.metadata['Elevation'] = self.altitude
+        self._update_attributes_from_ui()
         self.sig_new_dataset_imported.emit(self.name, self._dataset)
 
         if len(self._queued_filenames):
@@ -847,6 +838,22 @@ class NewDatasetDialog(QDialog):
         self._dataset = None
         self.directory.clear()
         self.update_gui()
+
+    def _update_attributes_from_ui(self):
+        if self._datatype == 'water level':
+            self._dataset['Well'] = self.station_name
+            self._dataset['Well ID'] = self.station_id
+            self._dataset['Province'] = self.province
+            self._dataset['Latitude'] = self.latitude
+            self._dataset['Longitude'] = self.longitude
+            self._dataset['Elevation'] = self.altitude
+        elif self._datatype == 'daily weather':
+            self._dataset.metadata['Station Name'] = self.station_name
+            self._dataset.metadata['Station ID'] = self.station_id
+            self._dataset.metadata['Location'] = self.province
+            self._dataset.metadata['Latitude'] = self.latitude
+            self._dataset.metadata['Longitude'] = self.longitude
+            self._dataset.metadata['Elevation'] = self.altitude
 
 
 if __name__ == '__main__':

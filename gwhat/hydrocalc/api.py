@@ -21,6 +21,13 @@ from gwhat.config.main import CONF
 
 
 def wlcalcmethod(func):
+    """
+    A wrapper that bypass a tool func execution if the tool is not registered
+    to hydrocalc.
+
+    This is required in order to test tools or use tools programmatically
+    without having to register them to hydrocalc.
+    """
     @functools.wraps(func)
     def wrapper(tool, *args, **kwargs):
         if not tool.is_registered():
