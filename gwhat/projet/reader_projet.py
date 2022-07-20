@@ -444,6 +444,18 @@ class WLDatasetHDF5(WLDatasetBase):
                 )
             self.dset.file.flush()
             print('done')
+        if isinstance(self.dset['Time'][0], bytes):
+            # This means this dataset was created with gwhat<=0.5.1 using
+            # and older version of h5py. We need to convert the bytes to
+            # strings.
+            print('Converting time from bytes to strings...', end=' ')
+            del self.dset['Time']
+            self.dset.create_dataset(
+                'Time',
+                data=np.array(self.strftime, dtype=h5py.string_dtype())
+                )
+            self.dset.file.flush()
+            print('done')
         if 'Well ID' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
             self.dset.attrs['Well ID'] = ""
