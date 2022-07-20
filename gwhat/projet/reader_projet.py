@@ -241,7 +241,7 @@ class ProjetReader(object):
             # Water level data
             grp.create_dataset(
                 'Time',
-                data=np.array(df['Time'], dtype=h5py.special_dtype(vlen=str)))
+                data=np.array(df['Time'], dtype=h5py.string_dtype()))
             # See http://docs.h5py.org/en/latest/strings.html as to why this
             # is necessary to do this in order to save a list of strings in
             # a dataset with h5py.
@@ -361,7 +361,7 @@ class ProjetReader(object):
 
         # Save time.
         strtimes = np.array(
-            wxdset.strftime(), dtype=h5py.special_dtype(vlen=str))
+            wxdset.strftime(), dtype=h5py.string_dtype())
         grp.create_dataset('Time', data=strtimes)
         # See http://docs.h5py.org/en/latest/strings.html as to why this
         # is necessary to do this in order to save a list of strings in
@@ -377,7 +377,7 @@ class ProjetReader(object):
             datetimeindex = wxdset.missing_value_indexes[variable]
             strtimes = np.array(
                 datetimeindex.strftime("%Y-%m-%dT%H:%M:%S").values.tolist(),
-                dtype=h5py.special_dtype(vlen=str)
+                dtype=h5py.string_dtype()
                 )
             grp.create_dataset(
                 'Missing {}'.format(variable), data=strtimes)
@@ -440,8 +440,8 @@ class WLDatasetHDF5(WLDatasetBase):
             del self.dset['Time']
             self.dset.create_dataset(
                 'Time',
-                data=np.array(self.strftime,
-                              dtype=h5py.special_dtype(vlen=str)))
+                data=np.array(self.strftime, dtype=h5py.string_dtype())
+                )
             self.dset.file.flush()
             print('done')
         if 'Well ID' not in list(self.dset.attrs.keys()):
