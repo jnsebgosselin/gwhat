@@ -420,12 +420,14 @@ class WLDatasetHDF5(WLDatasetBase):
             print('done')
 
         # Setup the WLDataFrame.
-        columns = ['Time']
-        data = [self.dset['Time'].asstr()[...]]
-        for colname in ['WL', 'BP', 'ET']:
-            if len(self.dset[colname][...]):
-                data.append(self.dset[colname][...])
-                columns.append(colname)
+        columns = []
+        data = []
+        for col_name in ['Time', 'WL', 'BP', 'ET']:
+            col_data = self[col_name]
+            if len(col_data):
+                data.append(col_data)
+                columns.append(col_name)
+
         data = np.vstack(tuple(data)).transpose()
         columns = tuple(columns)
         self._dataf = WLDataFrame(data, columns)
