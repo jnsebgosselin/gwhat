@@ -481,6 +481,8 @@ class WLDatasetHDF5(WLDatasetBase):
     def __getitem__(self, key):
         if key in list(self.dset.attrs.keys()):
             return self.dset.attrs[key]
+        elif key == 'Time':
+            return self.dset['Time'].asstr()[...]
         else:
             return self.dset[key][...]
 
