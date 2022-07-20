@@ -91,32 +91,32 @@ def _format_numeric_data(df):
 
 def _format_datetime_data(df):
     """Format the dates to datetimes and set it as index."""
-    if INDEX in df.columns:
-        if df['Time'].dtypes != 'datetime64[ns]':
-            try:
-                # We check first if the dates are stored in the
-                # Excel numeric format.
-                datetimes = df['Time'].astype('float64', errors='raise')
-                datetimes = pd.to_datetime(
-                    datetimes.apply(
-                        lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
-
-                # Get rid of milliseconds to avoid introducting
-                # round-off errors.
-                datetimes = datetimes.dt.round('S')
-
-                df['Time'] = datetimes
-            except (ValueError, TypeError) as e:
-                try:
-                    # We assume that dates are stored as strings.
-                    df['Time'] = pd.to_datetime(
-                        df['Time'], infer_datetime_format=True)
-                except ValueError:
-                    print('WARNING: the dates are not formatted correctly.')
-
-        df.set_index(['Time'], drop=True, inplace=True)
-    else:
+    if INDEX not in df.columns:
         print('WARNING: no "Time" data found in the datafile.')
+        return df
+
+    if isinstance(df['Time'][0], (int, float)):
+        # Time needs to be converted from Excel numeric dates
+        # to ISO date strings.
+        datetimes = df['Time'].astype('float64', errors='raise')
+        datetimes = pd.to_datetime(
+            datetimes.apply(
+                lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
+
+        # Get rid of milliseconds to avoid introducting
+        # round-off errors.
+        datetimes = datetimes.dt.round('S')
+
+        df['Time'] = datetimes
+    elif isinstance(df['Time'][0], (bytes)):
+        strtimes = df['Time'].apply(lambda x: x.decode())
+        df['Time'] = pd.to_datetime(strtimes, infer_datetime_format=True)
+    elif isinstance(df['Time'][0], (str)):
+        df['Time'] = pd.to_datetime(df['Time'], infer_datetime_format=True)
+    else:
+        print('WARNING: the dates are not formatted correctly.')
+
+    df.set_index(['Time'], drop=True, inplace=True)
     return df
 
 
