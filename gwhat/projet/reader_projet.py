@@ -914,9 +914,17 @@ class WXDataFrameHDF5(WXDataFrameBase):
     def __len__(self, key):
         raise NotImplementedError
 
-    def __load_dataset__(self, dataset):
-        """Load and format the data from the h5py group."""
-        self.dataset = dataset
+    def __load_dataset__(self, dataset: h5py.Group):
+        """
+        Load and format the data from the h5py group.
+
+        Parameters
+        ----------
+        dataset : h5py.Group
+            The h5py group containing the data and metadata of the weather
+            dataset.
+        """
+        self._dataset = dataset
 
         # Make older datasets compatible with newer format.
         if isinstance(dataset['Time'][0], (int, float)):
@@ -985,26 +993,28 @@ class WXDataFrameHDF5(WXDataFrameBase):
         for key in dataset.attrs.keys():
             self.metadata[key] = dataset.attrs[key]
 
-        # Get and format the timeseries data.
+        # Create a pandas dataframe containing all weather variables.
         self.data = pd.DataFrame(
             [],
             columns=METEO_VARIABLES,
-            index=pd.to_datetime(dataset['Time'], infer_datetime_format=True)
+            index=pd.to_datetime(
+                dataset['Time'].asstr()[...],
+                infer_datetime_format=True)
             )
         for variable in METEO_VARIABLES:
             self.data[variable] = np.copy(dataset[variable])
 
-        # Get and format the missing value time indexes.
+        # Get and format the missing value datetime indexes.
         self.missing_value_indexes = {}
         for variable in METEO_VARIABLES:
             key = 'Missing {}'.format(variable)
             if key in dataset.keys():
                 self.missing_value_indexes[variable] = pd.to_datetime(
-                    dataset[key][:], infer_datetime_format=True)
+                    dataset[key].asstr()[...], infer_datetime_format=True)
 
     @property
     def name(self):
-        return osp.basename(self.dataset.name)
+        return osp.basename(self._dataset.name)
 
 
 class GLUEDataFrameHDF5(GLUEDataFrameBase):
