@@ -530,6 +530,8 @@ def test_project_backward_compatibility(oldprojectfile):
         osp.join(__rootdir__, 'projet', 'tests', 'data',
                  'sample_weather_datafile.csv')
         )
+    expected_nan_count = {
+        'Tmax': 1, 'Tmin': 3, 'Tavg': 0, 'Ptot': 1, 'PET': 0}
 
     wxdset = project.get_wxdset('IBERVILLE (7023270)')
 
@@ -537,12 +539,23 @@ def test_project_backward_compatibility(oldprojectfile):
     assert (wxdset.data.index.values.tolist() ==
             expected_wxdata.index.values.tolist())
 
+    # Assert that the metadata are as expected.
+    assert wxdset.metadata['Station Name'] == 'IBERVILLE'
+    assert wxdset.metadata['Station ID'] == '7023270'
+    assert wxdset.metadata['Latitude'] == 45.33
+    assert wxdset.metadata['Longitude'] == -73.25
+    assert wxdset.metadata['Location'] == 'QUEBEC'
+    assert wxdset.metadata['Elevation'] == 30.5
+
     for column in expected_wxdata.columns:
+
         # Assert that the missing_data_index is as expected.
         expected_missing_value_indexes = expected_wxdata.index[
             pd.isnull(expected_wxdata[column])]
+        missing_value_index = wxdset.missing_value_indexes[column]
         assert (expected_missing_value_indexes.values.tolist() ==
-                wxdset.missing_value_indexes[column].values.tolist())
+                missing_value_index.values.tolist())
+        assert len(missing_value_index) == expected_nan_count[column]
 
         # Assert that the numerical values are as expected for the
         # non null values.
