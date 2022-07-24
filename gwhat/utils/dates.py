@@ -73,7 +73,7 @@ def xldates_to_strftimes(xldates):
     dtimeindex = xldates_to_datetimeindex(xldates)
     return np.array(
         dtimeindex.strftime("%Y-%m-%dT%H:%M:%S").values.tolist(),
-        dtype=h5py.special_dtype(vlen=str)
+        dtype=h5py.string_dtype()
         )
 
 

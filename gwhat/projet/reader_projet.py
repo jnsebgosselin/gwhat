@@ -241,7 +241,7 @@ class ProjetReader(object):
             # Water level data
             grp.create_dataset(
                 'Time',
-                data=np.array(df['Time'], dtype=h5py.special_dtype(vlen=str)))
+                data=np.array(df['Time'], dtype=h5py.string_dtype()))
             # See http://docs.h5py.org/en/latest/strings.html as to why this
             # is necessary to do this in order to save a list of strings in
             # a dataset with h5py.
@@ -361,7 +361,7 @@ class ProjetReader(object):
 
         # Save time.
         strtimes = np.array(
-            wxdset.strftime(), dtype=h5py.special_dtype(vlen=str))
+            wxdset.strftime(), dtype=h5py.string_dtype())
         grp.create_dataset('Time', data=strtimes)
         # See http://docs.h5py.org/en/latest/strings.html as to why this
         # is necessary to do this in order to save a list of strings in
@@ -377,7 +377,7 @@ class ProjetReader(object):
             datetimeindex = wxdset.missing_value_indexes[variable]
             strtimes = np.array(
                 datetimeindex.strftime("%Y-%m-%dT%H:%M:%S").values.tolist(),
-                dtype=h5py.special_dtype(vlen=str)
+                dtype=h5py.string_dtype()
                 )
             grp.create_dataset(
                 'Missing {}'.format(variable), data=strtimes)
@@ -407,18 +407,34 @@ class WLDatasetHDF5(WLDatasetBase):
         self.dset = hdf5group
         self._undo_stack = []
 
+        # Make older datasets compatible with newer format.
+        if isinstance(self.dset['Time'][0], (int, float)):
+            # Time needs to be converted from Excel numeric dates
+            # to ISO date strings (see PR #276).
+            print('Saving time as ISO date strings instead of Excel dates...',
+                  end=' ')
+            strtimes = xldates_to_strftimes(self.dset['Time'])
+            del self.dset['Time']
+            self.dset.create_dataset('Time', data=strtimes)
+            self.dset.file.flush()
+            print('done')
+
+        # Setup the WLDataFrame.
         columns = []
         data = []
-        for colname in ['Time', 'WL', 'BP', 'ET']:
-            if len(self.dset[colname][...]):
-                data.append(self.dset[colname][...])
-                columns.append(colname)
+        for col_name in ['Time', 'WL', 'BP', 'ET']:
+            col_data = self[col_name]
+            if len(col_data):
+                data.append(col_data)
+                columns.append(col_name)
+
         data = np.vstack(tuple(data)).transpose()
         columns = tuple(columns)
         self._dataf = WLDataFrame(data, columns)
 
-        # Setup the structure for the Master Recession Curve
+        # Make older datasets compatible with newer format.
         if 'mrc' not in list(self.dset.keys()):
+            # Setup the structure for the Master Recession Curve
             mrc = self.dset.create_group('mrc')
             mrc.attrs['exists'] = 0
             mrc.create_dataset('params', data=(np.nan, np.nan),
@@ -430,20 +446,6 @@ class WLDatasetHDF5(WLDatasetBase):
             mrc.create_dataset('time', data=np.array([]),
                                dtype='float64', maxshape=(None,))
             self.dset.file.flush()
-
-        # Make older datasets compatible with newer format.
-        if isinstance(self.dset['Time'][0], (int, float)):
-            # Time needs to be converted from Excel numeric dates
-            # to ISO date strings (see PR #276).
-            print('Saving time as ISO date strings instead of Excel dates...',
-                  end=' ')
-            del self.dset['Time']
-            self.dset.create_dataset(
-                'Time',
-                data=np.array(self.strftime,
-                              dtype=h5py.special_dtype(vlen=str)))
-            self.dset.file.flush()
-            print('done')
         if 'Well ID' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
             self.dset.attrs['Well ID'] = ""
@@ -481,6 +483,8 @@ class WLDatasetHDF5(WLDatasetBase):
     def __getitem__(self, key):
         if key in list(self.dset.attrs.keys()):
             return self.dset.attrs[key]
+        elif key == 'Time':
+            return self.dset['Time'].asstr()[...]
         else:
             return self.dset[key][...]
 
@@ -910,9 +914,17 @@ class WXDataFrameHDF5(WXDataFrameBase):
     def __len__(self, key):
         raise NotImplementedError
 
-    def __load_dataset__(self, dataset):
-        """Load and format the data from the h5py group."""
-        self.dataset = dataset
+    def __load_dataset__(self, dataset: h5py.Group):
+        """
+        Load and format the data from the h5py group.
+
+        Parameters
+        ----------
+        dataset : h5py.Group
+            The h5py group containing the data and metadata of the weather
+            dataset.
+        """
+        self._dataset = dataset
 
         # Make older datasets compatible with newer format.
         if isinstance(dataset['Time'][0], (int, float)):
@@ -981,26 +993,28 @@ class WXDataFrameHDF5(WXDataFrameBase):
         for key in dataset.attrs.keys():
             self.metadata[key] = dataset.attrs[key]
 
-        # Get and format the timeseries data.
+        # Create a pandas dataframe containing all weather variables.
         self.data = pd.DataFrame(
             [],
             columns=METEO_VARIABLES,
-            index=pd.to_datetime(dataset['Time'], infer_datetime_format=True)
+            index=pd.to_datetime(
+                dataset['Time'].asstr()[...],
+                infer_datetime_format=True)
             )
         for variable in METEO_VARIABLES:
             self.data[variable] = np.copy(dataset[variable])
 
-        # Get and format the missing value time indexes.
+        # Get and format the missing value datetime indexes.
         self.missing_value_indexes = {}
         for variable in METEO_VARIABLES:
             key = 'Missing {}'.format(variable)
             if key in dataset.keys():
                 self.missing_value_indexes[variable] = pd.to_datetime(
-                    dataset[key][:], infer_datetime_format=True)
+                    dataset[key].asstr()[...], infer_datetime_format=True)
 
     @property
     def name(self):
-        return osp.basename(self.dataset.name)
+        return osp.basename(self._dataset.name)
 
 
 class GLUEDataFrameHDF5(GLUEDataFrameBase):
