@@ -266,11 +266,13 @@ class DataManager(QWidget):
         """
         Add a new water level dataset to the project and update the GUI.
         """
-        print("Saving the new water level dataset in the project...")
+        print("Add new water level dataset to the project...")
+        if name in self.projet.wldsets:
+            self.projet.del_wldset(name)
         self.projet.add_wldset(name, dataset)
         self.update_wldsets(name)
         self.wldset_changed()
-        print("New water level dataset saved in the project successfully.")
+        print("New water level dataset added successfully.")
 
     def update_wldsets(self, name=None):
         self.wldsets_cbox.blockSignals(True)
@@ -379,14 +381,15 @@ class DataManager(QWidget):
 
     def add_new_wxdset(self, name, dataset):
         """
-        Receive the new weather dataset, save it in the project and
-        update the GUI.
+        Add a new weather dataset to the project and update the GUI.
         """
-        print("Saving the new weather dataset in the project.", end=" ")
+        print("Add new weather dataset to the project...")
+        if name in self.projet.wxdsets:
+            self.projet.del_wxdset(name)
         self.projet.add_wxdset(name, dataset)
         self.update_wxdsets(name)
         self.wxdset_changed()
-        print("done")
+        print("New weather dataset added successfully.")
 
     def update_wxdsets(self, name=None, silent=False):
         self.wxdsets_cbox.blockSignals(True)
@@ -817,8 +820,6 @@ class NewDatasetDialog(QDialog):
             reply = QMessageBox.question(self, 'Save dataset', msg, btn)
             if reply == QMessageBox.No:
                 return
-            else:
-                del_dset(self.name)
 
         # Update dataset attributes from UI and emit dataset.
         self._update_attributes_from_ui()
