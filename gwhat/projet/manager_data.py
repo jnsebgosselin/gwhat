@@ -269,6 +269,7 @@ class DataManager(QWidget):
         print("Add new water level dataset to the project...")
         if name in self.projet.wldsets:
             self.projet.del_wldset(name)
+            self._wldset = None
         self.projet.add_wldset(name, dataset)
         self.update_wldsets(name)
         self.wldset_changed()
