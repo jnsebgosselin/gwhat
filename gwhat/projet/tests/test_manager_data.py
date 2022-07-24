@@ -53,7 +53,7 @@ def datamanager(project, qtbot):
     return datamanager
 
 
-# ---- Tests DataManager
+# ---- Tests Weather Dataset
 def test_import_weather_data(datamanager, mocker, qtbot):
     """
     Test that importing data in gwhat projects is working as
@@ -93,8 +93,8 @@ def test_delete_weather_data(datamanager, mocker, qtbot):
     Test that deleting weather datasets from gwhat projects is working
     as expected.
     """
-    datamanager.new_wxdset_imported('wxdset1', WXDataFrame(WXFILENAME))
-    datamanager.new_wxdset_imported('wxdset2', WXDataFrame(WXFILENAME))
+    datamanager.add_new_wxdset('wxdset1', WXDataFrame(WXFILENAME))
+    datamanager.add_new_wxdset('wxdset2', WXDataFrame(WXFILENAME))
     assert datamanager.wxdataset_count() == 2
 
     # Click to delete the current weather dataset, but cancel.
@@ -123,6 +123,7 @@ def test_delete_weather_data(datamanager, mocker, qtbot):
     assert mock_exec_.call_count == 2
 
 
+# ---- Tests Weather Dataset
 def test_import_waterlevel_data(datamanager, mocker, qtbot):
     """
     Test that importing a water level dataset in a gwhat project is
@@ -283,8 +284,8 @@ def test_delete_waterlevel_data(datamanager, mocker, qtbot):
     """
     Test deleting water level datasets from the project.
     """
-    datamanager.new_wldset_imported('wldset1', WLDataset(WLFILENAME))
-    datamanager.new_wldset_imported('wldset2', WLDataset(WLFILENAME))
+    datamanager.add_new_wldset('wldset1', WLDataset(WLFILENAME))
+    datamanager.add_new_wldset('wldset2', WLDataset(WLFILENAME))
     assert datamanager.wldataset_count() == 2
 
     # Click to delete the current water level dataset, but cancel.
@@ -326,12 +327,12 @@ def test_last_opened_datasets(qtbot, projectpath):
 
     # Add some water level dataset.
     for name in ['wldset1', 'wldset2', 'wldset3']:
-        datamanager.new_wldset_imported(name, WLDataset(WLFILENAME))
+        datamanager.add_new_wldset(name, WLDataset(WLFILENAME))
     assert datamanager.get_current_wldset().name == 'wldset3'
 
     # Add some weather dataset.
     for name in ['wxdset1', 'wxdset2', 'wxdset3']:
-        datamanager.new_wxdset_imported(name, WXDataFrame(WXFILENAME))
+        datamanager.add_new_wxdset(name, WXDataFrame(WXFILENAME))
     assert datamanager.get_current_wxdset().name == 'wxdset3'
 
     # Change the current water level and weather datasets.
@@ -361,7 +362,7 @@ def test_export_yearly_monthly_daily(datamanager, mocker, qtbot, tmp_path):
     """
     datamanager.show()
     wxdset = WXDataFrame(WXFILENAME)
-    datamanager.new_wxdset_imported(wxdset.metadata['Station Name'], wxdset)
+    datamanager.add_new_wxdset(wxdset.metadata['Station Name'], wxdset)
 
     for ftype in ['xlsx', 'csv', 'xls']:
         for time_frame in ['daily', 'monthly', 'yearly']:
