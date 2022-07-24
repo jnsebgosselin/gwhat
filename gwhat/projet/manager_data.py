@@ -60,7 +60,7 @@ class DataManager(QWidget):
         self.new_waterlvl_win = NewDatasetDialog(
             'water level', parent, projet)
         self.new_waterlvl_win.sig_new_dataset_imported.connect(
-            self.new_wldset_imported)
+            self.add_new_wldset)
 
         self.new_weather_win = NewDatasetDialog(
             'daily weather', parent, projet)
@@ -262,10 +262,9 @@ class DataManager(QWidget):
         else:
             self.new_waterlvl_win.exec_()
 
-    def new_wldset_imported(self, name, dataset):
+    def add_new_wldset(self, name, dataset):
         """
-        Receives the new water level dataset, saves it in the project and
-        update the GUI.
+        Add a new water level dataset to the project and update the GUI.
         """
         print("Saving the new water level dataset in the project...")
         self.projet.add_wldset(name, dataset)
