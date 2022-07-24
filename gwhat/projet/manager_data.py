@@ -65,7 +65,7 @@ class DataManager(QWidget):
         self.new_weather_win = NewDatasetDialog(
             'daily weather', parent, projet)
         self.new_weather_win.sig_new_dataset_imported.connect(
-            self.new_wxdset_imported)
+            self.add_new_wxdset)
 
         self.setup_manager()
 
@@ -377,7 +377,7 @@ class DataManager(QWidget):
         else:
             self.new_weather_win.exec_()
 
-    def new_wxdset_imported(self, name, dataset):
+    def add_new_wxdset(self, name, dataset):
         """
         Receive the new weather dataset, save it in the project and
         update the GUI.
