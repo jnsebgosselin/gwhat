@@ -44,7 +44,7 @@ def wlfilename(tmp_path):
     columns = ['Date', 'WL(mbgs)']
     n_data = 33000
     time_data = np.arange(1000, n_data + 1000)
-    wl_data = np.random.rand(n_data)
+    wl_data = np.ones(n_data)
     datastack = np.vstack([time_data, wl_data]).transpose()
 
     filename = osp.join(tmp_path, 'waterlvl_testfile.csv')
@@ -405,6 +405,42 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert projmanager.project_selector.recent_projects() == [
         projectfile]
     assert len(projmanager.project_selector.menu.actions()) == 4
+
+
+# =============================================================================
+# ---- Tests ProjetReader
+# =============================================================================
+def test_add_waterlevel_dataset(tmp_path, wlfilename):
+    """
+    Test that adding a water level dataset to a gwhat project is
+    working as expected.
+    """
+    project = ProjetReader(osp.join(tmp_path, 'test_add_wldset.gwt'))
+    project.add_wldset('test_wdset', WLDataset(wlfilename))
+
+    wldset = project.get_wldset('test_wdset')
+    assert wldset.data.columns.tolist() == ['BP', 'WL', 'ET']
+
+    # Check the data.
+    assert len(wldset) == 33000
+    assert wldset.data['WL'].sum() == 33000
+    assert wldset.data['WL'].isnull().sum() == 0
+    assert wldset.data['BP'].isnull().sum() == 33000
+    assert wldset.data['ET'].isnull().sum() == 33000
+    assert wldset.data['WL'].dtype == 'float64'
+    assert wldset.data['BP'].dtype == 'float64'
+    assert wldset.data['ET'].dtype == 'float64'
+
+    # Check the time index.
+    assert wldset.data.index.values.tolist() == pd.date_range(
+        dtm.datetime(1902, 9, 26), dtm.datetime(1993, 1, 30)).values.tolist()
+
+    # Check the metadata.
+    assert wldset['Well ID'] == '3040002'
+    assert wldset['Latitude'] == 45.74581
+    assert wldset['Longitude'] == -73.28024
+    assert wldset['Elevation'] == 19.51
+    assert wldset['Province'] == 'QC'
 
 
 def test_store_mrc(project, wlfilename):
