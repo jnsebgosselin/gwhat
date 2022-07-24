@@ -448,7 +448,7 @@ def test_store_mrc(project, wlfilename):
     Test that MRC data and results are saved and retrieved as expected
     in GWHAT project files.
     """
-    project.add_wldset('dataset_test', WLDataset(testfile))
+    project.add_wldset('dataset_test', WLDataset(wlfilename))
     wldset = project.get_wldset('dataset_test')
     assert wldset.mrc_exists() is False
 
