@@ -21,8 +21,8 @@ from PyQt5.QtCore import Qt
 from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.projet.reader_waterlvl import WLDataset
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.projet.manager_data import (DataManager, QFileDialog, QMessageBox,
-                                       QCheckBox)
+from gwhat.projet.manager_data import (
+    DataManager, QFileDialog, QMessageBox, QCheckBox)
 
 DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
 WXFILENAME = osp.join(DATADIR, 'sample_weather_datafile.csv')
@@ -139,7 +139,7 @@ def test_import_waterlevel_data(datamanager, mocker, qtbot):
         QFileDialog, 'exec_', return_value=True)
     mocker.patch.object(
         QFileDialog, 'selectedFiles',
-        return_value=[WLFILENAME, WLFILENAME2, WLFILENAME3])
+        return_value=[WLFILENAME])
 
     with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_loaded):
         qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
@@ -182,6 +182,57 @@ def test_import_waterlevel_data(datamanager, mocker, qtbot):
     assert wldset['Latitude'] == 45.678
     assert wldset['Longitude'] == -76.543
     assert wldset['Elevation'] == 123.23
+
+
+def test_overwrite_waterlevel_dataset(datamanager, mocker, qtbot):
+    """
+    Test that adding a water level dataset with a name that already
+    exists in the project is working as expected.
+
+    Regression test for jnsebgosselin/gwhat#391
+    """
+    datamanager.new_waterlvl_win.setModal(False)
+    new_waterlvl_dialog = datamanager.new_waterlvl_win
+
+    # Mock the message box that appears when trying to add a dataset whose
+    # name already exists in the project.
+    mock_exec_ = mocker.patch.object(
+        QMessageBox, 'question', return_value=QMessageBox.Yes)
+
+    # Import and add a new water level dataset.
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_loaded):
+        datamanager.import_wldatasets([WLFILENAME])
+    new_waterlvl_dialog._dset_name.setText("test_dataset_name")
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_imported):
+        new_waterlvl_dialog.accept_dataset()
+
+    wldset = datamanager.get_current_wldset()
+    assert wldset.name == "test_dataset_name"
+    assert wldset['Well'] == "PO01 - Calixa-Lavallée"
+    assert wldset['Well ID'] == "3040002"
+    assert wldset['Province'] == "QC"
+    assert wldset['Latitude'] == 45.74581
+    assert wldset['Longitude'] == -73.28024
+    assert wldset['Elevation'] == 19.51
+
+    # Import and add another water level dataset with the same name as the
+    # previous one.
+    assert mock_exec_.call_count == 0
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_loaded):
+        datamanager.import_wldatasets([WLFILENAME2])
+    new_waterlvl_dialog._dset_name.setText("test_dataset_name")
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_imported):
+        new_waterlvl_dialog.accept_dataset()
+    assert mock_exec_.call_count == 1
+
+    wldset = datamanager.get_current_wldset()
+    assert wldset.name == "test_dataset_name"
+    assert wldset['Well'] == "test_well_02"
+    assert wldset['Well ID'] == "3040002"
+    assert wldset['Province'] == "QC"
+    assert wldset['Latitude'] == 42.02
+    assert wldset['Longitude'] == -72.02
+    assert wldset['Elevation'] == 22.02
 
 
 def test_import_multiple_waterlevel_data(datamanager, mocker, qtbot):
