@@ -387,6 +387,7 @@ class DataManager(QWidget):
         print("Add new weather dataset to the project...")
         if name in self.projet.wxdsets:
             self.projet.del_wxdset(name)
+            self._wxdset = None
         self.projet.add_wxdset(name, dataset)
         self.update_wxdsets(name)
         self.wxdset_changed()
