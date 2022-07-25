@@ -26,6 +26,7 @@ from gwhat.projet.manager_data import (
 
 DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
 WXFILENAME = osp.join(DATADIR, 'sample_weather_datafile.csv')
+WXFILENAME2 = osp.join(DATADIR, 'sample_weather_datafile2.csv')
 WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 WLFILENAME2 = osp.join(DATADIR, 'sample_water_level_datafile2.csv')
 WLFILENAME3 = osp.join(DATADIR, 'sample_water_level_datafile3.csv')
@@ -86,6 +87,57 @@ def test_import_weather_data(datamanager, mocker, qtbot):
     assert datamanager.wxdataset_count() == 1
     assert datamanager.wxdsets_cbox.currentText() == "IBERVILLE (7023270)"
     assert datamanager.get_current_wxdset().name == "IBERVILLE (7023270)"
+
+
+def test_overwrite_weather_dataset(datamanager, mocker, qtbot):
+    """
+    Test that adding a weather dataset with a name that already
+    exists in the project is working as expected.
+
+    Regression test for jnsebgosselin/gwhat#391
+    """
+    datamanager.new_weather_win.setModal(False)
+    new_dataset_dialog = datamanager.new_weather_win
+
+    # Mock the message box that appears when trying to add a dataset whose
+    # name already exists in the project.
+    mock_exec_ = mocker.patch.object(
+        QMessageBox, 'question', return_value=QMessageBox.Yes)
+
+    # Import and add a new water level dataset.
+    with qtbot.waitSignal(new_dataset_dialog.sig_new_dataset_loaded):
+        datamanager.import_wxdatasets([WXFILENAME])
+    new_dataset_dialog._dset_name.setText("test_wxdset_name")
+    with qtbot.waitSignal(new_dataset_dialog.sig_new_dataset_imported):
+        new_dataset_dialog.accept_dataset()
+
+    wxdset = datamanager.get_current_wxdset()
+    assert wxdset.name == "test_wxdset_name"
+    assert wxdset.metadata['Station Name'] == "IBERVILLE"
+    assert wxdset.metadata['Station ID'] == "7023270"
+    assert wxdset.metadata['Location'] == "QUEBEC"
+    assert wxdset.metadata['Latitude'] == 45.33
+    assert wxdset.metadata['Longitude'] == -73.25
+    assert wxdset.metadata['Elevation'] == 30.5
+
+    # Import and add another weather dataset with the same name as the
+    # previous one.
+    assert mock_exec_.call_count == 0
+    with qtbot.waitSignal(new_dataset_dialog.sig_new_dataset_loaded):
+        datamanager.import_wxdatasets([WXFILENAME2])
+    new_dataset_dialog._dset_name.setText("test_wxdset_name")
+    with qtbot.waitSignal(new_dataset_dialog.sig_new_dataset_imported):
+        new_dataset_dialog.accept_dataset()
+    assert mock_exec_.call_count == 1
+
+    wxdset = datamanager.get_current_wxdset()
+    assert wxdset.name == "test_wxdset_name"
+    assert wxdset.metadata['Station Name'] == "test_staname2"
+    assert wxdset.metadata['Station ID'] == "095021"
+    assert wxdset.metadata['Location'] == "test_prov2"
+    assert wxdset.metadata['Latitude'] == 44.346
+    assert wxdset.metadata['Longitude'] == -70.567
+    assert wxdset.metadata['Elevation'] == 104.67
 
 
 def test_delete_weather_data(datamanager, mocker, qtbot):
@@ -428,4 +480,4 @@ def test_export_yearly_monthly_daily(datamanager, mocker, qtbot, tmp_path):
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', __file__, '-v', '-rw', '-s'])
+    pytest.main(['-x', __file__, '-v', '-rw'])
