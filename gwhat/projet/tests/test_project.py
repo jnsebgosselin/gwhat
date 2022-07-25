@@ -39,12 +39,12 @@ LON = 73.15
 # ---- Pytest Fixtures
 # =============================================================================
 @pytest.fixture
-def testfile(tmp_path):
+def wlfilename(tmp_path):
     """Create  a testfile containing a waterlevel dataset."""
     columns = ['Date', 'WL(mbgs)']
     n_data = 33000
     time_data = np.arange(1000, n_data + 1000)
-    wl_data = np.random.rand(n_data)
+    wl_data = np.ones(n_data)
     datastack = np.vstack([time_data, wl_data]).transpose()
 
     filename = osp.join(tmp_path, 'waterlvl_testfile.csv')
@@ -128,7 +128,7 @@ def projmanager(qtbot):
 
 
 # =============================================================================
-# ---- Tests
+# ---- Tests ProjetManager
 # =============================================================================
 def test_create_new_projet(projmanager, mocker, projectpath):
     """
@@ -407,12 +407,48 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert len(projmanager.project_selector.menu.actions()) == 4
 
 
-def test_store_mrc(project, testfile):
+# =============================================================================
+# ---- Tests ProjetReader
+# =============================================================================
+def test_add_waterlevel_dataset(tmp_path, wlfilename):
+    """
+    Test that adding a water level dataset to a gwhat project is
+    working as expected.
+    """
+    project = ProjetReader(osp.join(tmp_path, 'test_add_wldset.gwt'))
+    project.add_wldset('test_wdset', WLDataset(wlfilename))
+
+    wldset = project.get_wldset('test_wdset')
+    assert wldset.data.columns.tolist() == ['BP', 'WL', 'ET']
+
+    # Check the data.
+    assert len(wldset) == 33000
+    assert wldset.data['WL'].sum() == 33000
+    assert wldset.data['WL'].isnull().sum() == 0
+    assert wldset.data['BP'].isnull().sum() == 33000
+    assert wldset.data['ET'].isnull().sum() == 33000
+    assert wldset.data['WL'].dtype == 'float64'
+    assert wldset.data['BP'].dtype == 'float64'
+    assert wldset.data['ET'].dtype == 'float64'
+
+    # Check the time index.
+    assert wldset.data.index.values.tolist() == pd.date_range(
+        dtm.datetime(1902, 9, 26), dtm.datetime(1993, 1, 30)).values.tolist()
+
+    # Check the metadata.
+    assert wldset['Well ID'] == '3040002'
+    assert wldset['Latitude'] == 45.74581
+    assert wldset['Longitude'] == -73.28024
+    assert wldset['Elevation'] == 19.51
+    assert wldset['Province'] == 'QC'
+
+
+def test_store_mrc(project, wlfilename):
     """
     Test that MRC data and results are saved and retrieved as expected
     in GWHAT project files.
     """
-    project.add_wldset('dataset_test', WLDataset(testfile))
+    project.add_wldset('dataset_test', WLDataset(wlfilename))
     wldset = project.get_wldset('dataset_test')
     assert wldset.mrc_exists() is False
 
@@ -440,7 +476,7 @@ def test_store_mrc(project, testfile):
     assert mrc_data['rmse'] == rmse
 
 
-def test_mrc_backward_compatibility(project, testfile):
+def test_mrc_backward_compatibility(project, wlfilename):
     """
     Test that converting mrc peak_indx data from int16 to int64 is
     working as expected.
@@ -452,7 +488,7 @@ def test_mrc_backward_compatibility(project, testfile):
     See jnsebgosselin/gwhat#377.
     """
     # Add the dataset to the project.
-    project.add_wldset('dataset_test', WLDataset(testfile))
+    project.add_wldset('dataset_test', WLDataset(wlfilename))
     wldset = project.get_wldset('dataset_test')
 
     # Make sure that the namespace was created automatically for the mrc
