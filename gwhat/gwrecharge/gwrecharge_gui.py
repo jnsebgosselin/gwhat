@@ -327,8 +327,8 @@ class RechgEvalWidget(QFrame):
         """Setup the toolbar of the widget. """
         toolbar = QWidget()
 
-        btn_calib = QPushButton('Compute Recharge')
-        btn_calib.clicked.connect(self.btn_calibrate_isClicked)
+        self.calc_rechg_btn = QPushButton('Compute Recharge')
+        self.calc_rechg_btn.clicked.connect(self.btn_calibrate_isClicked)
 
         self.btn_show_result = QToolButtonSmall(get_icon('search'))
         self.btn_show_result.clicked.connect(self.figstack.show)
@@ -337,7 +337,7 @@ class RechgEvalWidget(QFrame):
         self.btn_save_glue = ExportGLUEButton(self.wxdset)
 
         layout = QGridLayout(toolbar)
-        layout.addWidget(btn_calib, 0, 0)
+        layout.addWidget(self.calc_rechg_btn, 0, 0)
         layout.addWidget(self.btn_show_result, 0, 1)
         layout.addWidget(self.btn_save_glue, 0, 3)
         layout.setContentsMargins(10, 0, 10, 0)
