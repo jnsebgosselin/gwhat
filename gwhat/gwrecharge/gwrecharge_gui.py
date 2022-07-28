@@ -481,7 +481,14 @@ class RechgEvalWidget(QFrame):
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
         else:
             self.wldset.clear_glue()
-            self.wldset.save_glue(glue_dataframe)
+            try:
+                self.wldset.save_glue(glue_dataframe)
+            except Exception as e:
+                # We make sure the GLUE data are not saved in an incomplete
+                # state and cause problem when trying to read the
+                # project afterwards.
+                self.wldset.clear_glue()
+                raise(e)
             self.sig_new_gluedf.emit(glue_dataframe)
 
             self.btn_save_glue.set_model(glue_dataframe)
