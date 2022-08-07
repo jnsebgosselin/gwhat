@@ -327,8 +327,8 @@ class RechgEvalWidget(QFrame):
         """Setup the toolbar of the widget. """
         toolbar = QWidget()
 
-        btn_calib = QPushButton('Compute Recharge')
-        btn_calib.clicked.connect(self.btn_calibrate_isClicked)
+        self.calc_rechg_btn = QPushButton('Compute Recharge')
+        self.calc_rechg_btn.clicked.connect(self.btn_calibrate_isClicked)
 
         self.btn_show_result = QToolButtonSmall(get_icon('search'))
         self.btn_show_result.clicked.connect(self.figstack.show)
@@ -337,7 +337,7 @@ class RechgEvalWidget(QFrame):
         self.btn_save_glue = ExportGLUEButton(self.wxdset)
 
         layout = QGridLayout(toolbar)
-        layout.addWidget(btn_calib, 0, 0)
+        layout.addWidget(self.calc_rechg_btn, 0, 0)
         layout.addWidget(self.btn_show_result, 0, 1)
         layout.addWidget(self.btn_save_glue, 0, 3)
         layout.setContentsMargins(10, 0, 10, 0)
@@ -481,7 +481,14 @@ class RechgEvalWidget(QFrame):
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
         else:
             self.wldset.clear_glue()
-            self.wldset.save_glue(glue_dataframe)
+            try:
+                self.wldset.save_glue(glue_dataframe)
+            except Exception as e:
+                # We make sure the GLUE data are not saved in an incomplete
+                # state and cause problem when trying to read the
+                # project afterwards.
+                self.wldset.clear_glue()
+                raise(e)
             self.sig_new_gluedf.emit(glue_dataframe)
 
             self.btn_save_glue.set_model(glue_dataframe)

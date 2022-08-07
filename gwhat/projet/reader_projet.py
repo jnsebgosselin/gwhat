@@ -1070,6 +1070,10 @@ def save_dict_to_h5grp(h5grp, dic):
     for key, item in dic.items():
         if isinstance(item, dict):
             save_dict_to_h5grp(h5grp.require_group(key), item)
+        elif item is None:
+            # We need to do this to avoid a TypeError.
+            # See jnsebgosselin/gwhat#430
+            h5grp.create_dataset(key, data=np.nan)
         else:
             h5grp.create_dataset(key, data=item)
 
