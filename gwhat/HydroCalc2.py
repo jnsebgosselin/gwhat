@@ -620,6 +620,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
     def setup_ax_margins(self, event=None):
         """Setup the margins width of the axes in inches."""
+        # TODO: reimplement this as tight_layout. See Seismate implementation.
         fheight = self.fig.get_figheight()
         fwidth = self.fig.get_figwidth()
 
