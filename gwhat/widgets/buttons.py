@@ -392,7 +392,7 @@ class OnOffPushButton(QPushButton):
     """A push button that can be toggled on or off by clicking on it."""
     sig_value_changed = QSignal(bool)
 
-    def __init__(self, label, parent=None, icon: str = None | QIcon):
+    def __init__(self, label, parent=None, icon: str | QIcon = None):
         super().__init__(label, parent)
 
         if icon is not None:
