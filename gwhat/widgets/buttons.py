@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from qtpy.QtGui import QIcon
 
 # ---- Stantard imports
 import sys
@@ -20,7 +25,7 @@ from PyQt5.QtWidgets import (
     QToolButton, QWidget, QPushButton)
 
 # ---- Local imports
-from gwhat.utils.icons import QToolButtonBase
+from gwhat.utils.icons import QToolButtonBase, get_icon
 from gwhat.utils import icons
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
@@ -387,8 +392,13 @@ class OnOffPushButton(QPushButton):
     """A push button that can be toggled on or off by clicking on it."""
     sig_value_changed = QSignal(bool)
 
-    def __init__(self, label, parent=None):
+    def __init__(self, label, parent=None, icon: str = None | QIcon):
         super().__init__(label, parent)
+
+        if icon is not None:
+            icon = get_icon(icon) if isinstance(icon, str) else icon
+            self.setIcon(icon)
+
         self.installEventFilter(self)
         self.setCheckable(True)
         self.toggled.connect(self.sig_value_changed.emit)
