@@ -49,9 +49,6 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
         # Whether it is the first time showEvent is called.
         self._first_show_event = True
 
-        # The WLCalc instance to which this tool is registered.
-        self.wlcalc = None
-
         # The water level dataset currently registered to this tool.
         self.wldset = None
 
@@ -228,9 +225,6 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
         self._draw_mrc()
 
     # ---- WLCalcTool API
-    def is_registered(self):
-        return self.wlcalc is not None
-
     def register_tool(self, wlcalc: QWidget):
         # Setup wlcalc.
         self.wlcalc = wlcalc

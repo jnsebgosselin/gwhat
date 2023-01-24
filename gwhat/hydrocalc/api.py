@@ -45,6 +45,12 @@ class WLCalcToolBase(QFrame):
     know what you are doing.
     """
 
+    def __init__(self, *args, **kwargs):
+        super.__init__(*args, **kwargs)
+
+        # The WLCalc instance to which this tool is registered.
+        self.wlcalc = None
+
     def name(self):
         """Return the name of the tool."""
         return self.__toolname__
@@ -91,6 +97,10 @@ class WLCalcToolBase(QFrame):
         """
         CONF.set(self.__toolname__, option, value)
 
+    def is_registered(self):
+        """Return whether this tool is registered to a WLCalc instance."""
+        return self.wlcalc is not None
+
 
 class WLCalcTool(WLCalcToolBase):
     """
@@ -111,11 +121,6 @@ class WLCalcTool(WLCalcToolBase):
 
     @abstractmethod
     def register_tool(self, wlcalc: QWidget):
-        pass
-
-    @abstractmethod
-    def is_registered(self):
-        """Return whether this tool is registered to a WLCalc instance."""
         pass
 
     @abstractmethod
