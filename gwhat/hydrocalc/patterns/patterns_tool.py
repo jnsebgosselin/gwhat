@@ -69,22 +69,6 @@ class FeaturePointPlotter(WLCalcAxesWidget):
     def onrelease(self, *args, **kwargs):
         self._update()
 
-    # @abstractmethod
-    # def onmove(self, event):
-    #     """Handler that is called when the mouse cursor moves."""
-    #     pass
-
-    # @abstractmethod
-    # def onpress(self, event):
-    #     """Handler that is called when a mouse button is pressed."""
-    #     pass
-
-    # @abstractmethod
-    # def onrelease(self, event):
-    #     """Handler that is called when a mouse button is released."""
-    #     pass
-
-
 
 class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
     __toolname__ = 'patterns'
