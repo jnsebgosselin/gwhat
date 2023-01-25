@@ -161,40 +161,39 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
             self._select_high_fall_btn.value())
 
     @wlcalcmethod
-    def _on_daterange_selected(self, xdata):
+    def _on_daterange_selected(self, xldates):
         """
         Handle when a new period of high spring or hign fall water levels is
         selected by the user.
 
         Parameters
         ----------
-        xdata : 2-tuple
+        xldates : 2-tuple
             A 2-tuple of floats containing the time, in numerical Excel format,
             of the new selected recession period.
         """
-        if self._select_high_spring_btn.value():
-            key = 'high_spring'
-        elif self._select_high_fall_btn.value():
-            key = 'high_fall'
+        dtmin, dtmax = xldates_to_datetimeindex(xldates)
 
-        date_times = xldates_to_datetimeindex(xdata)
-        date_min = date_times.min()
-        date_max = date_times.max()
-
-        # Check and remove previously picked high springor high fall feature
+        # Check and remove previously picked high spring or high fall feature
         # points that are within the selected period.
-        mask = ((self._feature_points[key].index < date_min) |
-                (self._feature_points[key].index > date_max))
-        self._feature_points[key] = self._feature_points[key][mask]
+        for high_type in ['high_spring', 'high_fall']:
+            mask = ((self._feature_points[high_type].index < dtmin) |
+                    (self._feature_points[high_type].index > dtmax))
+            self._feature_points[high_type] = (
+                self._feature_points[high_type][mask])
 
         # Find and add the new high spring or high fall feature point within
         # the selected period.
         data = self.wlcalc.wldset.data
-        mask = ((data.index >= date_min) &
-                (data.index <= date_max))
+        mask = (data.index >= dtmin) & (data.index <= dtmax)
         argmin = np.argmin(data['WL'][mask])
 
-        self._feature_points[key][
+        if self._select_high_spring_btn.value():
+            high_type = 'high_spring'
+        elif self._select_high_fall_btn.value():
+            high_type = 'high_fall'
+
+        self._feature_points[high_type][
             data.index[mask][argmin]
             ] = data['WL'][mask][argmin]
 
