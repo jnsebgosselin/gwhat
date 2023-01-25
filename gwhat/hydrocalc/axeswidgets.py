@@ -20,7 +20,8 @@ import numpy as np
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import QWidget
-
+from qtpy.QtGui import QCursor
+from matplotlib.backend_bases import LocationEvent
 from matplotlib.axes import Axes
 from matplotlib.widgets import AxesWidget
 
@@ -45,9 +46,18 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
 
     def set_active(self, active):
         """Set whether the axes widget is active."""
-        self.set_axeswidget_active(active)
+        for artist in self.__artists:
+            self.__visible[artist] = active
+            artist.set_visible(active)
+
         super().set_active(active)
-        self.wlcalc.draw()
+        if active is True:
+            x, y = self.canvas.mouseEventCoords(
+                self.canvas.mapFromGlobal(QCursor.pos()))
+            event = LocationEvent('onactive', self.canvas, x, y)
+            self.onactive(event)
+
+        self.wlcalc.update_axeswidgets()
 
     def register_artist(self, artist):
         """Register given artist."""
@@ -90,7 +100,8 @@ class WLCalcAxesWidget(WLCalcAxesWidgetBase):
     """
 
     @abstractmethod
-    def set_axeswidget_active(active):
+    def onactive(self, event):
+        """Handler that is called after this axe widget become active."""
         pass
 
     @abstractmethod
