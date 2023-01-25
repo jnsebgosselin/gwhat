@@ -286,7 +286,7 @@ class BRFManager(WLCalcTool):
 
     # ---- WLCalc integration
     @wlcalcmethod
-    def _on_period_selected(self, xdata):
+    def _on_period_selected(self, xdata, button):
         """
         Handle when a period is selected for the BRF calculations.
 
@@ -360,7 +360,7 @@ class BRFManager(WLCalcTool):
 
         self._period_selector = WLCalcVSpanSelector(
             wlcalc.fig.axes[0], wlcalc, onselected=self._on_period_selected,
-            axvspan_color='#009900')
+            axvspan_colors=['#009900'])
         wlcalc.install_axeswidget(self._period_selector)
 
         # Init axvline artists to plot the BRF period.
