@@ -697,6 +697,7 @@ class WLCalc(QWidget, SaveFileMixin):
         self.draw_glue_wl()
         self.sig_date_format_changed.emit()
         self.draw()
+        self.update_axeswidgets()
 
     def setup_wl_style(self):
         """
