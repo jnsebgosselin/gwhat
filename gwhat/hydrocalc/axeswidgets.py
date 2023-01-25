@@ -187,19 +187,25 @@ class WLCalcVSpanHighlighter(WLCalcAxesWidget):
 
 
 class WLCalcVSpanSelector(WLCalcAxesWidget):
-    sig_span_selected = QSignal(tuple)
+    sig_span_selected = QSignal(tuple, int)
 
     def __init__(self, ax: Axes, wlcalc: QWidget, onselected: Callable = None,
-                 axvspan_color: str = 'red', axvline_color: str = 'black'):
+                 axvspan_colors: list[str] = None,
+                 allowed_buttons: list[int] = None,
+                 axvline_color: str = 'black'):
         super().__init__(ax, wlcalc)
+
+        self._axvspan_colors = (
+            ['red'] if axvspan_colors is None else axvspan_colors)
+        self._allowed_buttons = (
+            [1] if allowed_buttons is None else allowed_buttons)
 
         if onselected is not None:
             self.sig_span_selected.connect(onselected)
 
         self.axvspan = ax.axvspan(
             ax.get_xbound()[0], ax.get_xbound()[0], visible=False,
-            color=axvspan_color, linewidth=1, ls='-', animated=self.useblit,
-            alpha=0.1)
+            linewidth=1, ls='-', animated=self.useblit, alpha=0.1)
         self.register_artist(self.axvspan)
 
         self.axvline = ax.axvline(
@@ -212,14 +218,17 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
         self._onrelease_xdata = []
 
     # ---- WLCalcAxesWidgetBase interface
-    def set_axeswidget_active(self, event):
+    def onactive(self, event):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
         self.onmove(event)
 
     def onpress(self, event):
-        if event.button == 1 and event.xdata:
+        if event.button in self._allowed_buttons and event.xdata:
+            if self._onpress_button is None:
+                index = self._allowed_buttons.index(event.button)
+                self.axvspan.set_color(self._axvspan_colors[index])
             if self._onpress_button in [None, event.button]:
                 self._onpress_button = event.button
                 self._onpress_xdata.append(event.xdata)
@@ -264,7 +273,7 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
                 self._onpress_button = None
                 self._onpress_xdata = []
                 self._onrelease_xdata = []
-                self.sig_span_selected.emit(onrelease_xdata)
+                self.sig_span_selected.emit(onrelease_xdata, event.button)
         self._update()
 
     def onmove(self, event):
