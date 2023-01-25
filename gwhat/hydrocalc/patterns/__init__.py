@@ -6,3 +6,5 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
+
+from gwhat.hydrocalc.patterns.patterns_tool import SeasonPatternsCalcTool
