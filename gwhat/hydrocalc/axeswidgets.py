@@ -6,9 +6,12 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
+from __future__ import annotations
+from typing import Any, Callable, TYPE_CHECKING
+if TYPE_CHECKING:
+    from gwhat.HydroCalc2 import WLCalc
 
 # ---- Standard library imports
-from typing import Any, Callable
 from abc import abstractmethod
 
 # ---- Third party imports
@@ -17,7 +20,8 @@ import numpy as np
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import QWidget
-
+from qtpy.QtGui import QCursor
+from matplotlib.backend_bases import LocationEvent
 from matplotlib.axes import Axes
 from matplotlib.widgets import AxesWidget
 
@@ -30,7 +34,7 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
     know what you are doing.
     """
 
-    def __init__(self, ax: Axes, wlcalc: QWidget):
+    def __init__(self, ax: Axes, wlcalc: WLCalc):
         AxesWidget.__init__(self, ax)
         QObject.__init__(self)
         self.useblit = self.canvas.supports_blit
@@ -42,9 +46,18 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
 
     def set_active(self, active):
         """Set whether the axes widget is active."""
-        self.set_axeswidget_active(active)
+        for artist in self.__artists:
+            self.__visible[artist] = active
+            artist.set_visible(active)
+
         super().set_active(active)
-        self.wlcalc.draw()
+        if active is True:
+            x, y = self.canvas.mouseEventCoords(
+                self.canvas.mapFromGlobal(QCursor.pos()))
+            event = LocationEvent('onactive', self.canvas, x, y)
+            self.onactive(event)
+
+        self.wlcalc.update_axeswidgets()
 
     def register_artist(self, artist):
         """Register given artist."""
@@ -87,7 +100,8 @@ class WLCalcAxesWidget(WLCalcAxesWidgetBase):
     """
 
     @abstractmethod
-    def set_axeswidget_active(active):
+    def onactive(self, event):
+        """Handler that is called after this axe widget become active."""
         pass
 
     @abstractmethod
@@ -124,10 +138,8 @@ class WLCalcVSpanHighlighter(WLCalcAxesWidget):
         self.register_artist(self.axvspan_highlight)
 
     # ---- WLCalcAxesWidgetBase interface
-    def set_axeswidget_active(self, active):
-        self.axvspan_highlight.xy = [
-            [np.inf, 1], [np.inf, 0], [np.inf, 0], [np.inf, 1]]
-        self.axvspan_highlight.set_visible(active)
+    def onactive(self, event):
+        self.onmove(event)
 
     def onmove(self, event):
         """Handler to draw the selector when the mouse cursor moves."""
@@ -200,19 +212,11 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
         self._onrelease_xdata = []
 
     # ---- WLCalcAxesWidgetBase interface
-    def set_axeswidget_active(self, active):
+    def set_axeswidget_active(self, event):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
-
-        self.axvline.set_xdata((np.inf, np.inf))
-        self.axvline.set_visible(active)
-
-        self.axvspan.xy = [[np.inf, 1],
-                           [np.inf, 0],
-                           [np.inf, 0],
-                           [np.inf, 1]]
-        self.axvspan.set_visible(active)
+        self.onmove(event)
 
     def onpress(self, event):
         if event.button == 1 and event.xdata:
