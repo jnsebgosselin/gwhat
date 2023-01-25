@@ -6,9 +6,12 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
+from __future__ import annotations
+from typing import Any, Callable, TYPE_CHECKING
+if TYPE_CHECKING:
+    from gwhat.HydroCalc2 import WLCalc
 
 # ---- Standard library imports
-from typing import Any, Callable
 from abc import abstractmethod
 
 # ---- Third party imports
@@ -30,7 +33,7 @@ class WLCalcAxesWidgetBase(AxesWidget, QObject):
     know what you are doing.
     """
 
-    def __init__(self, ax: Axes, wlcalc: QWidget):
+    def __init__(self, ax: Axes, wlcalc: WLCalc):
         AxesWidget.__init__(self, ax)
         QObject.__init__(self)
         self.useblit = self.canvas.supports_blit
