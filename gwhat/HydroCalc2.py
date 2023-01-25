@@ -34,6 +34,7 @@ from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
 from gwhat.hydrocalc.recession.recession_tool import MasterRecessionCalcTool
+from gwhat.hydrocalc.patterns import SeasonPatternsCalcTool
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
@@ -111,6 +112,9 @@ class WLCalc(QWidget, SaveFileMixin):
             ("A tool to evaluate groundwater recharge and its "
              "uncertainty from observed water levels and daily "
              "weather data."))
+
+        self.patterns_widget = SeasonPatternsCalcTool(parent=self)
+        self.install_tool(self.patterns_widget)
 
         self.tools_tabwidget.setCurrentIndex(
             CONF.get('hydrocalc', 'current_tool_index'))
