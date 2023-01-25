@@ -6,6 +6,11 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from gwhat.hydrocalc.axeswidgets import WLCalcAxesWidget
+
 
 # ---- Standard library imports
 import io
@@ -390,9 +395,11 @@ class WLCalc(QWidget, SaveFileMixin):
         tool.register_tool(self)
         self.tools[tool.name()] = tool
 
-    def install_axeswidget(self, axes_widget):
-        """Install the provided axes widget in WLCalc."""
+    def install_axeswidget(self, axes_widget: WLCalcAxesWidget,
+                           active: bool = False):
+        """Install the provided axes widget."""
         self._axes_widgets.append(axes_widget)
+        axes_widget.set_active(active)
 
     def emit_warning(self, message, title='Warning'):
         QMessageBox.warning(self, title, message, QMessageBox.Ok)
