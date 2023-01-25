@@ -18,6 +18,7 @@ from qtpy.QtCore import Qt, Signal
 from qtpy.QtWidgets import (
     QWidget, QSizePolicy, QPushButton, QGridLayout,
     QLabel, QApplication, QFileDialog, QMessageBox)
+from matplotlib.transforms import ScaledTranslation
 
 # ---- Local imports
 from gwhat.hydrocalc.recession.recession_calc import calculate_mrc
@@ -38,11 +39,16 @@ class FeaturePointPlotter(WLCalcAxesWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        offset = ScaledTranslation(0, 6/72, self.ax.figure.dpi_scale_trans)
         self._feature_artists = {
             'high_spring': self.ax.plot(
-                [], [], marker='v', color='green', ls='none')[0],
+                [], [], marker='v', color='green', ls='none',
+                transform=self.ax.transData + offset
+                )[0],
             'high_fall': self.ax.plot(
-                [], [], marker='v', color='red', ls='none')[0],
+                [], [], marker='v', color='red', ls='none',
+                transform=self.ax.transData + offset
+                )[0],
             }
 
         for artist in self._feature_artists.values():
