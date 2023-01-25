@@ -51,11 +51,15 @@ class FeaturePointPlotter(WLCalcAxesWidget):
     def set_feature_points(self, feature_points: dict):
         """Set and draw the seasonal pattern feature points."""
         for key, series in feature_points.items():
-            if series.empty:
-                self._feature_artists[key].set_data([], [])
-            else:
+            if not series.empty and self.wlcalc.dformat == 1:
+                self._feature_artists[key].set_data(
+                    series.index, series.values)
+            elif not series.empty and self.wlcalc.dformat == 0:
                 xldates = datetimeindex_to_xldates(series.index)
-                self._feature_artists[key].set_data(xldates, series.values)
+                self._feature_artists[key].set_data(
+                    xldates, series.values)
+            else:
+                self._feature_artists[key].set_data([], [])
 
     def onactive(self, *args, **kwargs):
         self._update()
