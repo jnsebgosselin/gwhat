@@ -46,7 +46,7 @@ class WLCalcToolBase(QFrame):
     """
 
     def __init__(self, *args, **kwargs):
-        super.__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # The WLCalc instance to which this tool is registered.
         self.wlcalc = None
