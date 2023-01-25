@@ -138,10 +138,8 @@ class WLCalcVSpanHighlighter(WLCalcAxesWidget):
         self.register_artist(self.axvspan_highlight)
 
     # ---- WLCalcAxesWidgetBase interface
-    def set_axeswidget_active(self, active):
-        self.axvspan_highlight.xy = [
-            [np.inf, 1], [np.inf, 0], [np.inf, 0], [np.inf, 1]]
-        self.axvspan_highlight.set_visible(active)
+    def onactive(self, event):
+        self.onmove(event)
 
     def onmove(self, event):
         """Handler to draw the selector when the mouse cursor moves."""
@@ -214,19 +212,11 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
         self._onrelease_xdata = []
 
     # ---- WLCalcAxesWidgetBase interface
-    def set_axeswidget_active(self, active):
+    def set_axeswidget_active(self, event):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
-
-        self.axvline.set_xdata((np.inf, np.inf))
-        self.axvline.set_visible(active)
-
-        self.axvspan.xy = [[np.inf, 1],
-                           [np.inf, 0],
-                           [np.inf, 0],
-                           [np.inf, 1]]
-        self.axvspan.set_visible(active)
+        self.onmove(event)
 
     def onpress(self, event):
         if event.button == 1 and event.xdata:
