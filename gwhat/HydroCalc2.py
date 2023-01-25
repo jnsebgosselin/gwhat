@@ -978,6 +978,19 @@ class WLCalc(QWidget, SaveFileMixin):
                 widget.onpress(event)
         self.draw()
 
+    def update_axeswidgets(self):
+        """"Update all active axes widgets."""
+        if self._figbckground is None:
+            return
+        self.canvas.restore_region(self._figbckground)
+
+        # Update all axes widget.
+        for widget in self._axes_widgets:
+            if widget.get_active():
+                widget._update()
+
+        self.canvas.blit()
+
 
 if __name__ == '__main__':
     import sys
