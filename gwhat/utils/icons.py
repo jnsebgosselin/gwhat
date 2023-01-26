@@ -81,17 +81,17 @@ RED = '#aa0000'
 
 FA_ICONS = {
     'arrow_left': [
-        ('mdi.arrow-left-bold',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        ('mdi.arrow-left-thick',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     'arrow_right': [
-        ('mdi.arrow-right-bold',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        ('mdi.arrow-right-thick',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     'arrow_up': [
-        ('mdi.arrow-up-bold',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        ('mdi.arrow-up-thick',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     'arrow_down': [
-        ('mdi.arrow-down-bold',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        ('mdi.arrow-down-thick',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     'calendar': [
         ('mdi.calendar-question',),
         {'color': COLOR, 'scale_factor': 1.3}],
