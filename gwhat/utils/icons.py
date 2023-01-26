@@ -80,6 +80,18 @@ GREEN = '#00aa00'
 RED = '#aa0000'
 
 FA_ICONS = {
+    'arrow_left': [
+        ('mdi.arrow-left-bold',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'arrow_right': [
+        ('mdi.arrow-right-bold',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'arrow_up': [
+        ('mdi.arrow-up-bold',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'arrow_down': [
+        ('mdi.arrow-down-bold',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'calendar': [
         ('mdi.calendar-question',),
         {'color': COLOR, 'scale_factor': 1.3}],
