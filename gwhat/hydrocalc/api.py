@@ -136,3 +136,11 @@ class WLCalcTool(WLCalcToolBase):
     def set_wxdset(self, wldset):
         """Set the namespace for the wldset in the widget."""
         pass
+
+    @abstractmethod
+    def on_wldset_changed(self):
+        """
+        A method that is called each time the water level dataset
+        is chanded in WLCalc.
+        """
+        pass

@@ -432,6 +432,7 @@ class WLCalc(QWidget, SaveFileMixin):
         # Setup BRF widget.
         for tool in self.tools.values():
             tool.set_wldset(wldset)
+            tool.on_wldset_changed()
 
         self.setup_hydrograph()
         self._navig_toolbar.update()
