@@ -583,6 +583,32 @@ class WLCalc(QWidget, SaveFileMixin):
         self.setup_xticklabels_format()
         self.draw()
 
+    def zoom_axis(self, which: str, how: str):
+        """
+        Zoom in or out the specified axis.
+
+        Parameters
+        ----------
+        which : str
+            The axis to zoom in or out. Valid values are 'x' or 'y'.
+        how : str
+            Whether to zoom in or zoom out. Valid values are 'out' or 'in'.
+        """
+        ax = self.fig.axes[0]
+        if which == 'x':
+            xmin, xmax = ax.get_xlim()
+            xoffset = 0.1 * abs(xmax - xmin)
+            if how == 'in':
+                xoffset *= -1
+            ax.set_xlim(xmin=xmin - xoffset, xmax=xmax + xoffset)
+        elif which == 'y':
+            ymin, ymax = ax.get_ylim()
+            yoffset = 0.025 * abs(ymax - ymin)
+            if how == 'in':
+                yoffset *= -1
+            ax.set_ylim(ymin=ymin - yoffset, ymax=ymax + yoffset)
+        self.draw()
+
     def setup_axis_range(self, event=None):
         """Setup the range of the x- and y-axis."""
         if self.wldset is not None:
