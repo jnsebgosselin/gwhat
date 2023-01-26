@@ -609,6 +609,31 @@ class WLCalc(QWidget, SaveFileMixin):
             ax.set_ylim(ymin=ymin - yoffset, ymax=ymax + yoffset)
         self.draw()
 
+    def move_axis_range(self, direction: str):
+        """
+        Move axis in the specified direction.
+
+        Parameters
+        ----------
+        direction : str
+            The direction in which to move the axis. Valid values are
+            'left', 'right', 'up', and 'down'.
+        """
+        ax = self.fig.axes[0]
+        if direction in ('left', 'right'):
+            xmin, xmax = ax.get_xlim()
+            xoffset = 0.1 * abs(xmax - xmin)
+            if direction == 'right':
+                xoffset *= -1
+            ax.set_xlim(xmin=xmin + xoffset, xmax=xmax + xoffset)
+        elif direction in ('up', 'down'):
+            ymin, ymax = ax.get_ylim()
+            yoffset = 0.025 * abs(ymax - ymin)
+            if direction == 'down':
+                yoffset *= -1
+            ax.set_ylim(ymin=ymin + yoffset, ymax=ymax + yoffset)
+        self.draw()
+
     def setup_axis_range(self, event=None):
         """Setup the range of the x- and y-axis."""
         if self.wldset is not None:
