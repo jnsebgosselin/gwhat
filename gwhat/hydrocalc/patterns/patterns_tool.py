@@ -160,20 +160,22 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
             self._feature_points[high_type] = (
                 self._feature_points[high_type][mask])
 
+        # Make sure there is not two feature point of the same type
+
         # Find and add the new high spring or high fall feature point within
         # the selected period.
-        data = self.wlcalc.wldset.data
-        mask = (data.index >= dtmin) & (data.index <= dtmax)
-        argmin = np.argmin(data['WL'][mask])
-
         if button == 1:
             high_type = 'high_spring'
         elif button == 3:
             high_type = 'high_fall'
 
-        self._feature_points[high_type][
-            data.index[mask][argmin]
-            ] = data['WL'][mask][argmin]
+        data = self.wlcalc.wldset.data
+        mask = (data.index >= dtmin) & (data.index <= dtmax)
+        if mask.sum() > 0:
+            argmin = np.argmin(data['WL'][mask])
+            self._feature_points[high_type][
+                data.index[mask][argmin]
+                ] = data['WL'][mask][argmin]
 
         self._draw_patterns_feature_points()
 
