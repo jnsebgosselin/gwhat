@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 
 # ---- Standard library imports
+import sys
 import io
 import os.path as osp
 import datetime
@@ -23,9 +24,9 @@ from qtpy.QtGui import QImage
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (
+from qtpy.QtWidgets import (
     QGridLayout, QTabWidget, QApplication, QWidget, QMainWindow,
-    QToolBar, QFrame, QMessageBox)
+    QToolBar, QFrame, QMessageBox, QAction)
 
 import matplotlib as mpl
 from matplotlib.figure import Figure as MplFigure
@@ -43,7 +44,8 @@ from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-from gwhat.utils.qthelpers import create_toolbutton
+from gwhat.utils.qthelpers import (
+    create_toolbutton, create_action, get_shortcuts_native_text)
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
 from gwhat.widgets.buttons import OnOffToolButton, OnOffPushButton
@@ -272,6 +274,41 @@ class WLCalc(QWidget, SaveFileMixin):
         # dformat: False -> Excel Numeric Date Format
         #          True -> Matplotlib Date Format
 
+        # ---- Move/Zoom Axis.
+        modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Left')
+        self.move_left_action = create_action(
+            self, icon='arrow_left', text="Move left",
+            tip=("Move horizontal axis to the left "
+                 f"({modif_sc_text} to zoom out)."),
+            triggered=lambda _: self._on_move_axis_triggered('left'),
+            shortcut='Ctrl+Left')
+        self.move_left_action.setShortcuts(['Ctrl+Left', 'Ctrl+Shift+Left'])
+
+        modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Right')
+        self.move_right_action = create_action(
+            self, icon='arrow_right', text="Move right",
+            tip=("Move horizontal axis to the right "
+                 f"({modif_sc_text} to zoom in)."),
+            triggered=lambda _: self._on_move_axis_triggered('right'),
+            shortcut='Ctrl+Right')
+        self.move_right_action.setShortcuts(['Ctrl+Right', 'Ctrl+Shift+Right'])
+
+        modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Up')
+        self.move_up_action = create_action(
+            self, icon='arrow_up', text="Move up",
+            tip=f"Move vertical axis up ({modif_sc_text} to zoom out).",
+            triggered=lambda _: self._on_move_axis_triggered('up'),
+            shortcut='Ctrl+Up')
+        self.move_up_action.setShortcuts(['Ctrl+Up', 'Ctrl+Shift+Up'])
+
+        modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Down')
+        self.move_down_action = create_action(
+            self, icon='arrow_down', text="Move down",
+            tip=f"Move vertical axis down ({modif_sc_text} to zoom in).",
+            triggered=lambda _: self._on_move_axis_triggered('down'),
+            shortcut='Ctrl+Down')
+        self.move_down_action.setShortcuts(['Ctrl+Down', 'Ctrl+Shift+Down'])
+
         # ---- Show/Hide section
         self.btn_show_glue = OnOffToolButton('show_glue_wl', size='normal')
         self.btn_show_glue.setToolTip(
@@ -332,19 +369,30 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Setup the layout.
         toolbar = QToolBar()
-        for btn in [self.btn_copy_to_clipboard, None,
-                    self.btn_home, self.btn_fit_waterlevels, self.btn_pan,
-                    self.btn_zoom_to_rect, None,
-                    self.btn_wl_style, self.btn_dateFormat, None,
-                    self.btn_show_glue, self.btn_show_weather,
-                    self.btn_show_meas_wl, None,
-                    self.btn_rect_select, self.btn_clear_select,
-                    self.btn_del_select, self.btn_undo_changes,
-                    self.btn_clear_changes, self.btn_commit_changes]:
-            if btn is None:
+        for item in [
+                self.btn_copy_to_clipboard,
+                None,
+                self.btn_fit_waterlevels, self.btn_pan,
+                self.btn_zoom_to_rect,
+                None,
+                self.move_left_action, self.move_right_action,
+                self.move_up_action, self.move_down_action,
+                None,
+                self.btn_wl_style, self.btn_dateFormat,
+                None,
+                self.btn_show_glue, self.btn_show_weather,
+                self.btn_show_meas_wl,
+                None,
+                self.btn_rect_select, self.btn_clear_select,
+                self.btn_del_select, self.btn_undo_changes,
+                self.btn_clear_changes, self.btn_commit_changes,
+                ]:
+            if item is None:
                 toolbar.addSeparator()
+            elif isinstance(item, QAction):
+                toolbar.addAction(item)
             else:
-                toolbar.addWidget(btn)
+                toolbar.addWidget(item)
         return toolbar
 
     def __initUI__(self):
@@ -380,6 +428,24 @@ class WLCalc(QWidget, SaveFileMixin):
 
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
+
+    def _on_move_axis_triggered(self, direction):
+        """
+        Handle when one of the action to move or zoom the x-axis or y-axis
+        is triggered by the user.
+        """
+        shift = bool(QApplication.keyboardModifiers() & Qt.ShiftModifier)
+        if shift:
+            if direction == 'left':
+                self.zoom_axis('x', 'out')
+            elif direction == 'right':
+                self.zoom_axis('x', 'in')
+            elif direction == 'up':
+                self.zoom_axis('y', 'out')
+            elif direction == 'down':
+                self.zoom_axis('y', 'in')
+        else:
+            self.move_axis_range(direction)
 
     def install_tool(self, tool):
         """Install the provided tool in WLCalc."""
