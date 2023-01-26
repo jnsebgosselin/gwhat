@@ -240,10 +240,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self._navig_toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self._navig_toolbar.hide()
 
-        self.btn_home = QToolButtonNormal(icons.get_icon('home'))
-        self.btn_home.setToolTip('Reset original view.')
-        self.btn_home.clicked.connect(self.home)
-
         self.btn_fit_waterlevels = QToolButtonNormal('expand_all')
         self.btn_fit_waterlevels.setToolTip(
             "<p>Best fit the water level data along the x and y axis.</p>")
@@ -533,19 +529,6 @@ class WLCalc(QWidget, SaveFileMixin):
         """Clear the selecte water level data."""
         self.wl_selected_i = []
         self.draw_select_wl(draw)
-
-    def home(self):
-        """Reset the orgininal view of the figure."""
-        self._navig_toolbar.home()
-        if self.dformat == 0:
-            ax0 = self.fig.axes[0]
-            xfmt = mpl.ticker.ScalarFormatter()
-            ax0.xaxis.set_major_formatter(xfmt)
-            ax0.get_xaxis().get_major_formatter().set_useOffset(False)
-
-            xlim = ax0.get_xlim()
-            ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
-        self.setup_ax_margins()
 
     # ---- Water level edit tools
     def delete_selected_wl(self):
