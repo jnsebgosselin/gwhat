@@ -182,5 +182,174 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
     assert qfdialog_patcher.call_count == 1
 
 
+def test_pan_axes(hydrocalc, tmp_path, qtbot, mocker):
+    """
+    Test that the tool to pan the axes with keyboard shortcuts is working
+    as expected.
+    """
+    fig = hydrocalc.canvas.figure
+
+    expected_xmin = 15655.9
+    expected_xmax = 16032.1
+
+    expected_ymin = 3.8955
+    expected_ymax = 2.7344
+
+    xoffset = (16032.1 - 15655.9) * 0.1
+    yoffset = (3.90 - 2.73) * 0.025
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == expected_xmin
+    assert round(xmax, 1) == expected_xmax
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 4) == expected_ymin
+    assert round(ymax, 4) == expected_ymax
+
+    # Pan xaxis to the left.
+    qtbot.keyPress(hydrocalc, Qt.Key_Left, modifier=Qt.ControlModifier)
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == round(expected_xmin + xoffset, 1)
+    assert round(xmax, 1) == round(expected_xmax + xoffset, 1)
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 4) == expected_ymin
+    assert round(ymax, 4) == expected_ymax
+
+    # Pan xaxis to the right (x2).
+    qtbot.keyPress(hydrocalc, Qt.Key_Right, modifier=Qt.ControlModifier)
+    qtbot.keyPress(hydrocalc, Qt.Key_Right, modifier=Qt.ControlModifier)
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == round(expected_xmin - xoffset, 1)
+    assert round(xmax, 1) == round(expected_xmax - xoffset, 1)
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 4) == expected_ymin
+    assert round(ymax, 4) == expected_ymax
+
+    # Pan yaxis up.
+    qtbot.keyPress(hydrocalc, Qt.Key_Up, modifier=Qt.ControlModifier)
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == round(expected_xmin - xoffset, 1)
+    assert round(xmax, 1) == round(expected_xmax - xoffset, 1)
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 2) == round(expected_ymin + yoffset, 2)
+    assert round(ymax, 2) == round(expected_ymax + yoffset, 2)
+
+    # Pan yaxis down.
+    qtbot.keyPress(hydrocalc, Qt.Key_Down, modifier=Qt.ControlModifier)
+    qtbot.keyPress(hydrocalc, Qt.Key_Down, modifier=Qt.ControlModifier)
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == round(expected_xmin - xoffset, 1)
+    assert round(xmax, 1) == round(expected_xmax - xoffset, 1)
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 2) == round(expected_ymin - yoffset, 2)
+    assert round(ymax, 2) == round(expected_ymax - yoffset, 2)
+
+
+def test_zoom_in_axes(hydrocalc, tmp_path, qtbot, mocker):
+    """
+    Test that the tool to zoom the axes in with keyboard shortcuts is
+    working as expected.
+    """
+    fig = hydrocalc.canvas.figure
+
+    expected_xmin = 15655.9
+    expected_xmax = 16032.1
+
+    expected_ymin = 3.8955
+    expected_ymax = 2.7344
+
+    xoffset = (16032.1 - 15655.9) * 0.1
+    yoffset = (3.90 - 2.73) * 0.025
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == expected_xmin
+    assert round(xmax, 1) == expected_xmax
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 4) == expected_ymin
+    assert round(ymax, 4) == expected_ymax
+
+    # Zoom xaxis in.
+    qtbot.keyPress(hydrocalc, Qt.Key_Right,
+                   modifier=Qt.ControlModifier | Qt.ShiftModifier)
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == round(expected_xmin + xoffset, 1)
+    assert round(xmax, 1) == round(expected_xmax - xoffset, 1)
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 4) == expected_ymin
+    assert round(ymax, 4) == expected_ymax
+
+    # Zoom yaxis in.
+    qtbot.keyPress(hydrocalc, Qt.Key_Up,
+                   modifier=Qt.ControlModifier | Qt.ShiftModifier)
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == round(expected_xmin + xoffset, 1)
+    assert round(xmax, 1) == round(expected_xmax - xoffset, 1)
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 2) == round(expected_ymin - yoffset, 2)
+    assert round(ymax, 2) == round(expected_ymax + yoffset, 2)
+
+
+def test_zoom_out_axes(hydrocalc, tmp_path, qtbot, mocker):
+    """
+    Test that the tool to zoom the axes out with keyboard shortcuts is
+    working as expected.
+    """
+    fig = hydrocalc.canvas.figure
+
+    expected_xmin = 15655.9
+    expected_xmax = 16032.1
+
+    expected_ymin = 3.8955
+    expected_ymax = 2.7344
+
+    xoffset = (16032.1 - 15655.9) * 0.1
+    yoffset = (3.90 - 2.73) * 0.025
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == expected_xmin
+    assert round(xmax, 1) == expected_xmax
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 4) == expected_ymin
+    assert round(ymax, 4) == expected_ymax
+
+    # Zoom xaxis out.
+    qtbot.keyPress(hydrocalc, Qt.Key_Left,
+                   modifier=Qt.ControlModifier | Qt.ShiftModifier)
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == round(expected_xmin - xoffset, 1)
+    assert round(xmax, 1) == round(expected_xmax + xoffset, 1)
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 4) == expected_ymin
+    assert round(ymax, 4) == expected_ymax
+
+    # Zoom yaxis in.
+    qtbot.keyPress(hydrocalc, Qt.Key_Down,
+                   modifier=Qt.ControlModifier | Qt.ShiftModifier)
+
+    xmin, xmax = fig.axes[0].get_xlim()
+    assert round(xmin, 1) == round(expected_xmin - xoffset, 1)
+    assert round(xmax, 1) == round(expected_xmax + xoffset, 1)
+
+    ymin, ymax = fig.axes[0].get_ylim()
+    assert round(ymin, 2) == round(expected_ymin + yoffset, 2)
+    assert round(ymax, 2) == round(expected_ymax - yoffset, 2)
+
+
 if __name__ == "__main__":
     pytest.main(['-x', __file__, '-v', '-rw'])
