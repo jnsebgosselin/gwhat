@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 
 # ---- Standard library imports
+import sys
 import io
 import os.path as osp
 import datetime
@@ -23,9 +24,9 @@ from qtpy.QtGui import QImage
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (
+from qtpy.QtWidgets import (
     QGridLayout, QTabWidget, QApplication, QWidget, QMainWindow,
-    QToolBar, QFrame, QMessageBox)
+    QToolBar, QFrame, QMessageBox, QAction)
 
 import matplotlib as mpl
 from matplotlib.figure import Figure as MplFigure
@@ -43,7 +44,8 @@ from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-from gwhat.utils.qthelpers import create_toolbutton
+from gwhat.utils.qthelpers import (
+    create_toolbutton, create_action, get_shortcuts_native_text)
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
 from gwhat.widgets.buttons import OnOffToolButton, OnOffPushButton
@@ -240,10 +242,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self._navig_toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self._navig_toolbar.hide()
 
-        self.btn_home = QToolButtonNormal(icons.get_icon('home'))
-        self.btn_home.setToolTip('Reset original view.')
-        self.btn_home.clicked.connect(self.home)
-
         self.btn_fit_waterlevels = QToolButtonNormal('expand_all')
         self.btn_fit_waterlevels.setToolTip(
             "<p>Best fit the water level data along the x and y axis.</p>")
@@ -275,6 +273,41 @@ class WLCalc(QWidget, SaveFileMixin):
         self.btn_dateFormat.setAutoRaise(False)
         # dformat: False -> Excel Numeric Date Format
         #          True -> Matplotlib Date Format
+
+        # ---- Move/Zoom Axis.
+        modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Left')
+        self.move_left_action = create_action(
+            self, icon='arrow_left', text="Move left",
+            tip=("Move horizontal axis to the left "
+                 f"({modif_sc_text} to zoom out)."),
+            triggered=lambda _: self._on_move_axis_triggered('left'),
+            shortcut='Ctrl+Left')
+        self.move_left_action.setShortcuts(['Ctrl+Left', 'Ctrl+Shift+Left'])
+
+        modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Right')
+        self.move_right_action = create_action(
+            self, icon='arrow_right', text="Move right",
+            tip=("Move horizontal axis to the right "
+                 f"({modif_sc_text} to zoom in)."),
+            triggered=lambda _: self._on_move_axis_triggered('right'),
+            shortcut='Ctrl+Right')
+        self.move_right_action.setShortcuts(['Ctrl+Right', 'Ctrl+Shift+Right'])
+
+        modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Up')
+        self.move_up_action = create_action(
+            self, icon='arrow_up', text="Move up",
+            tip=f"Move vertical axis up ({modif_sc_text} to zoom in).",
+            triggered=lambda _: self._on_move_axis_triggered('up'),
+            shortcut='Ctrl+Up')
+        self.move_up_action.setShortcuts(['Ctrl+Up', 'Ctrl+Shift+Up'])
+
+        modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Down')
+        self.move_down_action = create_action(
+            self, icon='arrow_down', text="Move down",
+            tip=f"Move vertical axis down ({modif_sc_text} to zoom out).",
+            triggered=lambda _: self._on_move_axis_triggered('down'),
+            shortcut='Ctrl+Down')
+        self.move_down_action.setShortcuts(['Ctrl+Down', 'Ctrl+Shift+Down'])
 
         # ---- Show/Hide section
         self.btn_show_glue = OnOffToolButton('show_glue_wl', size='normal')
@@ -336,19 +369,30 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Setup the layout.
         toolbar = QToolBar()
-        for btn in [self.btn_copy_to_clipboard, None,
-                    self.btn_home, self.btn_fit_waterlevels, self.btn_pan,
-                    self.btn_zoom_to_rect, None,
-                    self.btn_wl_style, self.btn_dateFormat, None,
-                    self.btn_show_glue, self.btn_show_weather,
-                    self.btn_show_meas_wl, None,
-                    self.btn_rect_select, self.btn_clear_select,
-                    self.btn_del_select, self.btn_undo_changes,
-                    self.btn_clear_changes, self.btn_commit_changes]:
-            if btn is None:
+        for item in [
+                self.btn_copy_to_clipboard,
+                None,
+                self.btn_fit_waterlevels, self.btn_pan,
+                self.btn_zoom_to_rect,
+                None,
+                self.move_left_action, self.move_right_action,
+                self.move_up_action, self.move_down_action,
+                None,
+                self.btn_wl_style, self.btn_dateFormat,
+                None,
+                self.btn_show_glue, self.btn_show_weather,
+                self.btn_show_meas_wl,
+                None,
+                self.btn_rect_select, self.btn_clear_select,
+                self.btn_del_select, self.btn_undo_changes,
+                self.btn_clear_changes, self.btn_commit_changes,
+                ]:
+            if item is None:
                 toolbar.addSeparator()
+            elif isinstance(item, QAction):
+                toolbar.addAction(item)
             else:
-                toolbar.addWidget(btn)
+                toolbar.addWidget(item)
         return toolbar
 
     def __initUI__(self):
@@ -384,6 +428,24 @@ class WLCalc(QWidget, SaveFileMixin):
 
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
+
+    def _on_move_axis_triggered(self, direction):
+        """
+        Handle when one of the action to move or zoom the x-axis or y-axis
+        is triggered by the user.
+        """
+        shift = bool(QApplication.keyboardModifiers() & Qt.ShiftModifier)
+        if shift:
+            if direction == 'left':
+                self.zoom_axis('x', 'out')
+            elif direction == 'right':
+                self.zoom_axis('x', 'in')
+            elif direction == 'up':
+                self.zoom_axis('y', 'out')
+            elif direction == 'down':
+                self.zoom_axis('y', 'in')
+        else:
+            self.move_axis_range(direction)
 
     def install_tool(self, tool):
         """Install the provided tool in WLCalc."""
@@ -534,19 +596,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.wl_selected_i = []
         self.draw_select_wl(draw)
 
-    def home(self):
-        """Reset the orgininal view of the figure."""
-        self._navig_toolbar.home()
-        if self.dformat == 0:
-            ax0 = self.fig.axes[0]
-            xfmt = mpl.ticker.ScalarFormatter()
-            ax0.xaxis.set_major_formatter(xfmt)
-            ax0.get_xaxis().get_major_formatter().set_useOffset(False)
-
-            xlim = ax0.get_xlim()
-            ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
-        self.setup_ax_margins()
-
     # ---- Water level edit tools
     def delete_selected_wl(self):
         """Delete the selecte water level data."""
@@ -598,6 +647,57 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self.setup_axis_range()
         self.setup_xticklabels_format()
+        self.draw()
+
+    def zoom_axis(self, which: str, how: str):
+        """
+        Zoom in or out the specified axis.
+
+        Parameters
+        ----------
+        which : str
+            The axis to zoom in or out. Valid values are 'x' or 'y'.
+        how : str
+            Whether to zoom in or zoom out. Valid values are 'out' or 'in'.
+        """
+        ax = self.fig.axes[0]
+        if which == 'x':
+            xmin, xmax = ax.get_xlim()
+            xoffset = 0.1 * abs(xmax - xmin)
+            if how == 'in':
+                xoffset *= -1
+            ax.set_xlim(xmin=xmin - xoffset, xmax=xmax + xoffset)
+        elif which == 'y':
+            ymin, ymax = ax.get_ylim()
+            yoffset = 0.025 * abs(ymax - ymin)
+            if how == 'in':
+                yoffset *= -1
+            ax.set_ylim(ymin=ymin - yoffset, ymax=ymax + yoffset)
+        self.draw()
+
+    def move_axis_range(self, direction: str):
+        """
+        Move axis in the specified direction.
+
+        Parameters
+        ----------
+        direction : str
+            The direction in which to move the axis. Valid values are
+            'left', 'right', 'up', and 'down'.
+        """
+        ax = self.fig.axes[0]
+        if direction in ('left', 'right'):
+            xmin, xmax = ax.get_xlim()
+            xoffset = 0.1 * abs(xmax - xmin)
+            if direction == 'right':
+                xoffset *= -1
+            ax.set_xlim(xmin=xmin + xoffset, xmax=xmax + xoffset)
+        elif direction in ('up', 'down'):
+            ymin, ymax = ax.get_ylim()
+            yoffset = 0.025 * abs(ymax - ymin)
+            if direction == 'down':
+                yoffset *= -1
+            ax.set_ylim(ymin=ymin + yoffset, ymax=ymax + yoffset)
         self.draw()
 
     def setup_axis_range(self, event=None):
