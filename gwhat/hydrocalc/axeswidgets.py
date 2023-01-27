@@ -244,7 +244,7 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
                     QApplication.keyboardModifiers())
                 self._onpress_xdata = [event.xdata]
 
-                self.axvspan.set_color('red')
+                self.axvspan.set_color(self.get_onpress_axvspan_color(event))
                 self.axvline.set_visible(False)
                 self.axvspan.set_visible(False)
 
