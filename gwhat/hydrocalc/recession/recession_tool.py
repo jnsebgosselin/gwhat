@@ -140,7 +140,7 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
 
     # ---- WLCalc integration
     @wlcalcmethod
-    def _on_period_selected(self, xdata, button):
+    def _on_period_selected(self, xdata, button, modifiers):
         """
         Handle when a new period is selected for the MRC calculations.
 
