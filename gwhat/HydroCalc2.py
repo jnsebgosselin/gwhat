@@ -296,7 +296,7 @@ class WLCalc(QWidget, SaveFileMixin):
         modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Up')
         self.move_up_action = create_action(
             self, icon='arrow_up', text="Move up",
-            tip=f"Move vertical axis up ({modif_sc_text} to zoom out).",
+            tip=f"Move vertical axis up ({modif_sc_text} to zoom in).",
             triggered=lambda _: self._on_move_axis_triggered('up'),
             shortcut='Ctrl+Up')
         self.move_up_action.setShortcuts(['Ctrl+Up', 'Ctrl+Shift+Up'])
@@ -304,7 +304,7 @@ class WLCalc(QWidget, SaveFileMixin):
         modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Down')
         self.move_down_action = create_action(
             self, icon='arrow_down', text="Move down",
-            tip=f"Move vertical axis down ({modif_sc_text} to zoom in).",
+            tip=f"Move vertical axis down ({modif_sc_text} to zoom out).",
             triggered=lambda _: self._on_move_axis_triggered('down'),
             shortcut='Ctrl+Down')
         self.move_down_action.setShortcuts(['Ctrl+Down', 'Ctrl+Shift+Down'])
