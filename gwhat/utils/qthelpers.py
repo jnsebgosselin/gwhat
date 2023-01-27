@@ -9,14 +9,17 @@
 
 """Qt utilities"""
 
+from __future__ import annotations
+
 # ---- Standard imports
 import sys
 import platform
 
 # ---- Third party imports
-from PyQt5.QtCore import QByteArray, Qt, QSize
-from PyQt5.QtWidgets import (
-    QWidget, QSizePolicy, QToolButton, QApplication, QStyleFactory)
+from qtpy.QtGui import QKeySequence
+from qtpy.QtCore import QByteArray, Qt
+from qtpy.QtWidgets import (
+    QWidget, QSizePolicy, QToolButton, QApplication, QStyleFactory, QAction)
 
 # ---- Local imports
 from gwhat.utils.icons import get_icon
@@ -96,3 +99,72 @@ def create_toolbutton(parent, text=None, shortcut=None, icon=None, tip=None,
         button.setIconSize(iconsize)
 
     return button
+
+
+def create_action(parent, text=None, shortcut=None, icon=None, tip=None,
+                  toggled=None, triggered=None, data=None, menurole=None,
+                  context=Qt.WindowShortcut, name=None):
+    """Create a QToolButton with the provided settings."""
+    action = QAction(text, parent)
+
+    if name is not None:
+        action.setObjectName(name)
+
+    if icon is not None:
+        icon = get_icon(icon) if isinstance(icon, str) else icon
+        action.setIcon(icon)
+
+    if data is not None:
+        action.setData(data)
+    if menurole is not None:
+        action.setMenuRole(menurole)
+
+    if shortcut is not None:
+        if isinstance(shortcut, (list, tuple)):
+            action.setShortcuts(shortcut)
+        else:
+            action.setShortcut(shortcut)
+
+    if any((text, tip, shortcut)):
+        action.setToolTip(format_tooltip(text, tip, shortcut))
+
+    if triggered is not None:
+        action.triggered.connect(triggered)
+    if toggled is not None:
+        action.toggled.connect(toggled)
+        action.setCheckable(True)
+
+    return action
+
+
+def format_tooltip(text: str, tip: str, shortcuts: list[str] | str):
+    """
+    Format text, tip and shortcut into a single str to be set
+    as a widget's tooltip.
+    """
+    keystr = get_shortcuts_native_text(shortcuts)
+    # We need to replace the unicode characters < and > by their HTML
+    # code to avoid problem with the HTML formatting of the tooltip.
+    keystr = keystr.replace('<', '&#60;').replace('>', '&#62;')
+    ttip = ""
+    if text or keystr:
+        ttip += "<p style='white-space:pre'>"
+        if text:
+            ttip += "{}".format(text) + (" " if keystr else "")
+        if keystr:
+            ttip += "({})".format(keystr)
+        ttip += "</p>"
+    if tip:
+        ttip += "<p>{}</p>".format(tip or '')
+    return ttip
+
+
+def get_shortcuts_native_text(shortcuts: list[str] | str):
+    """
+    Return the native text of a shortcut or a list of shortcuts.
+    """
+    if not isinstance(shortcuts, (list, tuple)):
+        shortcuts = [shortcuts, ]
+
+    return ', '.join([QKeySequence(sc).toString(QKeySequence.NativeText)
+                      for sc in shortcuts])
