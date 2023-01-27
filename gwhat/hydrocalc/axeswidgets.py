@@ -19,7 +19,7 @@ import numpy as np
 
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget, QApplication
 from qtpy.QtGui import QCursor
 from matplotlib.backend_bases import LocationEvent
 from matplotlib.axes import Axes
@@ -187,16 +187,16 @@ class WLCalcVSpanHighlighter(WLCalcAxesWidget):
 
 
 class WLCalcVSpanSelector(WLCalcAxesWidget):
-    sig_span_selected = QSignal(tuple, int)
+    sig_span_selected = QSignal(tuple, int, object)
 
     def __init__(self, ax: Axes, wlcalc: QWidget, onselected: Callable = None,
-                 axvspan_colors: list[str] = None,
-                 allowed_buttons: list[int] = None,
-                 axvline_color: str = 'black'):
+                 axvspan_color: str = 'red',
+                 axvline_color: str = 'black',
+                 allowed_buttons: list[int] = None):
         super().__init__(ax, wlcalc)
 
-        self._axvspan_colors = (
-            ['red'] if axvspan_colors is None else axvspan_colors)
+        self._axvline_color = axvspan_color
+        self._axvspan_color = axvspan_color
         self._allowed_buttons = (
             [1] if allowed_buttons is None else allowed_buttons)
 
@@ -216,34 +216,51 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
+        self._onpress_keyboard_modifiers = None
+
+    def get_onpress_axvspan_color(self, event):
+        """"
+        Return the axvline color.
+
+        This method can be overridden to set the color of axvspan based on
+        a set of custom conditions.
+        """
+        return self._axvline_color
 
     # ---- WLCalcAxesWidgetBase interface
     def onactive(self, event):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
+        self._onpress_keyboard_modifiers = None
         self.onmove(event)
 
     def onpress(self, event):
         if event.button in self._allowed_buttons and event.xdata:
-            if self._onpress_button is None:
-                index = self._allowed_buttons.index(event.button)
-                self.axvspan.set_color(self._axvspan_colors[index])
-            if self._onpress_button in [None, event.button]:
+            if (self._onpress_button is None or
+                    self._onpress_button != event.button):
                 self._onpress_button = event.button
+                self._onpress_keyboard_modifiers = (
+                    QApplication.keyboardModifiers())
+                self._onpress_xdata = [event.xdata]
+
+                self.axvspan.set_color('red')
+                self.axvline.set_visible(False)
+                self.axvspan.set_visible(False)
+
+                self.axvspan.xy = [[self._onpress_xdata[0], 1],
+                                   [self._onpress_xdata[0], 0],
+                                   [self._onpress_xdata[0], 0],
+                                   [self._onpress_xdata[0], 1]]
+            elif self._onpress_button == event.button:
                 self._onpress_xdata.append(event.xdata)
+
                 self.axvline.set_visible(False)
                 self.axvspan.set_visible(True)
-                if len(self._onpress_xdata) == 1:
-                    self.axvspan.xy = [[self._onpress_xdata[0], 1],
-                                       [self._onpress_xdata[0], 0],
-                                       [self._onpress_xdata[0], 0],
-                                       [self._onpress_xdata[0], 1]]
-                elif len(self._onpress_xdata) == 2:
-                    self.axvspan.xy = [[self._onpress_xdata[0], 1],
-                                       [self._onpress_xdata[0], 0],
-                                       [self._onpress_xdata[1], 0],
-                                       [self._onpress_xdata[1], 1]]
+                self.axvspan.xy = [[self._onpress_xdata[0], 1],
+                                   [self._onpress_xdata[0], 0],
+                                   [self._onpress_xdata[1], 0],
+                                   [self._onpress_xdata[1], 1]]
         self._update()
 
     def onrelease(self, event):
@@ -270,10 +287,16 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
                     max(self._onrelease_xdata) -
                     self.wlcalc.dt4xls2mpl * self.wlcalc.dformat
                     ))
+
+                self.sig_span_selected.emit(
+                    onrelease_xdata,
+                    self._onpress_button,
+                    self._onpress_keyboard_modifiers)
+
                 self._onpress_button = None
                 self._onpress_xdata = []
                 self._onrelease_xdata = []
-                self.sig_span_selected.emit(onrelease_xdata, event.button)
+                self._onpress_keyboard_modifiers = None
         self._update()
 
     def onmove(self, event):
@@ -294,7 +317,7 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
             self.axvspan.set_visible(False)
         elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 0:
             self.axvline.set_visible(False)
-            self.axvspan.set_visible(True)
+            self.axvspan.set_visible(False)
         elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 1:
             self.axvline.set_visible(True)
             self.axvline.set_xdata((event.xdata, event.xdata))
