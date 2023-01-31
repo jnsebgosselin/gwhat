@@ -240,8 +240,7 @@ class WLCalcVSpanSelector(WLCalcAxesWidget):
             if (self._onpress_button is None or
                     self._onpress_button != event.button):
                 self._onpress_button = event.button
-                self._onpress_keyboard_modifiers = (
-                    QApplication.keyboardModifiers())
+                self._onpress_keyboard_modifiers = event.guiEvent.modifiers()
                 self._onpress_xdata = [event.xdata]
 
                 self.axvspan.set_color(self.get_onpress_axvspan_color(event))

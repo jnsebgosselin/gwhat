@@ -9,28 +9,21 @@
 from __future__ import annotations
 
 # ---- Standard library imports
-import os.path as osp
+import sys
 
 # ---- Third party imports
 import numpy as np
 import pandas as pd
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import (
-    QWidget, QSizePolicy, QPushButton, QGridLayout,
-    QLabel, QApplication, QFileDialog, QMessageBox)
+from qtpy.QtWidgets import QWidget, QGridLayout, QApplication
 from matplotlib.transforms import ScaledTranslation
 
 # ---- Local imports
-from gwhat.hydrocalc.recession.recession_calc import calculate_mrc
-from gwhat.hydrocalc.axeswidgets import (
-    WLCalcVSpanSelector, WLCalcVSpanHighlighter, WLCalcAxesWidget)
+from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector, WLCalcAxesWidget
 from gwhat.hydrocalc.api import WLCalcTool, wlcalcmethod
 from gwhat.utils.dates import (
     xldates_to_datetimeindex, datetimeindex_to_xldates)
-from gwhat.utils.qthelpers import create_toolbutton
-from gwhat.utils.icons import get_iconsize
-from gwhat.widgets.buttons import (
-    OnOffToolButton, ToolBarWidget, OnOffPushButton)
+from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.fileio import SaveFileMixin
 
 
@@ -39,6 +32,22 @@ COLORS = {
     'high_fall': 'red',
     'low_summer': 'orange',
     'low_winter': 'cyan'}
+
+
+class FeaturePointSelector(WLCalcVSpanSelector):
+    def __init__(self, ax, wlcalc, onselected):
+        super().__init__(
+            ax, wlcalc, onselected, allowed_buttons=[1, 3],
+            )
+
+    def get_onpress_axvspan_color(self, event):
+        ctrl = bool(self._onpress_keyboard_modifiers & Qt.ControlModifier)
+        if event.button == 1:
+            return COLORS['high_fall'] if ctrl else COLORS['high_spring']
+        elif event.button == 3:
+            return COLORS['low_winter'] if ctrl else COLORS['low_summer']
+        else:
+            return super().get_axvline_color(event)
 
 
 class FeaturePointPlotter(WLCalcAxesWidget):
@@ -131,20 +140,28 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         #     tip='Save calculated MRC to file.',
         #     triggered=lambda: self.save_mrc_tofile())
 
-        self._select_highs_btn = OnOffPushButton(
-            '  Select Highs', icon='select_range')
-        self._select_highs_btn.setToolTip(
-            'Select periods when maximum water levels were '
-            'reached in the spring or in the fall.')
-        self._select_highs_btn.setCheckable(True)
-        self._select_highs_btn.setFocusPolicy(Qt.NoFocus)
-        self._select_highs_btn.sig_value_changed.connect(
+        mod_str = 'COMMAND' if sys.platform == 'darwin' else 'CONTROL'
+        self._select_feature_points_btn = OnOffPushButton(
+            '  Select Feature Points', icon='select_range')
+        self._select_feature_points_btn.setToolTip(
+            '<b>Select Feature Points</b>'
+            '<p>Select periods corresponding to seasonal maximum or minimum '
+            'water levels.</p>'
+            '<p>Use Left click to select a spring maximum and '
+            f'{mod_str} + Left click to select a fall maximum.</p>'
+            '<p>Use Right click to select a summer minimum and '
+            f'{mod_str} + Right click to select a winter minimum.</p>'
+            )
+
+        self._select_feature_points_btn.setCheckable(True)
+        self._select_feature_points_btn.setFocusPolicy(Qt.NoFocus)
+        self._select_feature_points_btn.sig_value_changed.connect(
             self._btn_select_highs_isclicked)
 
         # Setup the Layout.
         layout = QGridLayout(self)
 
-        layout.addWidget(self._select_highs_btn, 0, 0)
+        layout.addWidget(self._select_feature_points_btn, 0, 0)
         layout.setRowMinimumHeight(2, 5)
         layout.setRowStretch(2, 100)
 
@@ -155,12 +172,14 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         Handle when the button to select high water level feature points
         is clicked.
         """
-        if self._select_highs_btn.value():
-            self.wlcalc.toggle_navig_and_select_tools(self._select_highs_btn)
-        self.highs_selector.set_active(self._select_highs_btn.value())
+        if self._select_feature_points_btn.value():
+            self.wlcalc.toggle_navig_and_select_tools(
+                self._select_feature_points_btn)
+        self.feature_points_selector.set_active(
+            self._select_feature_points_btn.value())
 
     @wlcalcmethod
-    def _on_daterange_selected(self, xldates, button):
+    def _on_daterange_selected(self, xldates, button, modifiers):
         """
         Handle when a new period of high spring or hign fall water levels is
         selected by the user.
@@ -175,9 +194,9 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
 
         # Check and remove previously picked high spring or high fall feature
         # points that are within the selected period.
-        if self._select_highs_btn.value():
+        if button == 1:
             feature_types = ['high_spring', 'high_fall']
-        elif self._select_lows_btn.value():
+        elif button == 3:
             feature_types = ['low_summer', 'low_winter']
 
         for key in feature_types:
@@ -192,18 +211,12 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         if mask.sum() == 0:
             return
 
-        if self._select_highs_btn.value():
-            if button == 1:
-                feature_type = 'high_spring'
-            elif button == 3:
-                feature_type = 'high_fall'
+        ctrl = bool(modifiers & Qt.ControlModifier)
+        if button == 1:
+            feature_type = 'high_spring' if not ctrl else 'high_fall'
             index = np.argmin(data['WL'][mask])
-
-        elif self._select_lows_btn.value():
-            if button == 1:
-                feature_type = 'low_summer'
-            elif button == 3:
-                feature_type = 'low_winter'
+        elif button == 3:
+            feature_type = 'low_summer' if not ctrl else 'low_winter'
             index = np.argmax(data['WL'][mask])
 
         self._feature_points[feature_type][
@@ -228,16 +241,14 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         wlcalc.tools_tabwidget.setTabToolTip(index, self.tooltip())
 
         # Setup the axes widget to select high water level periods.
-        wlcalc.register_navig_and_select_tool(self._select_highs_btn)
+        wlcalc.register_navig_and_select_tool(self._select_feature_points_btn)
 
         # Setup the selectors for the periods of water level high spring or
         # high fall and low summer or low winter.
-        self.highs_selector = WLCalcVSpanSelector(
+        self.feature_points_selector = FeaturePointSelector(
             self.wlcalc.fig.axes[0], wlcalc,
-            onselected=self._on_daterange_selected,
-            axvspan_colors=[COLORS['high_spring'], COLORS['high_fall']],
-            allowed_buttons=[1, 3])
-        wlcalc.install_axeswidget(self.highs_selector)
+            onselected=self._on_daterange_selected)
+        wlcalc.install_axeswidget(self.feature_points_selector)
 
         # Setup the seasonal pattern feature points plotter.
         self.feature_points_plotter = FeaturePointPlotter(
