@@ -133,24 +133,20 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         self.setup()
 
     def setup(self):
-        # self.btn_save_mrc = create_toolbutton(
-        #     parent=self,
-        #     icon='save',
-        #     iconsize=get_iconsize('normal'),
-        #     tip='Save calculated MRC to file.',
-        #     triggered=lambda: self.save_mrc_tofile())
-
         mod_str = 'COMMAND' if sys.platform == 'darwin' else 'CONTROL'
         self._select_feature_points_btn = OnOffPushButton(
-            '  Select Feature Points', icon='select_range')
-        self._select_feature_points_btn.setToolTip(
-            '<b>Select Feature Points</b>'
-            '<p>Select periods corresponding to seasonal maximum or minimum '
-            'water levels.</p>'
-            '<p>Use Left click to select a spring maximum and '
-            f'{mod_str} + Left click to select a fall maximum.</p>'
-            '<p>Use Right click to select a summer minimum and '
-            f'{mod_str} + Right click to select a winter minimum.</p>'
+            label='  Select Feature Points',
+            icon='select_range',
+            tooltip=(
+                '<b>Select Feature Points</b>'
+                '<p>Select periods corresponding to seasonal maximum '
+                'or minimum water levels.</p>'
+                '<p>Use Left click to select a spring maximum and '
+                f'{mod_str} + Left click to select a fall maximum.</p>'
+                '<p>Use Right click to select a summer minimum and '
+                f'{mod_str} + Right click to select a winter minimum.</p>'),
+            on_value_changed=self._btn_select_feature_points_isclicked
+            )
             )
 
         self._select_feature_points_btn.setCheckable(True)
