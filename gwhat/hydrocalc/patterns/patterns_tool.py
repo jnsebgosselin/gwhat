@@ -110,10 +110,11 @@ class FeaturePointPlotter(WLCalcAxesWidget):
         self._update()
 
 
-class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
-    __toolname__ = 'patterns'
-    __tooltitle__ = 'Patterns'
-    __tooltip__ = ("A tool to pick seasonal patterns on the hydrograph.")
+class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
+    __toolname__ = 'cycle'
+    __tooltitle__ = 'Cycle'
+    __tooltip__ = ("<p>A tool to pick hydrological cycle events "
+                   "on the hydrograph.</p>")
 
     CYCLE_START_MONTH = {
         'high_fall': 3,
