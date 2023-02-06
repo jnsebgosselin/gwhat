@@ -98,6 +98,9 @@ FA_ICONS = {
     'clear_changes': [
         ('mdi.close-circle-outline',),
         {'color': RED, 'scale_factor': 1.3}],
+    'close': [
+        ('mdi.close-thick',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'close_all': [
         ('fa.close', 'fa.close', 'fa.close'),
         {'options': [{'scale_factor': 0.6,
