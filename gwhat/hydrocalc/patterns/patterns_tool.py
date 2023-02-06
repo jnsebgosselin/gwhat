@@ -115,6 +115,13 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
     __tooltitle__ = 'Patterns'
     __tooltip__ = ("A tool to pick seasonal patterns on the hydrograph.")
 
+    CYCLE_START_MONTH = {
+        'high_fall': 3,
+        'high_spring': 9,
+        'low_summer': 6,
+        'low_winter': 12
+        }
+
     sig_new_mrc = Signal()
 
     def __init__(self, parent=None):
@@ -242,8 +249,7 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
                     (self._feature_points[key].index > dtmax))
             self._feature_points[key] = self._feature_points[key][mask]
 
-        # Find and add the new high spring or high fall feature point within
-        # the selected period.
+        # Find and the new seasonal feature point within the selected period.
         data = self.wlcalc.wldset.data
         mask = (data.index >= dtmin) & (data.index <= dtmax)
         if mask.sum() == 0:
@@ -256,10 +262,28 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         elif button == 3:
             feature_type = 'low_summer' if not ctrl else 'low_winter'
             index = np.argmax(data['WL'][mask])
+        picked_date = data.index[mask][index]
+        picked_value = data['WL'][mask][index]
 
-        self._feature_points[feature_type][
-            data.index[mask][index]
-            ] = data['WL'][mask][index]
+        # Remove previously picked feature points that are within
+        # the same seasonal year.
+        cycle_start_month = self.CYCLE_START_MONTH[feature_type]
+        cycle_start_year = picked_date.year
+        if picked_date.month < cycle_start_month:
+            cycle_start_year = cycle_start_year - 1
+
+        cycle_start_date = datetime(cycle_start_year, cycle_start_month, 1)
+        cycle_end_date = datetime(cycle_start_year + 1, cycle_start_month, 1)
+
+        mask = ((self._feature_points[feature_type].index < cycle_start_date) |
+                (self._feature_points[feature_type].index >= cycle_end_date))
+        self._feature_points[feature_type] = (
+            self._feature_points[feature_type][mask])
+
+        # Add new picked feature point.
+        self._feature_points[feature_type][picked_date] = picked_value
+        self._draw_patterns_feature_points()
+
     @wlcalcmethod
     def _on_daterange_erased(self, xldates, button, modifiers):
         """
