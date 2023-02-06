@@ -36,7 +36,7 @@ COLORS = {
     'low_winter': 'cyan'}
 
 
-class FeaturePointSelector(WLCalcVSpanSelector):
+class HydroCycleEventsSelector(WLCalcVSpanSelector):
     def __init__(self, ax, wlcalc, onselected):
         super().__init__(
             ax, wlcalc, onselected, allowed_buttons=[1, 3],
@@ -52,7 +52,7 @@ class FeaturePointSelector(WLCalcVSpanSelector):
             return super().get_axvline_color(event)
 
 
-class FeaturePointPlotter(WLCalcAxesWidget):
+class HydroCycleEventsPlotter(WLCalcAxesWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -213,7 +213,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         """
         if self._erase_events_btn.value():
             self.wlcalc.toggle_navig_and_select_tools(self._erase_events_btn)
-        self.feature_points_erasor.set_active(self._erase_events_btn.value())
+        self.events_erasor.set_active(self._erase_events_btn.value())
 
     @wlcalcmethod
     def _btn_select_feature_points_isclicked(self, *args, **kwargs):
@@ -222,8 +222,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         """
         if self._select_events_btn.value():
             self.wlcalc.toggle_navig_and_select_tools(self._select_events_btn)
-        self.feature_points_selector.set_active(
-            self._select_events_btn.value())
+        self.events_selector.set_active(self._select_events_btn.value())
 
     @wlcalcmethod
     def _on_daterange_selected(self, xldates, button, modifiers):
@@ -307,7 +306,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
     @wlcalcmethod
     def _draw_patterns_feature_points(self):
-        self.feature_points_plotter.set_feature_points(self._feature_points)
+        self.events_plotter.set_feature_points(self._feature_points)
         self.wlcalc.update_axeswidgets()
 
     # ---- WLCalcTool API
@@ -326,22 +325,21 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         wlcalc.register_navig_and_select_tool(self._erase_events_btn)
 
         # Setup the seasonal feature points selectorand erasor.
-        self.feature_points_selector = FeaturePointSelector(
+        self.events_selector = HydroCycleEventsSelector(
             self.wlcalc.fig.axes[0], wlcalc,
             onselected=self._on_daterange_selected)
-        wlcalc.install_axeswidget(self.feature_points_selector)
+        wlcalc.install_axeswidget(self.events_selector)
 
-        self.feature_points_erasor = WLCalcVSpanSelector(
+        self.events_erasor = WLCalcVSpanSelector(
             self.wlcalc.fig.axes[0], wlcalc,
             onselected=self._on_daterange_erased,
             axvspan_color='0.6')
-        wlcalc.install_axeswidget(self.feature_points_erasor)
+        wlcalc.install_axeswidget(self.events_erasor)
 
         # Setup the seasonal pattern feature points plotter.
-        self.feature_points_plotter = FeaturePointPlotter(
+        self.events_plotter = HydroCycleEventsPlotter(
             self.wlcalc.fig.axes[0], wlcalc)
-        self.wlcalc.install_axeswidget(
-            self.feature_points_plotter, active=True)
+        self.wlcalc.install_axeswidget(self.events_plotter, active=True)
 
         # Init matplotlib artists.
         self._high_spring_plt, = self.wlcalc.fig.axes[0].plot(
