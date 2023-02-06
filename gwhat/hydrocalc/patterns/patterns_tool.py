@@ -163,7 +163,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             on_value_changed=self._btn_select_feature_points_isclicked
             )
 
-        self._erase_feature_points_btn = OnOffPushButton(
+        self._erase_events_btn = OnOffPushButton(
             label='  Erase Events',
             icon='erase_data',
             tooltip=(
@@ -185,8 +185,8 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         # Setup the Layout.
         layout = QGridLayout(self)
 
-        layout.addWidget(self._select_feature_points_btn, 0, 0)
-        layout.addWidget(self._erase_feature_points_btn, 1, 0)
+        layout.addWidget(self._select_events_btn, 0, 0)
+        layout.addWidget(self._erase_events_btn, 1, 0)
         layout.addWidget(self._clear_feature_points_btn, 2, 0)
         layout.setRowStretch(4, 100)
 
@@ -211,11 +211,9 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         """
         Handle when the button to erase seasonal feature points is clicked.
         """
-        if self._erase_feature_points_btn.value():
-            self.wlcalc.toggle_navig_and_select_tools(
-                self._erase_feature_points_btn)
-        self.feature_points_erasor.set_active(
-            self._erase_feature_points_btn.value())
+        if self._erase_events_btn.value():
+            self.wlcalc.toggle_navig_and_select_tools(self._erase_events_btn)
+        self.feature_points_erasor.set_active(self._erase_events_btn.value())
 
     @wlcalcmethod
     def _btn_select_feature_points_isclicked(self, *args, **kwargs):
@@ -325,7 +323,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
         # Setup the axes widget to select high water level periods.
         wlcalc.register_navig_and_select_tool(self._select_events_btn)
-        wlcalc.register_navig_and_select_tool(self._erase_feature_points_btn)
+        wlcalc.register_navig_and_select_tool(self._erase_events_btn)
 
         # Setup the seasonal feature points selectorand erasor.
         self.feature_points_selector = FeaturePointSelector(
