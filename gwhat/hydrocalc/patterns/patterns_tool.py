@@ -173,12 +173,12 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             on_value_changed=self._btn_erase_feature_points_isclicked
             )
 
-        self._clear_feature_points_btn = QPushButton('  Clear Events')
-        self._clear_feature_points_btn.setIcon(get_icon('close'))
-        self._clear_feature_points_btn.setToolTip(
+        self._clear_events_btn = QPushButton('  Clear Events')
+        self._clear_events_btn.setIcon(get_icon('close'))
+        self._clear_events_btn.setToolTip(
             '<b>Clear Events</b>'
             '<p>Clear all picked events from the hydrograph.</p>')
-        self._clear_feature_points_btn.clicked.connect(
+        self._clear_events_btn.clicked.connect(
             self._btn_clear_feature_points_isclicked)
 
 
@@ -187,7 +187,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
         layout.addWidget(self._select_events_btn, 0, 0)
         layout.addWidget(self._erase_events_btn, 1, 0)
-        layout.addWidget(self._clear_feature_points_btn, 2, 0)
+        layout.addWidget(self._clear_events_btn, 2, 0)
         layout.setRowStretch(4, 100)
 
     # ---- WLCalc integration
