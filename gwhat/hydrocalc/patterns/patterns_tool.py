@@ -153,6 +153,15 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         self._select_feature_points_btn.setFocusPolicy(Qt.NoFocus)
         self._select_feature_points_btn.sig_value_changed.connect(
             self._btn_select_highs_isclicked)
+        self._clear_feature_points_btn = QPushButton('  Clear Feature Points')
+        self._clear_feature_points_btn.setIcon(get_icon('close'))
+        self._clear_feature_points_btn.setToolTip(
+            '<b>Clear Feature Points</b>'
+            '<p>Clear all feature points from the current well '
+            'hydrograph.</p>')
+        self._clear_feature_points_btn.clicked.connect(
+            self._btn_clear_feature_points_isclicked)
+
 
         # Setup the Layout.
         layout = QGridLayout(self)
@@ -160,8 +169,24 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         layout.addWidget(self._select_feature_points_btn, 0, 0)
         layout.setRowMinimumHeight(2, 5)
         layout.setRowStretch(2, 100)
+        layout.addWidget(self._clear_feature_points_btn, 2, 0)
 
     # ---- WLCalc integration
+
+    @wlcalcmethod
+    def _btn_clear_feature_points_isclicked(self, *args, **kwargs):
+        """
+        Handle when the button to clear all feature points from the current
+        well hydrograph is clicked.
+        """
+        self._feature_points = {
+            'high_fall': pd.Series(),
+            'high_spring': pd.Series(),
+            'low_summer': pd.Series(),
+            'low_winter': pd.Series(),
+            }
+        self._draw_patterns_feature_points()
+
     @wlcalcmethod
     def _btn_select_highs_isclicked(self, *args, **kwargs):
         """
