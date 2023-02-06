@@ -143,37 +143,41 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         self.setup()
 
     def setup(self):
-        mod_str = 'COMMAND' if sys.platform == 'darwin' else 'CONTROL'
+        key_modif = 'COMMAND' if sys.platform == 'darwin' else 'CONTROL'
         self._select_feature_points_btn = OnOffPushButton(
-            label='  Select Feature Points',
+            label='  Select Events',
             icon='select_range',
             tooltip=(
-                '<b>Select Feature Points</b>'
-                '<p>Select periods corresponding to seasonal maximum '
-                'or minimum water levels.</p>'
-                '<p>Use Left click to select a spring maximum and '
-                f'{mod_str} + Left click to select a fall maximum.</p>'
-                '<p>Use Right click to select a summer minimum and '
-                f'{mod_str} + Right click to select a winter minimum.</p>'),
+                '<b>Select Events</b>'
+                '<p>Select periods on the hydrograph corresponding to '
+                'an event of the hydrological cycle :'
+                '<ul>'
+                '<li>Use Left click to select a spring maximum;</li>'
+                '<li>Use {key_modif} + Left click to select a '
+                'fall maximum;</li>'
+                '<li>Use Right click to select a summer minimum;</li>'
+                '<li>Use {key_modif} + Right click to select a '
+                'winter minimum.</li>'
+                '</ul>'
+                ).format(key_modif=key_modif),
             on_value_changed=self._btn_select_feature_points_isclicked
             )
 
         self._erase_feature_points_btn = OnOffPushButton(
-            label='  Erase Feature Points',
+            label='  Erase Events',
             icon='erase_data',
             tooltip=(
-                '<b>Erase Feature Points</b>'
-                '<p>Use the left click of the mouse to select a period '
-                'within which to erase all feature points.</p>'),
+                '<b>Erase Events</b>'
+                '<p>Use Left click of the mouse to select a period '
+                'where to erase all picked events.</p>'),
             on_value_changed=self._btn_erase_feature_points_isclicked
             )
 
-        self._clear_feature_points_btn = QPushButton('  Clear Feature Points')
+        self._clear_feature_points_btn = QPushButton('  Clear Events')
         self._clear_feature_points_btn.setIcon(get_icon('close'))
         self._clear_feature_points_btn.setToolTip(
-            '<b>Clear Feature Points</b>'
-            '<p>Clear all feature points from the current well '
-            'hydrograph.</p>')
+            '<b>Clear Events</b>'
+            '<p>Clear all picked events from the hydrograph.</p>')
         self._clear_feature_points_btn.clicked.connect(
             self._btn_clear_feature_points_isclicked)
 
