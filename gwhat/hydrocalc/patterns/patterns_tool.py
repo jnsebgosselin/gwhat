@@ -144,7 +144,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
     def setup(self):
         key_modif = 'COMMAND' if sys.platform == 'darwin' else 'CONTROL'
-        self._select_feature_points_btn = OnOffPushButton(
+        self._select_events_btn = OnOffPushButton(
             label='  Select Events',
             icon='select_range',
             tooltip=(
@@ -222,11 +222,10 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         """
         Handle when the button to select seasonal feature points is clicked.
         """
-        if self._select_feature_points_btn.value():
-            self.wlcalc.toggle_navig_and_select_tools(
-                self._select_feature_points_btn)
+        if self._select_events_btn.value():
+            self.wlcalc.toggle_navig_and_select_tools(self._select_events_btn)
         self.feature_points_selector.set_active(
-            self._select_feature_points_btn.value())
+            self._select_events_btn.value())
 
     @wlcalcmethod
     def _on_daterange_selected(self, xldates, button, modifiers):
@@ -325,7 +324,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         wlcalc.tools_tabwidget.setTabToolTip(index, self.tooltip())
 
         # Setup the axes widget to select high water level periods.
-        wlcalc.register_navig_and_select_tool(self._select_feature_points_btn)
+        wlcalc.register_navig_and_select_tool(self._select_events_btn)
         wlcalc.register_navig_and_select_tool(self._erase_feature_points_btn)
 
         # Setup the seasonal feature points selectorand erasor.
