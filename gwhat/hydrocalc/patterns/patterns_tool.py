@@ -147,12 +147,17 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
                 f'{mod_str} + Right click to select a winter minimum.</p>'),
             on_value_changed=self._btn_select_feature_points_isclicked
             )
+
+        self._erase_feature_points_btn = OnOffPushButton(
+            label='  Erase Feature Points',
+            icon='erase_data',
+            tooltip=(
+                '<b>Erase Feature Points</b>'
+                '<p>Use the left click of the mouse to select a period '
+                'within which to erase all feature points.</p>'),
+            on_value_changed=self._btn_erase_feature_points_isclicked
             )
 
-        self._select_feature_points_btn.setCheckable(True)
-        self._select_feature_points_btn.setFocusPolicy(Qt.NoFocus)
-        self._select_feature_points_btn.sig_value_changed.connect(
-            self._btn_select_highs_isclicked)
         self._clear_feature_points_btn = QPushButton('  Clear Feature Points')
         self._clear_feature_points_btn.setIcon(get_icon('close'))
         self._clear_feature_points_btn.setToolTip(
@@ -167,9 +172,9 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         layout = QGridLayout(self)
 
         layout.addWidget(self._select_feature_points_btn, 0, 0)
-        layout.setRowMinimumHeight(2, 5)
-        layout.setRowStretch(2, 100)
+        layout.addWidget(self._erase_feature_points_btn, 1, 0)
         layout.addWidget(self._clear_feature_points_btn, 2, 0)
+        layout.setRowStretch(4, 100)
 
     # ---- WLCalc integration
 
@@ -188,10 +193,20 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         self._draw_patterns_feature_points()
 
     @wlcalcmethod
-    def _btn_select_highs_isclicked(self, *args, **kwargs):
+    def _btn_erase_feature_points_isclicked(self, *args, **kwargs):
         """
-        Handle when the button to select high water level feature points
-        is clicked.
+        Handle when the button to erase seasonal feature points is clicked.
+        """
+        if self._erase_feature_points_btn.value():
+            self.wlcalc.toggle_navig_and_select_tools(
+                self._erase_feature_points_btn)
+        self.feature_points_erasor.set_active(
+            self._erase_feature_points_btn.value())
+
+    @wlcalcmethod
+    def _btn_select_feature_points_isclicked(self, *args, **kwargs):
+        """
+        Handle when the button to select seasonal feature points is clicked.
         """
         if self._select_feature_points_btn.value():
             self.wlcalc.toggle_navig_and_select_tools(
@@ -209,7 +224,7 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         ----------
         xldates : 2-tuple
             A 2-tuple of floats containing the time, in numerical Excel format,
-            of the new selected recession period.
+            where to add a new seasonal feature point.
         """
         dtmin, dtmax = xldates_to_datetimeindex(xldates)
 
@@ -243,6 +258,23 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
         self._feature_points[feature_type][
             data.index[mask][index]
             ] = data['WL'][mask][index]
+    @wlcalcmethod
+    def _on_daterange_erased(self, xldates, button, modifiers):
+        """
+        Handle when a period is selected to erase all selected seasonal
+        feature points.
+
+        Parameters
+        ----------
+        xldates : 2-tuple
+            A 2-tuple of floats containing the time, in numerical Excel format,
+            of the period where to erase all picked seasonal feature points.
+        """
+        dtmin, dtmax = xldates_to_datetimeindex(xldates)
+        for key in self._feature_points.keys():
+            mask = ((self._feature_points[key].index < dtmin) |
+                    (self._feature_points[key].index > dtmax))
+            self._feature_points[key] = self._feature_points[key][mask]
         self._draw_patterns_feature_points()
 
     @wlcalcmethod
@@ -263,13 +295,19 @@ class SeasonPatternsCalcTool(WLCalcTool, SaveFileMixin):
 
         # Setup the axes widget to select high water level periods.
         wlcalc.register_navig_and_select_tool(self._select_feature_points_btn)
+        wlcalc.register_navig_and_select_tool(self._erase_feature_points_btn)
 
-        # Setup the selectors for the periods of water level high spring or
-        # high fall and low summer or low winter.
+        # Setup the seasonal feature points selectorand erasor.
         self.feature_points_selector = FeaturePointSelector(
             self.wlcalc.fig.axes[0], wlcalc,
             onselected=self._on_daterange_selected)
         wlcalc.install_axeswidget(self.feature_points_selector)
+
+        self.feature_points_erasor = WLCalcVSpanSelector(
+            self.wlcalc.fig.axes[0], wlcalc,
+            onselected=self._on_daterange_erased,
+            axvspan_color='0.6')
+        wlcalc.install_axeswidget(self.feature_points_erasor)
 
         # Setup the seasonal pattern feature points plotter.
         self.feature_points_plotter = FeaturePointPlotter(
