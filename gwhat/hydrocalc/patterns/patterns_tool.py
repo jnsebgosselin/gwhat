@@ -10,12 +10,13 @@ from __future__ import annotations
 
 # ---- Standard library imports
 import sys
+from datetime import datetime, timedelta
 
 # ---- Third party imports
 import numpy as np
 import pandas as pd
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import QWidget, QGridLayout, QApplication
+from qtpy.QtWidgets import (QWidget, QGridLayout, QApplication, QPushButton)
 from matplotlib.transforms import ScaledTranslation
 
 # ---- Local imports
@@ -23,6 +24,7 @@ from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector, WLCalcAxesWidget
 from gwhat.hydrocalc.api import WLCalcTool, wlcalcmethod
 from gwhat.utils.dates import (
     xldates_to_datetimeindex, datetimeindex_to_xldates)
+from gwhat.utils.icons import get_icon
 from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.fileio import SaveFileMixin
 
