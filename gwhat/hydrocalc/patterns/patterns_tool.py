@@ -62,7 +62,7 @@ class HydroCycleEventsPlotter(WLCalcAxesWidget):
         offset_lows = ScaledTranslation(
             0, -6/72, self.ax.figure.dpi_scale_trans)
 
-        self._feature_artists = {
+        self._picked_event_artists = {
             'high_spring': self.ax.plot(
                 [], [], marker='v', color=COLORS['high_spring'], ls='none',
                 transform=self.ax.transData + offset_highs
@@ -81,21 +81,21 @@ class HydroCycleEventsPlotter(WLCalcAxesWidget):
                 )[0],
             }
 
-        for artist in self._feature_artists.values():
+        for artist in self._picked_event_artists.values():
             self.register_artist(artist)
 
-    def set_feature_points(self, feature_points: dict):
-        """Set and draw the seasonal pattern feature points."""
-        for key, series in feature_points.items():
+    def set_events_data(self, events_data: dict):
+        """Set and draw the hydrological cycle picked events."""
+        for key, series in events_data.items():
             if not series.empty and self.wlcalc.dformat == 1:
-                self._feature_artists[key].set_data(
+                self._picked_event_artists[key].set_data(
                     series.index, series.values)
             elif not series.empty and self.wlcalc.dformat == 0:
                 xldates = datetimeindex_to_xldates(series.index)
-                self._feature_artists[key].set_data(
+                self._picked_event_artists[key].set_data(
                     xldates, series.values)
             else:
-                self._feature_artists[key].set_data([], [])
+                self._picked_event_artists[key].set_data([], [])
 
     def onactive(self, *args, **kwargs):
         self._update()
@@ -132,8 +132,8 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         # Whether it is the first time showEvent is called.
         self._first_show_event = True
 
-        # A dict to hold the picked seasonal pattern feature points.
-        self._feature_points = {
+        # A dict to hold the data of the picked hydrological cycles events.
+        self._events_data = {
             'high_fall': pd.Series(),
             'high_spring': pd.Series(),
             'low_summer': pd.Series(),
@@ -160,7 +160,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
                 'winter minimum.</li>'
                 '</ul>'
                 ).format(key_modif=key_modif),
-            on_value_changed=self._btn_select_feature_points_isclicked
+            on_value_changed=self._btn_select_events_isclicked
             )
 
         self._erase_events_btn = OnOffPushButton(
@@ -170,7 +170,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
                 '<b>Erase Events</b>'
                 '<p>Use Left click of the mouse to select a period '
                 'where to erase all picked events.</p>'),
-            on_value_changed=self._btn_erase_feature_points_isclicked
+            on_value_changed=self._btn_erase_events_isclicked
             )
 
         self._clear_events_btn = QPushButton('  Clear Events')
@@ -179,7 +179,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             '<b>Clear Events</b>'
             '<p>Clear all picked events from the hydrograph.</p>')
         self._clear_events_btn.clicked.connect(
-            self._btn_clear_feature_points_isclicked)
+            self._btn_clear_events_isclicked)
 
 
         # Setup the Layout.
@@ -193,32 +193,32 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
     # ---- WLCalc integration
 
     @wlcalcmethod
-    def _btn_clear_feature_points_isclicked(self, *args, **kwargs):
+    def _btn_clear_events_isclicked(self, *args, **kwargs):
         """
-        Handle when the button to clear all feature points from the current
+        Handle when the button to clear all hydrological ëvents from the
         well hydrograph is clicked.
         """
-        self._feature_points = {
+        self._events_data = {
             'high_fall': pd.Series(),
             'high_spring': pd.Series(),
             'low_summer': pd.Series(),
             'low_winter': pd.Series(),
             }
-        self._draw_patterns_feature_points()
+        self._draw_event_points()
 
     @wlcalcmethod
-    def _btn_erase_feature_points_isclicked(self, *args, **kwargs):
+    def _btn_erase_events_isclicked(self, *args, **kwargs):
         """
-        Handle when the button to erase seasonal feature points is clicked.
+        Handle when the button to erase hydrological cycle events is clicked.
         """
         if self._erase_events_btn.value():
             self.wlcalc.toggle_navig_and_select_tools(self._erase_events_btn)
         self.events_erasor.set_active(self._erase_events_btn.value())
 
     @wlcalcmethod
-    def _btn_select_feature_points_isclicked(self, *args, **kwargs):
+    def _btn_select_events_isclicked(self, *args, **kwargs):
         """
-        Handle when the button to select seasonal feature points is clicked.
+        Handle when the button to select hydrological cycle events is clicked.
         """
         if self._select_events_btn.value():
             self.wlcalc.toggle_navig_and_select_tools(self._select_events_btn)
@@ -227,30 +227,29 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
     @wlcalcmethod
     def _on_daterange_selected(self, xldates, button, modifiers):
         """
-        Handle when a new period of high spring or hign fall water levels is
-        selected by the user.
+        Handle when a new hydrological cycle event is selected by the user.
 
         Parameters
         ----------
         xldates : 2-tuple
             A 2-tuple of floats containing the time, in numerical Excel format,
-            where to add a new seasonal feature point.
+            where to add a new hydrological cycle event.
         """
         dtmin, dtmax = xldates_to_datetimeindex(xldates)
 
-        # Check and remove previously picked high spring or high fall feature
-        # points that are within the selected period.
+        # Check and remove previously picked events that are within the
+        # selected period.
         if button == 1:
-            feature_types = ['high_spring', 'high_fall']
+            event_types = ['high_spring', 'high_fall']
         elif button == 3:
-            feature_types = ['low_summer', 'low_winter']
+            event_types = ['low_summer', 'low_winter']
 
-        for key in feature_types:
-            mask = ((self._feature_points[key].index < dtmin) |
-                    (self._feature_points[key].index > dtmax))
-            self._feature_points[key] = self._feature_points[key][mask]
+        for key in event_types:
+            mask = ((self._events_data[key].index < dtmin) |
+                    (self._events_data[key].index > dtmax))
+            self._events_data[key] = self._events_data[key][mask]
 
-        # Find and the new seasonal feature point within the selected period.
+        # Find the point of the new event within the selected period.
         data = self.wlcalc.wldset.data
         mask = (data.index >= dtmin) & (data.index <= dtmax)
         if mask.sum() == 0:
@@ -258,17 +257,17 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
         ctrl = bool(modifiers & Qt.ControlModifier)
         if button == 1:
-            feature_type = 'high_spring' if not ctrl else 'high_fall'
+            event_type = 'high_spring' if not ctrl else 'high_fall'
             index = np.argmin(data['WL'][mask])
         elif button == 3:
-            feature_type = 'low_summer' if not ctrl else 'low_winter'
+            event_type = 'low_summer' if not ctrl else 'low_winter'
             index = np.argmax(data['WL'][mask])
         picked_date = data.index[mask][index]
         picked_value = data['WL'][mask][index]
 
-        # Remove previously picked feature points that are within
-        # the same seasonal year.
-        cycle_start_month = self.CYCLE_START_MONTH[feature_type]
+        # Remove previously picked events that are within the
+        # hydrological cycle.
+        cycle_start_month = self.CYCLE_START_MONTH[event_type]
         cycle_start_year = picked_date.year
         if picked_date.month < cycle_start_month:
             cycle_start_year = cycle_start_year - 1
@@ -276,37 +275,37 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         cycle_start_date = datetime(cycle_start_year, cycle_start_month, 1)
         cycle_end_date = datetime(cycle_start_year + 1, cycle_start_month, 1)
 
-        mask = ((self._feature_points[feature_type].index < cycle_start_date) |
-                (self._feature_points[feature_type].index >= cycle_end_date))
-        self._feature_points[feature_type] = (
-            self._feature_points[feature_type][mask])
+        mask = ((self._events_data[event_type].index < cycle_start_date) |
+                (self._events_data[event_type].index >= cycle_end_date))
+        self._events_data[event_type] = (
+            self._events_data[event_type][mask])
 
-        # Add new picked feature point.
-        self._feature_points[feature_type][picked_date] = picked_value
-        self._draw_patterns_feature_points()
+        # Add the new picked event.
+        self._events_data[event_type][picked_date] = picked_value
+        self._draw_event_points()
 
     @wlcalcmethod
     def _on_daterange_erased(self, xldates, button, modifiers):
         """
-        Handle when a period is selected to erase all selected seasonal
-        feature points.
+        Handle when a period is selected to erase all picked hydrological
+        cycle events.
 
         Parameters
         ----------
         xldates : 2-tuple
             A 2-tuple of floats containing the time, in numerical Excel format,
-            of the period where to erase all picked seasonal feature points.
+            of the period where to erase all picked hydrological cycle events.
         """
         dtmin, dtmax = xldates_to_datetimeindex(xldates)
-        for key in self._feature_points.keys():
-            mask = ((self._feature_points[key].index < dtmin) |
-                    (self._feature_points[key].index > dtmax))
-            self._feature_points[key] = self._feature_points[key][mask]
-        self._draw_patterns_feature_points()
+        for key in self._events_data.keys():
+            mask = ((self._events_data[key].index < dtmin) |
+                    (self._events_data[key].index > dtmax))
+            self._events_data[key] = self._events_data[key][mask]
+        self._draw_event_points()
 
     @wlcalcmethod
-    def _draw_patterns_feature_points(self):
-        self.events_plotter.set_feature_points(self._feature_points)
+    def _draw_event_points(self):
+        self.events_plotter.set_events_data(self._events_data)
         self.wlcalc.update_axeswidgets()
 
     # ---- WLCalcTool API
@@ -324,7 +323,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         wlcalc.register_navig_and_select_tool(self._select_events_btn)
         wlcalc.register_navig_and_select_tool(self._erase_events_btn)
 
-        # Setup the seasonal feature points selectorand erasor.
+        # Setup the hydrological cycle events selector and erasor.
         self.events_selector = HydroCycleEventsSelector(
             self.wlcalc.fig.axes[0], wlcalc,
             onselected=self._on_daterange_selected)
@@ -336,7 +335,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             axvspan_color='0.6')
         wlcalc.install_axeswidget(self.events_erasor)
 
-        # Setup the seasonal pattern feature points plotter.
+        # Setup the hydrological cycle events plotter.
         self.events_plotter = HydroCycleEventsPlotter(
             self.wlcalc.fig.axes[0], wlcalc)
         self.wlcalc.install_axeswidget(self.events_plotter, active=True)
@@ -350,13 +349,13 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             zorder=15, marker='v', linestyle='none')
 
         # self.load_mrc_from_wldset()
-        self._draw_patterns_feature_points()
+        self._draw_event_points()
 
     def close_tool(self):
         super().close()
 
     def on_wldset_changed(self):
-        self._feature_points = {
+        self._events_data = {
             'high_fall': pd.Series(),
             'high_spring': pd.Series(),
             'low_summer': pd.Series(),
