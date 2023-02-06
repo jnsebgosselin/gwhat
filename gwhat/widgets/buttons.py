@@ -7,7 +7,7 @@
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 if TYPE_CHECKING:
     from qtpy.QtGui import QIcon
 
@@ -392,16 +392,22 @@ class OnOffPushButton(QPushButton):
     """A push button that can be toggled on or off by clicking on it."""
     sig_value_changed = QSignal(bool)
 
-    def __init__(self, label, parent=None, icon: str | QIcon = None):
+    def __init__(self, label, parent=None, icon: str | QIcon = None,
+                 tooltip: str = None, on_value_changed: Callable = None):
         super().__init__(label, parent)
 
         if icon is not None:
             icon = get_icon(icon) if isinstance(icon, str) else icon
             self.setIcon(icon)
+        if tooltip is not None:
+            self.setToolTip(tooltip)
 
         self.installEventFilter(self)
         self.setCheckable(True)
         self.toggled.connect(self.sig_value_changed.emit)
+
+        if on_value_changed is not None:
+            self.sig_value_changed.connect(on_value_changed)
 
     def value(self):
         """Return True if autoRaise is False and False if True."""
