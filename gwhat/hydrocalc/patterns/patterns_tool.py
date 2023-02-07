@@ -86,18 +86,15 @@ class HydroCycleEventsPlotter(WLCalcAxesWidget):
         for artist in self._picked_event_artists.values():
             self.register_artist(artist)
 
-    def set_events_data(self, events_data: dict):
+    def set_events_data(self, events_data: pd.DataFrame):
         """Set and draw the hydrological cycle picked events."""
-        for key, series in events_data.items():
-            if not series.empty and self.wlcalc.dformat == 1:
-                self._picked_event_artists[key].set_data(
-                    series.index, series.values)
-            elif not series.empty and self.wlcalc.dformat == 0:
-                xldates = datetimeindex_to_xldates(series.index)
-                self._picked_event_artists[key].set_data(
-                    xldates, series.values)
+        for event_type in EVENT_TYPES:
+            xydata = events_data[event_type].dropna()
+            if not xydata.empty:
+                self._picked_event_artists[event_type].set_data(
+                    xydata.date, xydata.value)
             else:
-                self._picked_event_artists[key].set_data([], [])
+                self._picked_event_artists[event_type].set_data([], [])
 
     def onactive(self, *args, **kwargs):
         self._update()
