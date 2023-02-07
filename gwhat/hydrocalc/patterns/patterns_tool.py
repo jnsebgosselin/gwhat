@@ -444,26 +444,26 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
         # Setup the hydrological cycle events selector and erasor.
         self.events_selector = HydroCycleEventsSelector(
-            self.wlcalc.fig.axes[0], wlcalc,
+            self.wlcalc.figure.axes[0], wlcalc,
             onselected=self._on_daterange_selected)
         wlcalc.install_axeswidget(self.events_selector)
 
         self.events_erasor = WLCalcVSpanSelector(
-            self.wlcalc.fig.axes[0], wlcalc,
+            self.wlcalc.figure.axes[0], wlcalc,
             onselected=self._on_daterange_erased,
             axvspan_color='0.6')
         wlcalc.install_axeswidget(self.events_erasor)
 
         # Setup the hydrological cycle events plotter.
         self.events_plotter = HydroCycleEventsPlotter(
-            self.wlcalc.fig.axes[0], wlcalc)
+            self.wlcalc.figure.axes[0], wlcalc)
         self.wlcalc.install_axeswidget(self.events_plotter, active=True)
 
         # Init matplotlib artists.
-        self._high_spring_plt, = self.wlcalc.fig.axes[0].plot(
+        self._high_spring_plt, = self.wlcalc.figure.axes[0].plot(
             [], [], color='green', clip_on=True,
             zorder=15, marker='v', linestyle='none')
-        self._high_fall_plt, = self.wlcalc.fig.axes[0].plot(
+        self._high_fall_plt, = self.wlcalc.figure.axes[0].plot(
             [], [], color='orange', clip_on=True,
             zorder=15, marker='v', linestyle='none')
 
