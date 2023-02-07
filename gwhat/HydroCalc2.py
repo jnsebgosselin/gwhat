@@ -63,6 +63,11 @@ class WLCalc(QWidget, SaveFileMixin):
     """
     sig_date_format_changed = QSignal()
 
+    @property
+    def figure(self):
+        """Return WLCalc matplotlib figure."""
+        return self.canvas.figure
+
     def __init__(self, datamanager, parent=None):
         QWidget.__init__(self, parent)
         SaveFileMixin.__init__(self)
