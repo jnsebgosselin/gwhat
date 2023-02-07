@@ -29,6 +29,8 @@ from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.fileio import SaveFileMixin
 
 
+EVENT_TYPES = ['low_winter', 'high_spring', 'low_summer', 'high_fall']
+
 COLORS = {
     'high_spring': 'green',
     'high_fall': 'red',
@@ -132,13 +134,19 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         # Whether it is the first time showEvent is called.
         self._first_show_event = True
 
-        # A dict to hold the data of the picked hydrological cycles events.
-        self._events_data = {
-            'high_fall': pd.Series(),
-            'high_spring': pd.Series(),
-            'low_summer': pd.Series(),
-            'low_winter': pd.Series(),
-            }
+        # A pandas dataframe to hold the data of the picked
+        # hydrological cycle events.
+        self._events_data = pd.DataFrame(
+            columns=pd.MultiIndex.from_tuples(
+                [('low_winter', 'date'),
+                 ('low_winter', 'value'),
+                 ('high_spring', 'date'),
+                 ('high_spring', 'value'),
+                 ('low_summer', 'date'),
+                 ('low_summer', 'value'),
+                 ('high_fall', 'date'),
+                 ('high_fall', 'value')])
+            )
 
         self.setup()
 
@@ -190,6 +198,154 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         layout.addWidget(self._clear_events_btn, 2, 0)
         layout.setRowStretch(4, 100)
 
+    # ---- Public interface.
+    def clear_all_events(self):
+        """
+        Clear all picked events.
+        """
+        self._events_data = pd.DataFrame(
+            columns=pd.MultiIndex.from_tuples(
+                [('low_winter', 'date'),
+                 ('low_winter', 'value'),
+                 ('high_spring', 'date'),
+                 ('high_spring', 'value'),
+                 ('low_summer', 'date'),
+                 ('low_summer', 'value'),
+                 ('high_fall', 'date'),
+                 ('high_fall', 'value')])
+            )
+
+    def add_new_event(self, picked_date: datetime, picked_value: float,
+                      event_type: str):
+        """
+        Add new picked event.
+
+        Parameters
+        ----------
+        picked_date : datetime
+            The datetime of the picked event point.
+        picked_value : float
+            The water level value (in mbgs) of the picked event point.
+        event_type : str
+            The type of event. Valide values are 'low_winter', 'high_spring',
+            'low_summer', and 'high_fall'.
+        """
+        cycle_year = picked_date.year
+        if event_type == 'low_winter' and picked_date.month >= 12:
+            # This means the low winter event occured early at the end
+            # of the previous year.
+            cycle_year = cycle_year + 1
+        elif event_type == 'high_fall' and picked_date.month < 6:
+            # This means the high fall event occured late during
+            # the winter of the next year.
+            cycle_year = cycle_year - 1
+
+        self._events_data.loc[
+            cycle_year, (event_type, 'date')] = picked_date
+        self._events_data.loc[
+            cycle_year, (event_type, 'value')] = picked_value
+        if cycle_year + 1 not in self._events_data.index:
+            self._events_data.loc[cycle_year + 1] = np.nan
+        if cycle_year - 1 not in self._events_data.index:
+            self._events_data.loc[cycle_year - 1] = np.nan
+
+        # Cleanup conflicting events.
+        if event_type == 'low_summer':
+            # The low winter and high spring events must happen
+            # before the low summer event.
+            for other_type in ['low_winter', 'high_spring']:
+                other_date = self._events_data.loc[
+                    cycle_year, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date >= picked_date:
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'value')] = np.nan
+            # The high fall event must happen after the low summer event.
+            for other_type in ['high_fall']:
+                other_date = self._events_data.loc[
+                    cycle_year, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date <= picked_date:
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'value')] = np.nan
+        elif event_type == 'low_winter':
+            # The high spring, low summer, and high fall events must happen
+            # after the low winter event.
+            for other_type in ['high_spring', 'low_summer', 'high_fall']:
+                other_date = self._events_data.loc[
+                    cycle_year, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date <= picked_date:
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'value')] = np.nan
+            # The high spring, low summer, and high fall events of the
+            # previous year must happen before the low winter event.
+            for other_type in ['high_spring', 'low_summer', 'high_fall']:
+                other_date = self._events_data.loc[
+                    cycle_year - 1, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date >= picked_date:
+                    self._events_data.loc[
+                        cycle_year - 1, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year - 1, (other_type, 'value')] = np.nan
+        elif event_type == 'high_spring':
+            # The low winter event must happen before the high spring event.
+            for other_type in ['low_winter']:
+                other_date = self._events_data.loc[
+                    cycle_year, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date >= picked_date:
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'value')] = np.nan
+            # The low summer and high fall events must happen
+            # after the high spring event.
+            for other_type in ['low_summer', 'high_fall']:
+                other_date = self._events_data.loc[
+                    cycle_year, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date <= picked_date:
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'value')] = np.nan
+            # The high fall event of the previous year must happen
+            # before this high spring event.
+            for other_type in ['high_fall']:
+                other_date = self._events_data.loc[
+                    cycle_year - 1, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date >= picked_date:
+                    self._events_data.loc[
+                        cycle_year - 1, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year - 1, (other_type, 'value')] = np.nan
+        elif event_type == 'high_fall':
+            # The low winter, high spring, and low summer events must happen
+            # before this high fall event.
+            for other_type in ['low_winter', 'high_spring', 'low_summer']:
+                other_date = self._events_data.loc[
+                    cycle_year, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date >= picked_date:
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year, (other_type, 'value')] = np.nan
+
+            # The low winter, high spring, and low summer events of the
+            # following year must happen after this high fall event.
+            for other_type in ['low_winter', 'high_spring', 'low_summer']:
+                other_date = self._events_data.loc[
+                    cycle_year + 1, (other_type, 'date')]
+                if not pd.isnull(other_date) and other_date <= picked_date:
+                    self._events_data.loc[
+                        cycle_year + 1, (other_type, 'date')] = np.nan
+                    self._events_data.loc[
+                        cycle_year + 1, (other_type, 'value')] = np.nan
+        self._events_data = self._events_data.sort_index()
+        print(self._events_data)
+
     # ---- WLCalc integration
 
     @wlcalcmethod
@@ -198,12 +354,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         Handle when the button to clear all hydrological ëvents from the
         well hydrograph is clicked.
         """
-        self._events_data = {
-            'high_fall': pd.Series(),
-            'high_spring': pd.Series(),
-            'low_summer': pd.Series(),
-            'low_winter': pd.Series(),
-            }
+        self.clear_all_events()
         self._draw_event_points()
 
     @wlcalcmethod
@@ -237,18 +388,6 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         """
         dtmin, dtmax = xldates_to_datetimeindex(xldates)
 
-        # Check and remove previously picked events that are within the
-        # selected period.
-        if button == 1:
-            event_types = ['high_spring', 'high_fall']
-        elif button == 3:
-            event_types = ['low_summer', 'low_winter']
-
-        for key in event_types:
-            mask = ((self._events_data[key].index < dtmin) |
-                    (self._events_data[key].index > dtmax))
-            self._events_data[key] = self._events_data[key][mask]
-
         # Find the point of the new event within the selected period.
         data = self.wlcalc.wldset.data
         mask = (data.index >= dtmin) & (data.index <= dtmax)
@@ -265,23 +404,8 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         picked_date = data.index[mask][index]
         picked_value = data['WL'][mask][index]
 
-        # Remove previously picked events that are within the
-        # hydrological cycle.
-        cycle_start_month = self.CYCLE_START_MONTH[event_type]
-        cycle_start_year = picked_date.year
-        if picked_date.month < cycle_start_month:
-            cycle_start_year = cycle_start_year - 1
-
-        cycle_start_date = datetime(cycle_start_year, cycle_start_month, 1)
-        cycle_end_date = datetime(cycle_start_year + 1, cycle_start_month, 1)
-
-        mask = ((self._events_data[event_type].index < cycle_start_date) |
-                (self._events_data[event_type].index >= cycle_end_date))
-        self._events_data[event_type] = (
-            self._events_data[event_type][mask])
-
-        # Add the new picked event.
-        self._events_data[event_type][picked_date] = picked_value
+        # Add the new picked event and redraw picked events.
+        self.add_new_event(picked_date, picked_value, event_type)
         self._draw_event_points()
 
     @wlcalcmethod
@@ -297,10 +421,11 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             of the period where to erase all picked hydrological cycle events.
         """
         dtmin, dtmax = xldates_to_datetimeindex(xldates)
-        for key in self._events_data.keys():
-            mask = ((self._events_data[key].index < dtmin) |
-                    (self._events_data[key].index > dtmax))
-            self._events_data[key] = self._events_data[key][mask]
+        for event_type in EVENT_TYPES:
+            mask = ((self._events_data[event_type]['date'] >= dtmin) &
+                    (self._events_data[event_type]['date'] <= dtmax))
+            self._events_data.loc[mask, (event_type, 'date')] = np.nan
+            self._events_data.loc[mask, (event_type, 'value')] = np.nan
         self._draw_event_points()
 
     @wlcalcmethod
@@ -355,13 +480,8 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         super().close()
 
     def on_wldset_changed(self):
-        self._events_data = {
-            'high_fall': pd.Series(),
-            'high_spring': pd.Series(),
-            'low_summer': pd.Series(),
-            'low_winter': pd.Series(),
-            }
-        self.wlcalc.update_axeswidgets()
+        self.clear_all_events()
+        self._draw_event_points()
 
     def set_wldset(self, wldset):
         pass
