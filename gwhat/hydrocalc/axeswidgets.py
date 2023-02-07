@@ -7,22 +7,20 @@
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
 from __future__ import annotations
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING
 if TYPE_CHECKING:
     from gwhat.HydroCalc2 import WLCalc
+    from matplotlib.axes import Axes
 
 # ---- Standard library imports
 from abc import abstractmethod
 
 # ---- Third party imports
-import numpy as np
-
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
-from qtpy.QtWidgets import QWidget, QApplication
+from qtpy.QtWidgets import QWidget
 from qtpy.QtGui import QCursor
 from matplotlib.backend_bases import LocationEvent
-from matplotlib.axes import Axes
 from matplotlib.widgets import AxesWidget
 
 
