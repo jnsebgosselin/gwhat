@@ -7,6 +7,10 @@
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from gwhat.HydroCalc2 import WLCalc
+    from matplotlib.axes import Axes
 
 # ---- Standard library imports
 import sys
@@ -16,7 +20,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import (QWidget, QGridLayout, QApplication, QPushButton)
+from qtpy.QtWidgets import QWidget, QGridLayout, QPushButton
 from matplotlib.transforms import ScaledTranslation
 
 # ---- Local imports
