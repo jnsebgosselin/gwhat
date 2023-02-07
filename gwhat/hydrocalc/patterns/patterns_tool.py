@@ -113,6 +113,35 @@ class HydroCycleEventsPlotter(WLCalcAxesWidget):
         self._update()
 
 
+class YearlyVGridPlotter(object):
+
+    def __init__(self, ax: Axes, wlcalc: WLCalc):
+        self.ax = ax
+        self.wlcalc = wlcalc
+        self._vgrid_artists = []
+        self._active = False
+
+    def set_active(self, active: bool):
+        self._active = active
+        for artist in self._vgrid_artists:
+            artist.set_visible(active)
+        self.wlcalc.draw()
+
+    def set_grid_xdata(self, xdata: list):
+        """Set the position of the yearly vertical grid lines."""
+        for artist in self._vgrid_artists:
+            artist.set_visible(False)
+        for i, value in enumerate(xdata):
+            try:
+                artist = self._vgrid_artists[i]
+                artist.set_xdata(value)
+            except IndexError:
+                artist = self.ax.axvline(value, ls=':', color='0.85', zorder=1)
+                self._vgrid_artists.append(artist)
+            artist.set_visible(self._active)
+        self.wlcalc.draw()
+
+
 class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
     __toolname__ = 'cycle'
     __tooltitle__ = 'Cycle'
@@ -459,6 +488,11 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             self.wlcalc.figure.axes[0], wlcalc)
         self.wlcalc.install_axeswidget(self.events_plotter, active=True)
 
+        # Setup the yearly vertical grid plotter.
+        self.vgrid_plotter = YearlyVGridPlotter(
+            self.wlcalc.figure.axes[1], wlcalc)
+        self.vgrid_plotter.set_active(True)
+
         # Init matplotlib artists.
         self._high_spring_plt, = self.wlcalc.figure.axes[0].plot(
             [], [], color='green', clip_on=True,
@@ -475,6 +509,11 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
     def on_wldset_changed(self):
         self.clear_all_events()
+        if self.wlcalc.wldset is not None:
+            min_year = self.wlcalc.wldset.data.index.year.min()
+            max_year = self.wlcalc.wldset.data.index.year.max()
+            self.vgrid_plotter.set_grid_xdata(
+                [datetime(y, 1, 1) for y in range(min_year, max_year + 1)])
         self._draw_event_points()
 
     def set_wldset(self, wldset):
