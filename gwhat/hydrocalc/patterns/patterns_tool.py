@@ -377,7 +377,6 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
                     self._events_data.loc[
                         cycle_year + 1, (other_type, 'value')] = np.nan
         self._events_data = self._events_data.sort_index()
-        print(self._events_data)
 
     # ---- WLCalc integration
     @wlcalcmethod
