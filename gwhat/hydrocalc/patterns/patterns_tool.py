@@ -118,13 +118,6 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
     __tooltip__ = ("<p>A tool to pick hydrological cycle events "
                    "on the hydrograph.</p>")
 
-    CYCLE_START_MONTH = {
-        'high_fall': 3,
-        'high_spring': 9,
-        'low_summer': 6,
-        'low_winter': 12
-        }
-
     sig_new_mrc = Signal()
 
     def __init__(self, parent=None):
