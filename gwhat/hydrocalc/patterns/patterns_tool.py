@@ -212,6 +212,15 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         self._clear_events_btn.clicked.connect(
             self._btn_clear_events_isclicked)
 
+        self._copy_events_btn = QPushButton('  Copy Events')
+        self._copy_events_btn.setIcon(get_icon('copy_clipboard'))
+        self._copy_events_btn.setToolTip(
+            '<b>Copy Events</b>'
+            '<p>Place a copy of the hydrological cycle events '
+            'data on the clipboard.</p>'
+            )
+        self._copy_events_btn.clicked.connect(
+            self._btn_copy_to_clipboard_isclicked)
 
         # Setup the Layout.
         layout = QGridLayout(self)
@@ -219,6 +228,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         layout.addWidget(self._select_events_btn, 0, 0)
         layout.addWidget(self._erase_events_btn, 1, 0)
         layout.addWidget(self._clear_events_btn, 2, 0)
+        layout.addWidget(self._copy_events_btn, 3, 0)
         layout.setRowStretch(4, 100)
 
     # ---- Public interface.
@@ -370,6 +380,18 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         print(self._events_data)
 
     # ---- WLCalc integration
+    @wlcalcmethod
+    def _btn_copy_to_clipboard_isclicked(self, *args, **kwargs):
+        events_data = self._events_data.dropna(how='all').copy()
+
+        # Format the datetime data.
+        for event_type in EVENT_TYPES:
+            events_data.loc[:, (event_type, 'date')] = (
+                pd.to_datetime(events_data[event_type]['date']).dt.date
+                )
+
+        events_data.to_clipboard(
+            excel=True, index=True, na_rep='', date_format='%Y-%m-%d')
 
     @wlcalcmethod
     def _btn_clear_events_isclicked(self, *args, **kwargs):
