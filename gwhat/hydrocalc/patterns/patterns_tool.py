@@ -45,6 +45,12 @@ COLORS = {
     'high_fall': 'red',
     'low_summer': 'orange',
     'low_winter': 'cyan'}
+MARKERS = {
+    'high_spring': 'v',
+    'high_fall': 'v',
+    'low_summer': '^',
+    'low_winter': '^',
+    }
 
 
 class HydroCycleEventsSelector(WLCalcVSpanSelector):
@@ -75,19 +81,31 @@ class HydroCycleEventsPlotter(WLCalcAxesWidget):
 
         self._picked_event_artists = {
             'high_spring': self.ax.plot(
-                [], [], marker='v', color=COLORS['high_spring'], ls='none',
+                [], [],
+                marker=MARKERS['high_spring'],
+                color=COLORS['high_spring'],
+                ls='none',
                 transform=self.ax.transData + offset_highs
                 )[0],
             'high_fall': self.ax.plot(
-                [], [], marker='v', color=COLORS['high_fall'], ls='none',
+                [], [],
+                marker=MARKERS['high_fall'],
+                color=COLORS['high_fall'],
+                ls='none',
                 transform=self.ax.transData + offset_highs
                 )[0],
             'low_summer': self.ax.plot(
-                [], [], marker='^', color=COLORS['low_summer'], ls='none',
+                [], [],
+                marker=MARKERS['low_summer'],
+                color=COLORS['low_summer'],
+                ls='none',
                 transform=self.ax.transData + offset_lows
                 )[0],
             'low_winter': self.ax.plot(
-                [], [], marker='^', color=COLORS['low_winter'], ls='none',
+                [], [],
+                marker=MARKERS['low_winter'],
+                color=COLORS['low_winter'],
+                ls='none',
                 transform=self.ax.transData + offset_lows
                 )[0],
             }
