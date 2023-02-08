@@ -33,8 +33,13 @@ from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.fileio import SaveFileMixin
 
 
-EVENT_TYPES = ['low_winter', 'high_spring', 'low_summer', 'high_fall']
-
+EVENT_TYPES = [
+    'low_winter',
+    'high_spring',
+    'recess_summer',
+    'low_summer',
+    'high_fall'
+    ]
 COLORS = {
     'high_spring': 'green',
     'high_fall': 'red',
