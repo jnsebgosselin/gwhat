@@ -26,8 +26,7 @@ from matplotlib.transforms import ScaledTranslation
 # ---- Local imports
 from gwhat.hydrocalc.axeswidgets import WLCalcVSpanSelector, WLCalcAxesWidget
 from gwhat.hydrocalc.api import WLCalcTool, wlcalcmethod
-from gwhat.utils.dates import (
-    xldates_to_datetimeindex, datetimeindex_to_xldates)
+from gwhat.utils.dates import xldates_to_datetimeindex
 from gwhat.utils.icons import get_icon
 from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.fileio import SaveFileMixin
@@ -43,13 +42,23 @@ EVENT_TYPES = [
 COLORS = {
     'high_spring': 'green',
     'high_fall': 'red',
+    'recess_summer': 'purple',
     'low_summer': 'orange',
-    'low_winter': 'cyan'}
+    'low_winter': 'cyan',
+    }
 MARKERS = {
     'high_spring': 'v',
     'high_fall': 'v',
+    'recess_summer': 'o',
     'low_summer': '^',
     'low_winter': '^',
+    }
+MARKER_VOFFSETS = {
+    'high_spring': 8/72,
+    'high_fall': 8/72,
+    'recess_summer': 0,
+    'low_summer': -8/72,
+    'low_winter': -8/72,
     }
 
 
@@ -58,6 +67,40 @@ class HydroCycleEventsSelector(WLCalcVSpanSelector):
         super().__init__(
             ax, wlcalc, onselected, allowed_buttons=[1, 3],
             )
+
+    def onpress(self, event):
+        if event.button == 2 and event.xdata:
+            self._onpress_button = event.button
+            self._onpress_keyboard_modifiers = event.guiEvent.modifiers()
+            self._onpress_xdata = [event.xdata]
+            self.axvline.set_visible(False)
+            self._update()
+        else:
+            super().onpress(event)
+
+    def onrelease(self, event):
+        if event.button == 2 and self._onpress_button == 2:
+            onrelease_xdata = tuple(
+                [self._onpress_xdata[0] -
+                 self.wlcalc.dt4xls2mpl * self.wlcalc.dformat] * 2
+                )
+
+            self.axvline.set_visible(True)
+            if event.xdata:
+                self.axvline.set_xdata((event.xdata, event.xdata))
+
+            self.sig_span_selected.emit(
+                onrelease_xdata,
+                self._onpress_button,
+                self._onpress_keyboard_modifiers)
+
+            self._onpress_button = None
+            self._onpress_xdata = []
+            self._onrelease_xdata = []
+            self._onpress_keyboard_modifiers = None
+            self._update()
+        else:
+            super().onrelease(event)
 
     def get_onpress_axvspan_color(self, event):
         ctrl = bool(self._onpress_keyboard_modifiers & Qt.ControlModifier)
@@ -74,44 +117,19 @@ class HydroCycleEventsPlotter(WLCalcAxesWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        offset_highs = ScaledTranslation(
-            0, 6/72, self.ax.figure.dpi_scale_trans)
-        offset_lows = ScaledTranslation(
-            0, -6/72, self.ax.figure.dpi_scale_trans)
-
-        self._picked_event_artists = {
-            'high_spring': self.ax.plot(
+        self._picked_event_artists = {}
+        for event_type in EVENT_TYPES:
+            scaled_trans = ScaledTranslation(
+                0, MARKER_VOFFSETS[event_type], self.ax.figure.dpi_scale_trans)
+            artist = self.ax.plot(
                 [], [],
-                marker=MARKERS['high_spring'],
-                color=COLORS['high_spring'],
+                marker=MARKERS[event_type],
+                color=COLORS[event_type],
                 ls='none',
-                transform=self.ax.transData + offset_highs
-                )[0],
-            'high_fall': self.ax.plot(
-                [], [],
-                marker=MARKERS['high_fall'],
-                color=COLORS['high_fall'],
-                ls='none',
-                transform=self.ax.transData + offset_highs
-                )[0],
-            'low_summer': self.ax.plot(
-                [], [],
-                marker=MARKERS['low_summer'],
-                color=COLORS['low_summer'],
-                ls='none',
-                transform=self.ax.transData + offset_lows
-                )[0],
-            'low_winter': self.ax.plot(
-                [], [],
-                marker=MARKERS['low_winter'],
-                color=COLORS['low_winter'],
-                ls='none',
-                transform=self.ax.transData + offset_lows
-                )[0],
-            }
-
-        for artist in self._picked_event_artists.values():
+                transform=self.ax.transData + scaled_trans
+                )[0]
             self.register_artist(artist)
+            self._picked_event_artists[event_type] = artist
 
     def set_events_data(self, events_data: pd.DataFrame):
         """Set and draw the hydrological cycle picked events."""
@@ -276,7 +294,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             The water level value (in mbgs) of the picked event point.
         event_type : str
             The type of event. Valide values are 'low_winter', 'high_spring',
-            'low_summer', and 'high_fall'.
+            'low_summer', 'high_fall', and 'recess_summer'.
         """
         cycle_year = picked_date.year
         if event_type == 'low_winter' and picked_date.month >= 12:
@@ -410,6 +428,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         events_data.to_clipboard(
             excel=True, index=True, na_rep='', date_format='%Y-%m-%d')
 
+    # ---- WLCalc integration
     @wlcalcmethod
     def _btn_clear_events_isclicked(self, *args, **kwargs):
         """
@@ -448,23 +467,33 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             A 2-tuple of floats containing the time, in numerical Excel format,
             where to add a new hydrological cycle event.
         """
-        dtmin, dtmax = xldates_to_datetimeindex(xldates)
-
-        # Find the point of the new event within the selected period.
-        data = self.wlcalc.wldset.data
-        mask = (data.index >= dtmin) & (data.index <= dtmax)
-        if mask.sum() == 0:
-            return
-
         ctrl = bool(modifiers & Qt.ControlModifier)
-        if button == 1:
-            event_type = 'high_spring' if not ctrl else 'high_fall'
-            index = np.argmin(data['WL'][mask])
-        elif button == 3:
-            event_type = 'low_summer' if not ctrl else 'low_winter'
-            index = np.argmax(data['WL'][mask])
-        picked_date = data.index[mask][index]
-        picked_value = data['WL'][mask][index]
+        dtmin, dtmax = xldates_to_datetimeindex(xldates)
+        data = self.wlcalc.wldset.data
+
+        # Find the point of the new event within the selected period or the
+        # closest point if it is a single date.
+        if button in [1, 3]:
+            mask = (data.index >= dtmin) & (data.index <= dtmax)
+            if mask.sum() == 0:
+                return
+
+            if button == 1:
+                event_type = 'high_spring' if not ctrl else 'high_fall'
+                index = np.argmin(data['WL'][mask])
+            elif button == 3:
+                event_type = 'low_summer' if not ctrl else 'low_winter'
+                index = np.argmax(data['WL'][mask])
+
+            picked_date = data.index[mask][index]
+            picked_value = data['WL'][mask][index]
+        elif button == 2:
+            # When button 2 is pressed, dtmin and dtmax are the same.
+            event_type = 'recess_summer'
+            index = np.argmin(np.abs(data.index - dtmin))
+
+            picked_date = data.index[index]
+            picked_value = data['WL'][index]
 
         # Add the new picked event and redraw picked events.
         self.add_new_event(picked_date, picked_value, event_type)
