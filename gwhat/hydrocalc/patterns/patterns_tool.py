@@ -333,6 +333,18 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         self._events_data = pd.DataFrame(
             columns=pd.MultiIndex.from_tuples(tuples)
             )
+        self._save_events_btn.setEnabled(True)
+
+    def delete_events_inrange(self, dtmin: datetime, dtmax: datetime):
+        """
+        Delete all events picked between 'dtmin' and 'date_max'.
+        """
+        for event_type in EVENT_TYPES:
+            mask = ((self._events_data[event_type]['date'] >= dtmin) &
+                    (self._events_data[event_type]['date'] <= dtmax))
+            self._events_data.loc[mask, (event_type, 'date')] = pd.NaT
+            self._events_data.loc[mask, (event_type, 'value')] = np.nan
+        self._save_events_btn.setEnabled(True)
 
     def add_new_event(self, picked_date: datetime, picked_value: float,
                       event_type: str):
@@ -564,11 +576,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             of the period where to erase all picked hydrological cycle events.
         """
         dtmin, dtmax = xldates_to_datetimeindex(xldates)
-        for event_type in EVENT_TYPES:
-            mask = ((self._events_data[event_type]['date'] >= dtmin) &
-                    (self._events_data[event_type]['date'] <= dtmax))
-            self._events_data.loc[mask, (event_type, 'date')] = np.nan
-            self._events_data.loc[mask, (event_type, 'value')] = np.nan
+        self.delete_events_inrange(dtmin, dtmax)
         self._draw_event_points()
 
     @wlcalcmethod
