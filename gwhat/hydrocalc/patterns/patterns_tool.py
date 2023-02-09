@@ -182,16 +182,12 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
         # A pandas dataframe to hold the data of the picked
         # hydrological cycle events.
+        tuples = []
+        for event_type in EVENT_TYPES:
+            tuples.append((event_type, 'date'))
+            tuples.append((event_type, 'value'))
         self._events_data = pd.DataFrame(
-            columns=pd.MultiIndex.from_tuples(
-                [('low_winter', 'date'),
-                 ('low_winter', 'value'),
-                 ('high_spring', 'date'),
-                 ('high_spring', 'value'),
-                 ('low_summer', 'date'),
-                 ('low_summer', 'value'),
-                 ('high_fall', 'date'),
-                 ('high_fall', 'value')])
+            columns=pd.MultiIndex.from_tuples(tuples)
             )
 
         self.setup()
@@ -259,16 +255,12 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         """
         Clear all picked events.
         """
+        tuples = []
+        for event_type in EVENT_TYPES:
+            tuples.append((event_type, 'date'))
+            tuples.append((event_type, 'value'))
         self._events_data = pd.DataFrame(
-            columns=pd.MultiIndex.from_tuples(
-                [('low_winter', 'date'),
-                 ('low_winter', 'value'),
-                 ('high_spring', 'date'),
-                 ('high_spring', 'value'),
-                 ('low_summer', 'date'),
-                 ('low_summer', 'value'),
-                 ('high_fall', 'date'),
-                 ('high_fall', 'value')])
+            columns=pd.MultiIndex.from_tuples(tuples)
             )
 
     def add_new_event(self, picked_date: datetime, picked_value: float,
