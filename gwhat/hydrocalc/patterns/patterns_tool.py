@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
 # ---- Standard library imports
+import io
 import sys
 from datetime import datetime, timedelta
 
@@ -60,6 +61,8 @@ MARKER_VOFFSETS = {
     'low_summer': -8/72,
     'low_winter': -8/72,
     }
+
+DATE_FORMAT = '%Y-%m-%d'
 
 
 class HydroCycleEventsSelector(WLCalcVSpanSelector):
@@ -258,6 +261,14 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             )
         self._copy_events_btn.clicked.connect(lambda: self.copy_to_clipboard())
 
+        self._save_events_btn = QPushButton('  Save Events')
+        self._save_events_btn.setIcon(get_icon('save'))
+        self._save_events_btn.setToolTip(
+            '<b>Save Events</b>'
+            '<p>Save picked hydrological cycle events in the '
+            'GWHAT project.</p>')
+        self._save_events_btn.clicked.connect(lambda: self.save_events_data())
+        self._save_events_btn.setEnabled(False)
 
         # Setup the Layout.
         layout = QGridLayout(self)
@@ -266,9 +277,51 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         layout.addWidget(self._erase_events_btn, 1, 0)
         layout.addWidget(self._clear_events_btn, 2, 0)
         layout.addWidget(self._copy_events_btn, 3, 0)
-        layout.setRowStretch(4, 100)
+        layout.addWidget(self._save_events_btn, 4, 0)
+        layout.setRowStretch(5, 100)
 
     # ---- Public interface.
+    @wlcalcmethod
+    def read_events_data(self):
+        """
+        Read previously picked hydological cycle events from the GWHAT project.
+        """
+        wldset = self.wlcalc.wldset
+        if wldset is None:
+            return
+
+        try:
+            out = wldset.dset.attrs['hydro_cycle_picked_event_data']
+        except KeyError:
+            return
+
+        self._events_data = pd.read_csv(
+            io.StringIO(out.tobytes().decode('utf-8')),
+            header=[0, 1], index_col=0)
+        for column in self._events_data.columns.to_flat_index():
+            if column[1] == 'value':
+                self._events_data[column] = (
+                    self._events_data[column].astype(float))
+            elif column[1] == 'date':
+                self._events_data[column] = pd.to_datetime(
+                    self._events_data[column], format=DATE_FORMAT)
+
+    @wlcalcmethod
+    def save_events_data(self):
+        """
+        Save events data in the GWHAT project.
+        """
+        events_data = self._events_data.dropna(how='all').copy()
+
+        binary_blob = events_data.to_csv(
+            index=True, na_rep='', date_format='%Y-%m-%d', encoding='utf-8'
+            ).encode('utf-8')
+        self.wlcalc.wldset.dset.attrs[
+            'hydro_cycle_picked_event_data'
+            ] = np.void(binary_blob)
+        self.wlcalc.wldset.dset.file.flush()
+        self._save_events_btn.setEnabled(False)
+
     def clear_all_events(self):
         """
         Clear all picked events.
@@ -410,10 +463,12 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
                     self._events_data.loc[
                         cycle_year + 1, (other_type, 'value')] = np.nan
         self._events_data = self._events_data.sort_index()
-
+        self._save_events_btn.setEnabled(True)
 
     def copy_to_clipboard(self):
-        """Put the picked hydrological events data on the clipboard."""
+        """
+        Put the picked hydrological events data on the clipboard.
+        """
         events_data = self._events_data.dropna(how='all').copy()
 
         # Format the datetime data.
@@ -579,6 +634,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             max_year = self.wlcalc.wldset.data.index.year.max()
             self.vgrid_plotter.set_grid_xdata(
                 [datetime(y, 1, 1) for y in range(min_year, max_year + 1)])
+            self.read_events_data()
         self._draw_event_points()
 
     def set_wldset(self, wldset):
