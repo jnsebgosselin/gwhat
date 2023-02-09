@@ -256,8 +256,8 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
             '<p>Place a copy of the hydrological cycle events '
             'data on the clipboard.</p>'
             )
-        self._copy_events_btn.clicked.connect(
-            self._btn_copy_to_clipboard_isclicked)
+        self._copy_events_btn.clicked.connect(lambda: self.copy_to_clipboard())
+
 
         # Setup the Layout.
         layout = QGridLayout(self)
@@ -411,12 +411,9 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
                         cycle_year + 1, (other_type, 'value')] = np.nan
         self._events_data = self._events_data.sort_index()
 
-    # ---- WLCalc integration
-    @wlcalcmethod
-    def _btn_copy_to_clipboard_isclicked(self, *args, **kwargs):
-        """
-        Handle when the button to put events picked data on the clipboard.
-        """
+
+    def copy_to_clipboard(self):
+        """Put the picked hydrological events data on the clipboard."""
         events_data = self._events_data.dropna(how='all').copy()
 
         # Format the datetime data.
