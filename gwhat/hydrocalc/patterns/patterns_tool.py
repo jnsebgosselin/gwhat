@@ -43,14 +43,14 @@ EVENT_TYPES = [
 COLORS = {
     'high_spring': 'green',
     'high_fall': 'red',
-    'recess_summer': 'purple',
+    'recess_summer': 'orange',
     'low_summer': 'orange',
     'low_winter': 'cyan',
     }
 MARKERS = {
     'high_spring': 'v',
     'high_fall': 'v',
-    'recess_summer': 'o',
+    'recess_summer': 's',
     'low_summer': '^',
     'low_winter': '^',
     }
@@ -128,8 +128,12 @@ class HydroCycleEventsPlotter(WLCalcAxesWidget):
                 [], [],
                 marker=MARKERS[event_type],
                 color=COLORS[event_type],
+                mfc='none',
                 ls='none',
-                transform=self.ax.transData + scaled_trans
+                mew=1.5,
+                ms=6,
+                transform=self.ax.transData + scaled_trans,
+                zorder=1000
                 )[0]
             self.register_artist(artist)
             self._picked_event_artists[event_type] = artist
@@ -229,6 +233,8 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
                 '<li>Use Right click to select a summer minimum;</li>'
                 '<li>Use {key_modif} + Right click to select a '
                 'winter minimum.</li>'
+                '<li>Use Middle click to select the start of the '
+                'summer recession.</li>'
                 '</ul>'
                 ).format(key_modif=key_modif),
             on_value_changed=self._btn_select_events_isclicked
