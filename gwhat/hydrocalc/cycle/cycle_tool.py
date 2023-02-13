@@ -256,8 +256,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         self._copy_events_btn.setIcon(get_icon('copy_clipboard'))
         self._copy_events_btn.setToolTip(
             '<b>Copy Events</b>'
-            '<p>Place a copy of the hydrological cycle events '
-            'data on the clipboard.</p>'
+            '<p>Place a copy of the picked event data on the clipboard.</p>'
             )
         self._copy_events_btn.clicked.connect(lambda: self.copy_to_clipboard())
 
@@ -265,8 +264,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         self._save_events_btn.setIcon(get_icon('save'))
         self._save_events_btn.setToolTip(
             '<b>Save Events</b>'
-            '<p>Save picked hydrological cycle events in the '
-            'GWHAT project.</p>')
+            '<p>Save the picked event data in the GWHAT project.</p>')
         self._save_events_btn.clicked.connect(lambda: self.save_events_data())
         self._save_events_btn.setEnabled(False)
 
