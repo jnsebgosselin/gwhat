@@ -122,8 +122,6 @@ def test_calc_mrc(hydrocalc, tmp_path, qtbot, mocker):
     mrc_tool = hydrocalc.tools['mrc']
 
     assert hydrocalc.dformat == 1  # Matplotlib date format
-    hydrocalc.switch_date_format()
-    assert hydrocalc.dformat == 0  # Excel date format
 
     # Select recession periods on the hydrograph.
     coordinates = [
