@@ -10,6 +10,7 @@
 from __future__ import division, unicode_literals
 
 # ---- Standard library imports
+import io
 import csv
 import os
 import os.path as osp
@@ -504,6 +505,27 @@ class WLDatasetHDF5(WLDatasetBase):
             self.dset.file.flush()
             self._undo_stack = []
             print('Changes commited successfully.')
+
+    # ---- Hydrological cycle events
+    def read_hydro_cycle_events(self):
+        """
+        Return picked hydrological cycle events for this dataset.
+        """
+        try:
+            out = self.dset.attrs['hydro_cycle_events']
+        except KeyError:
+            return None
+
+        events_data = pd.read_csv(
+            io.StringIO(out.tobytes().decode('utf-8')),
+            header=[0, 1], index_col=0)
+        for column in events_data.columns.to_flat_index():
+            if column[1] == 'value':
+                events_data[column] = events_data[column].astype(float)
+            elif column[1] == 'date':
+                events_data[column] = pd.to_datetime(
+                    events_data[column], format='%Y-%m-%d')
+        return events_data
 
     # ---- Manual measurements
     def set_wlmeas(self, time, wl):
