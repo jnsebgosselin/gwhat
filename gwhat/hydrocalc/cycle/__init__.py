@@ -7,4 +7,4 @@
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
 
-from gwhat.hydrocalc.patterns.cycle_tool import HydroCycleCalcTool
+from gwhat.hydrocalc.cycle.cycle_tool import HydroCycleCalcTool
