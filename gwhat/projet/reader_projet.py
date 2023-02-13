@@ -527,6 +527,18 @@ class WLDatasetHDF5(WLDatasetBase):
                     events_data[column], format='%Y-%m-%d')
         return events_data
 
+    def save_hydro_cycle_events(self, events_data: pd.DataFrame):
+        """
+        Save picked hydrological cycle events for this dataset.
+        """
+        events_data = events_data.dropna(how='all').copy()
+
+        binary_blob = events_data.to_csv(
+            index=True, na_rep='', date_format='%Y-%m-%d', encoding='utf-8'
+            ).encode('utf-8')
+        self.dset.attrs['hydro_cycle_events'] = np.void(binary_blob)
+        self.dset.file.flush()
+
     # ---- Manual measurements
     def set_wlmeas(self, time, wl):
         """Overwrite the water level measurements for this dataset."""
