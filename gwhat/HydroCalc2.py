@@ -266,14 +266,6 @@ class WLCalc(QWidget, SaveFileMixin):
             '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_wl_style.sig_value_changed.connect(self.setup_wl_style)
 
-        self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
-        self.btn_dateFormat.setToolTip(
-            'Show x-axis tick labels as Excel numeric format.')
-        self.btn_dateFormat.clicked.connect(self.switch_date_format)
-        self.btn_dateFormat.setAutoRaise(False)
-        # dformat: False -> Excel Numeric Date Format
-        #          True -> Matplotlib Date Format
-
         # ---- Move/Zoom Axis.
         modif_sc_text = get_shortcuts_native_text('Ctrl+Shift+Left')
         self.move_left_action = create_action(
@@ -378,10 +370,8 @@ class WLCalc(QWidget, SaveFileMixin):
                 self.move_left_action, self.move_right_action,
                 self.move_up_action, self.move_down_action,
                 None,
-                self.btn_wl_style, self.btn_dateFormat,
-                None,
-                self.btn_show_glue, self.btn_show_weather,
-                self.btn_show_meas_wl,
+                self.btn_wl_style, self.btn_show_glue,
+                self.btn_show_weather, self.btn_show_meas_wl,
                 None,
                 self.btn_rect_select, self.btn_clear_select,
                 self.btn_del_select, self.btn_undo_changes,
@@ -758,41 +748,6 @@ class WLCalc(QWidget, SaveFileMixin):
             xfmt = mpl.ticker.ScalarFormatter()
             ax0.xaxis.set_major_formatter(xfmt)
             ax0.get_xaxis().get_major_formatter().set_useOffset(False)
-
-    def switch_date_format(self):
-        """
-        Change the format of the xticklabels.
-        - 0 is for Excel numeric date format.
-        - 1 is for Matplotlib text format.
-        """
-        ax0 = self.fig.axes[0]
-        if self.dformat == 0:
-            # Switch to matplotlib date format
-            self.btn_dateFormat.setAutoRaise(False)
-            self.btn_dateFormat.setToolTip(
-                'Show x-axis tick labels as Excel numeric format')
-            self.dformat = 1
-        elif self.dformat == 1:
-            # Switch to Excel numeric date format
-            self.btn_dateFormat.setAutoRaise(True)
-            self.btn_dateFormat.setToolTip(
-                'Show x-axis tick labels as date')
-            self.dformat = 0
-        self.setup_xticklabels_format()
-
-        # Adjust the range of the x-axis.
-        xlim = ax0.get_xlim()
-        if self.dformat == 1:
-            ax0.set_xlim(xlim[0] + self.dt4xls2mpl, xlim[1] + self.dt4xls2mpl)
-        elif self.dformat == 0:
-            ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
-
-        self._draw_obs_wl()
-        self.draw_meas_wl()
-        self.draw_weather()
-        self.draw_glue_wl()
-        self.sig_date_format_changed.emit()
-        self.draw()
 
     def setup_wl_style(self):
         """
