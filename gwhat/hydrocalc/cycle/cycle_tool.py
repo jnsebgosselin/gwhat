@@ -13,9 +13,8 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
 # ---- Standard library imports
-import io
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # ---- Third party imports
 import numpy as np
