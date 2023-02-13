@@ -207,13 +207,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
 
         # A pandas dataframe to hold the data of the picked
         # hydrological cycle events.
-        tuples = []
-        for event_type in EVENT_TYPES:
-            tuples.append((event_type, 'date'))
-            tuples.append((event_type, 'value'))
-        self._events_data = pd.DataFrame(
-            columns=pd.MultiIndex.from_tuples(tuples)
-            )
+        self._events_data = self._create_empty_event_data()
 
         self.setup()
 
@@ -286,6 +280,18 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         layout.addWidget(self._save_events_btn, 4, 0)
         layout.setRowStretch(5, 100)
 
+    def _create_empty_event_data(self):
+        """
+        Return an empty event data pandas dataframe.
+        """
+        tuples = []
+        for event_type in EVENT_TYPES:
+            tuples.append((event_type, 'date'))
+            tuples.append((event_type, 'value'))
+        return pd.DataFrame(
+            columns=pd.MultiIndex.from_tuples(tuples)
+            )
+
     # ---- Public interface.
     @wlcalcmethod
     def read_events_data(self):
@@ -332,13 +338,7 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         """
         Clear all picked events.
         """
-        tuples = []
-        for event_type in EVENT_TYPES:
-            tuples.append((event_type, 'date'))
-            tuples.append((event_type, 'value'))
-        self._events_data = pd.DataFrame(
-            columns=pd.MultiIndex.from_tuples(tuples)
-            )
+        self._events_data = self._create_empty_event_data()
         self._save_events_btn.setEnabled(True)
 
     def delete_events_inrange(self, dtmin: datetime, dtmax: datetime):
