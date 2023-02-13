@@ -302,36 +302,17 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         if wldset is None:
             return
 
-        try:
-            out = wldset.dset.attrs['hydro_cycle_picked_event_data']
-        except KeyError:
-            return
-
-        self._events_data = pd.read_csv(
-            io.StringIO(out.tobytes().decode('utf-8')),
-            header=[0, 1], index_col=0)
-        for column in self._events_data.columns.to_flat_index():
-            if column[1] == 'value':
-                self._events_data[column] = (
-                    self._events_data[column].astype(float))
-            elif column[1] == 'date':
-                self._events_data[column] = pd.to_datetime(
-                    self._events_data[column], format=DATE_FORMAT)
+        self._events_data = self.wlcalc.wldset.read_hydro_cycle_events()
+        if self._events_data is None:
+            self._events_data = self._create_empty_event_data()
+        self._save_events_btn.setEnabled(False)
 
     @wlcalcmethod
     def save_events_data(self):
         """
         Save events data in the GWHAT project.
         """
-        events_data = self._events_data.dropna(how='all').copy()
-
-        binary_blob = events_data.to_csv(
-            index=True, na_rep='', date_format='%Y-%m-%d', encoding='utf-8'
-            ).encode('utf-8')
-        self.wlcalc.wldset.dset.attrs[
-            'hydro_cycle_picked_event_data'
-            ] = np.void(binary_blob)
-        self.wlcalc.wldset.dset.file.flush()
+        self.wlcalc.wldset.save_hydro_cycle_events(self._events_data)
         self._save_events_btn.setEnabled(False)
 
     def clear_all_events(self):
