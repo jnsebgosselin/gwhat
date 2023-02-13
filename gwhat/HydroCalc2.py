@@ -40,7 +40,7 @@ from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
 from gwhat.hydrocalc.recession.recession_tool import MasterRecessionCalcTool
-from gwhat.hydrocalc.patterns import HydroCycleCalcTool
+from gwhat.hydrocalc.cycle import HydroCycleCalcTool
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
