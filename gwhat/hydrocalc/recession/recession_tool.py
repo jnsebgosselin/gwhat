@@ -364,6 +364,12 @@ class MasterRecessionCalcTool(WLCalcTool, SaveFileMixin):
     def add_mrcperiod(self, xdata):
         """
         Add a a new mrc period using the provided xdata.
+
+        Parameters
+        ----------
+        xdata : 2-tuple
+            A 2-tuple of floats containing the time, in numerical Excel format,
+            of the new selected recession period.
         """
         try:
             xmin = min(xdata)
