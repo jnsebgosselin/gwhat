@@ -175,6 +175,17 @@ FA_ICONS = {
     'search': [
         ('fa5s.search',),
         {'color': COLOR, 'scale_factor': 1.0}],
+    'square': [
+        ('mdi.square-outline',),
+        {}
+        ],
+    'tria_down': [
+        ('mdi.triangle-outline',),
+        {'rotated': 180}],
+    'tria_up': [
+        ('mdi.triangle-outline',),
+        {}
+        ],
     'undo_changes': [
         ('mdi.undo-variant',),
         {'color': COLOR, 'scale_factor': 1.3}],
