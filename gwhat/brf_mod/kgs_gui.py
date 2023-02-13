@@ -286,7 +286,7 @@ class BRFManager(WLCalcTool):
 
     # ---- WLCalc integration
     @wlcalcmethod
-    def _on_period_selected(self, xdata):
+    def _on_period_selected(self, xdata, button, modifiers):
         """
         Handle when a period is selected for the BRF calculations.
 

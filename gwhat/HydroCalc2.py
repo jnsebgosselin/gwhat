@@ -40,6 +40,7 @@ from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
 from gwhat.hydrocalc.recession.recession_tool import MasterRecessionCalcTool
+from gwhat.hydrocalc.cycle import HydroCycleCalcTool
 from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
@@ -61,6 +62,11 @@ class WLCalc(QWidget, SaveFileMixin):
     MRC and ultimately estimate groundwater recharge.
     """
     sig_date_format_changed = QSignal()
+
+    @property
+    def figure(self):
+        """Return WLCalc matplotlib figure."""
+        return self.canvas.figure
 
     def __init__(self, datamanager, parent=None):
         QWidget.__init__(self, parent)
@@ -118,6 +124,9 @@ class WLCalc(QWidget, SaveFileMixin):
             ("A tool to evaluate groundwater recharge and its "
              "uncertainty from observed water levels and daily "
              "weather data."))
+
+        self.patterns_widget = HydroCycleCalcTool(parent=self)
+        self.install_tool(self.patterns_widget)
 
         self.tools_tabwidget.setCurrentIndex(
             CONF.get('hydrocalc', 'current_tool_index'))
@@ -480,6 +489,7 @@ class WLCalc(QWidget, SaveFileMixin):
         # Setup BRF widget.
         for tool in self.tools.values():
             tool.set_wldset(wldset)
+            tool.on_wldset_changed()
 
         self.setup_hydrograph()
         self._navig_toolbar.update()

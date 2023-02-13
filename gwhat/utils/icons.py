@@ -18,6 +18,9 @@ import qtawesome as qta
 
 # ---- Local imports
 from gwhat import __rootdir__
+from gwhat.config.gui import GREEN, RED, CSS4_COLORS
+from gwhat.config.gui import ICON_COLOR as COLOR
+
 
 DIRNAME = os.path.join(__rootdir__, 'ressources', 'icons_png')
 GWHAT_ICONS = {
@@ -75,9 +78,6 @@ GWHAT_ICONS = {
     'rect_select_clear': 'rect_select_clear'
     }
 
-COLOR = '#4d4d4d'
-GREEN = '#00aa00'
-RED = '#aa0000'
 
 FA_ICONS = {
     'arrow_left': [
@@ -98,6 +98,9 @@ FA_ICONS = {
     'clear_changes': [
         ('mdi.close-circle-outline',),
         {'color': RED, 'scale_factor': 1.3}],
+    'close': [
+        ('mdi.close-thick',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'close_all': [
         ('fa.close', 'fa.close', 'fa.close'),
         {'options': [{'scale_factor': 0.6,
@@ -172,6 +175,17 @@ FA_ICONS = {
     'search': [
         ('fa5s.search',),
         {'color': COLOR, 'scale_factor': 1.0}],
+    'square': [
+        ('mdi.square-outline',),
+        {}
+        ],
+    'tria_down': [
+        ('mdi.triangle-outline',),
+        {'rotated': 180}],
+    'tria_up': [
+        ('mdi.triangle-outline',),
+        {}
+        ],
     'undo_changes': [
         ('mdi.undo-variant',),
         {'color': COLOR, 'scale_factor': 1.3}],
@@ -191,10 +205,17 @@ ICON_SIZES = {'large': (32, 32),
               'small': (20, 20)}
 
 
-def get_icon(name):
+def get_icon(name, color: str = None):
     """Return a QIcon from a specified icon name."""
     if name in FA_ICONS:
         args, kwargs = FA_ICONS[name]
+        if color is not None:
+            if color in CSS4_COLORS:
+                kwargs['color'] = CSS4_COLORS[color]
+            else:
+                kwargs['color'] = color
+        elif color is None and 'color' not in kwargs:
+            kwargs['color'] = COLOR
         return qta.icon(*args, **kwargs)
     elif name in GWHAT_ICONS:
         return QIcon(os.path.join(DIRNAME, GWHAT_ICONS[name]))
