@@ -21,7 +21,8 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import QWidget, QGridLayout, QPushButton
+from qtpy.QtWidgets import (QWidget, QGridLayout, QPushButton, QLabel,
+                            QGroupBox)
 from matplotlib.transforms import ScaledTranslation
 
 # ---- Local imports
@@ -268,6 +269,24 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         self._save_events_btn.clicked.connect(lambda: self.save_events_data())
         self._save_events_btn.setEnabled(False)
 
+        # Add a legend.
+        icons = ['tria_up', 'tria_down', 'tria_up', 'tria_down', 'square']
+        colors = ['cyan', 'green', 'orange', 'red', 'orange']
+        labels = ['Low winter event', 'High spring event',
+                  'Low summer event', 'High fall event',
+                  'Start of summer recession']
+
+        legend_widget = QGroupBox('Legend')
+        legend_layout = QGridLayout(legend_widget)
+        for i, (icon, color, label) in enumerate(zip(icons, colors, labels)):
+            marker_qlabel = QLabel()
+            marker_qlabel.setPixmap(get_icon(icon, color=color).pixmap(16))
+
+            legend_layout.addWidget(marker_qlabel, i + 1, 0)
+            legend_layout.addWidget(QLabel(label), i + 1, 1)
+        legend_layout.setColumnStretch(2, 1)
+        legend_layout.setRowStretch(legend_layout.rowCount(), 1)
+
         # Setup the Layout.
         layout = QGridLayout(self)
 
@@ -276,7 +295,8 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         layout.addWidget(self._clear_events_btn, 2, 0)
         layout.addWidget(self._copy_events_btn, 3, 0)
         layout.addWidget(self._save_events_btn, 4, 0)
-        layout.setRowStretch(5, 100)
+        layout.addWidget(legend_widget, 5, 0)
+        layout.setRowStretch(6, 100)
 
     def _create_empty_event_data(self):
         """
