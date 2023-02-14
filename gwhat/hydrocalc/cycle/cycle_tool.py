@@ -589,9 +589,6 @@ class HydroCycleCalcTool(WLCalcTool, SaveFileMixin):
         self.wlcalc.update_axeswidgets()
 
     # ---- WLCalcTool API
-    def is_registered(self):
-        return self.wlcalc is not None
-
     def register_tool(self, wlcalc: QWidget):
         # Setup wlcalc.
         self.wlcalc = wlcalc
