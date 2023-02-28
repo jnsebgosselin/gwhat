@@ -397,6 +397,7 @@ class WLCalc(QWidget, SaveFileMixin):
     def __initUI__(self):
         # Setup the left widget.
         left_widget = QMainWindow()
+        left_widget.setContextMenuPolicy(Qt.NoContextMenu)
 
         self.toolbar = self._setup_toolbar()
         self.toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
