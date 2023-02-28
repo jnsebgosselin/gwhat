@@ -897,10 +897,10 @@ class WLCalc(QWidget, SaveFileMixin):
 
             self.h_rain = ax.fill_between(
                 time_bar, 0, rain_bar, color=[23/255, 52/255, 88/255],
-                zorder=100, linestyle='None', alpha=0.65, lw=0)
+                zorder=100, linestyle='None', lw=0)
             self.h_ptot = ax.fill_between(
-                time_bar, 0, ptot_bar, color=[165/255, 165/255, 165/255],
-                zorder=50, linestyle='None', alpha=0.65, lw=0)
+                time_bar, 0, ptot_bar, color='0.65',
+                zorder=50, linestyle='None', lw=0)
             self.h_etp.set_data(time_bin, etp_bin)
         self.setup_ax_margins()
 
