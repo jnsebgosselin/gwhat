@@ -172,6 +172,10 @@ FA_ICONS = {
     'save': [
         ('fa.save',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'shapes': [
+        ('mdi.shape-outline',),
+        {'scale_factor': 1.1}
+        ],
     'search': [
         ('fa5s.search',),
         {'color': COLOR, 'scale_factor': 1.0}],
