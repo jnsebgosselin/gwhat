@@ -7,17 +7,21 @@
 # Licensed under the terms of the GNU General Public License.
 # -----------------------------------------------------------------------------
 
-"""Qt utilities"""
+"""Extension of the Qt helpers module."""
 
-from __future__ import annotations
-
+# ---- Third party imports
 from apputils.qthelpers import *
 from apputils import qthelpers
+
+# ---- Local library imports
 from gwhat.utils.icons import get_icon
 
 
 def create_toolbutton(*args, **kwargs):
-    """Create a QToolButton with the provided settings."""
+    """
+    Extend create_toolbutton so that we can pass the name of an
+    icon instead of a QIcon object.
+    """
     if len(args) >= 3 and isinstance(args[4], str):
         args[4] = get_icon(args[4])
     if 'icon' in kwargs and isinstance(kwargs['icon'], str):
@@ -26,7 +30,10 @@ def create_toolbutton(*args, **kwargs):
 
 
 def create_action(*args, **kwargs):
-    """Create a QToolButton with the provided settings."""
+    """
+    Extend create_action so that we can pass the name of an
+    icon instead of a QIcon object.
+    """
     if len(args) >= 3 and isinstance(args[4], str):
         args[4] = get_icon(args[4])
     if 'icon' in kwargs and isinstance(kwargs['icon'], str):
