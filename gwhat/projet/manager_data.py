@@ -861,13 +861,8 @@ class NewDatasetDialog(QDialog):
 if __name__ == '__main__':
     import sys
     from gwhat.projet.reader_projet import ProjetReader
-
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(11)
-    app.setFont(ft)
+    from gwhat.utils.qthelpers import create_qapplication
+    app = create_qapplication(ft_ptsize=10, ft_family='Segoe UI')
 
     dm = DataManager(projet=ProjetReader(
         "C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt"))

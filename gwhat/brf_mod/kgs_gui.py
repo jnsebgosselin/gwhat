@@ -1171,6 +1171,7 @@ class BRFOptionsPanel(QWidget):
 
 
 if __name__ == "__main__":
+    from gwhat.utils.qthelpers import create_qapplication
     import gwhat.projet.reader_projet as prd
     import sys
     # projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/Projects/Example/"
@@ -1179,12 +1180,7 @@ if __name__ == "__main__":
                               "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
     wldset = projet.get_wldset(projet.wldsets[0])
 
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setPointSize(11)
-    ft.setFamily('Segoe UI')
-    app.setFont(ft)
+    app = create_qapplication(ft_ptsize=10, ft_family='Segoe UI')
 
     brfwin = BRFManager(None)
     brfwin.show()

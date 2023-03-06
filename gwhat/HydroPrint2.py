@@ -1062,12 +1062,8 @@ class PageSetupWin(QWidget):
 if __name__ == '__main__':
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(11)
-    app.setFont(ft)
+    from gwhat.qthelpers import create_qapplication
+    app = create_qapplication(ft_ptsize=10, ft_family='Segoe UI')
 
     pf = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
     pr = ProjetReader(pf)
