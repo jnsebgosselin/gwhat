@@ -168,3 +168,41 @@ apputils.icons.QTA_ICONS.update({
         ('mdi.selection-search',),
         {'scale_factor': 1.2}],
     })
+
+
+class QToolButtonBase(QToolButton):
+    """A basic tool button."""
+
+    def __init__(self, icon, *args, **kargs):
+        super(QToolButtonBase, self).__init__(*args, **kargs)
+        icon = get_icon(icon) if isinstance(icon, str) else icon
+        self.setIcon(icon)
+        self.setAutoRaise(True)
+        self.setFocusPolicy(Qt.NoFocus)
+
+    def setToolTip(self, ttip):
+        """
+        Qt method override to ensure tooltips are enclosed in <p></p> so
+        that they wraps correctly.
+        """
+        ttip = ttip if ttip.startswith('<p>') else '<p>' + ttip
+        ttip = ttip if ttip.endswith('</p>') else ttip + '</p>'
+        super().setToolTip(ttip)
+
+
+class QToolButtonNormal(QToolButtonBase):
+    def __init__(self, Qicon, *args, **kargs):
+        super(QToolButtonNormal, self).__init__(Qicon, *args, **kargs)
+        self.setIconSize(get_iconsize('normal'))
+
+
+class QToolButtonSmall(QToolButtonBase):
+    def __init__(self, Qicon, *args, **kargs):
+        super(QToolButtonSmall, self).__init__(Qicon, *args, **kargs)
+        self.setIconSize(get_iconsize('small'))
+
+
+class QToolButtonVRectSmall(QToolButtonBase):
+    def __init__(self, Qicon, *args, **kargs):
+        super(QToolButtonVRectSmall, self).__init__(Qicon, *args, **kargs)
+        self.setIconSize(QSize(8, 20))
