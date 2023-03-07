@@ -13,7 +13,8 @@ import os.path as osp
 
 from apputils.icons import *
 import apputils.icons
-from apputils.colors import DEFAULT_ICON_COLOR, GREEN
+from apputils.colors import DEFAULT_ICON_COLOR
+from gwhat.config.gui import GREEN
 
 # ---- Local imports
 from gwhat import __rootdir__
@@ -97,9 +98,6 @@ apputils.icons.QTA_ICONS.update({
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
                       'color': DEFAULT_ICON_COLOR}]}],
-    'console': [
-        ('mdi.console',),
-        {'scale_factor': 1.3}],
     'content_duplicate': [
         ('mdi.content-duplicate',),
         {'scale_factor': 1.2}],
@@ -148,9 +146,6 @@ apputils.icons.QTA_ICONS.update({
     'play_start': [
         ('mdi.play',),
         {'color': GREEN, 'scale_factor': 1.5}],
-    'report_bug': [
-        ('mdi.bug',),
-        {'scale_factor': 1.4}],
     'square': [
         ('mdi.square-outline',),
         ],
