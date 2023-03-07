@@ -32,8 +32,9 @@ install:
   # Setup SYS PATH.
   - cmd: set PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
   
-  # Upgrade pip.
+  # Upgrade pip and install wheel.
   - python -m pip install --upgrade pip
+  - python -m pip install wheel
 
   # Setup GWHAT dev requirements.
   - python -m pip install -r requirements.txt
