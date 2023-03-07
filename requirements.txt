@@ -13,3 +13,4 @@ qtawesome
 pandas == 1.3.*
 qtpy
 scipy == 1.7.*
+git+https://github.com/jnsebgosselin/apputils@main#egg=apputils

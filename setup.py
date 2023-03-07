@@ -9,6 +9,7 @@
 
 import csv
 import setuptools
+import re
 import numpy
 from numpy.distutils.core import setup, Extension
 from Cython.Build import cythonize
@@ -18,6 +19,10 @@ from gwhat import __version__, __project_url__
 with open('requirements.txt', 'r') as csvfile:
     INSTALL_REQUIRES = list(csv.reader(csvfile))
 INSTALL_REQUIRES = [item for sublist in INSTALL_REQUIRES for item in sublist]
+for i, line in enumerate(INSTALL_REQUIRES):
+    if line.startswith('git+https'):
+        name = re.findall(r'#egg=(.*)', line)[0]
+        INSTALL_REQUIRES[i] = f'{name} @ {line}'
 
 with open('requirements-dev.txt', 'r') as csvfile:
     DEV_INSTALL_REQUIRES = list(csv.reader(csvfile))

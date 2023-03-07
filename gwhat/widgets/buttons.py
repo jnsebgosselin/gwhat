@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import (
     QToolButton, QWidget, QPushButton)
 
 # ---- Local imports
-from gwhat.utils.icons import QToolButtonBase, get_icon
+from gwhat.utils.icons import get_icon
 from gwhat.utils import icons
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
@@ -305,6 +305,26 @@ class DropDownList(QListWidget):
                 self.hide()
         else:
             self.hide()
+
+
+class QToolButtonBase(QToolButton):
+    """A basic tool button."""
+
+    def __init__(self, icon, *args, **kargs):
+        super().__init__(*args, **kargs)
+        icon = get_icon(icon) if isinstance(icon, str) else icon
+        self.setIcon(icon)
+        self.setAutoRaise(True)
+        self.setFocusPolicy(Qt.NoFocus)
+
+    def setToolTip(self, ttip):
+        """
+        Qt method override to ensure tooltips are enclosed in <p></p> so
+        that they wraps correctly.
+        """
+        ttip = ttip if ttip.startswith('<p>') else '<p>' + ttip
+        ttip = ttip if ttip.endswith('</p>') else ttip + '</p>'
+        super().setToolTip(ttip)
 
 
 class DropdownToolButton(QToolButtonBase):

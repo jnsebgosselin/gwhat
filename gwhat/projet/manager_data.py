@@ -25,8 +25,8 @@ from gwhat.config.main import CONF
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
-from gwhat.utils.icons import QToolButtonSmall
-from gwhat.utils import icons
+from gwhat.utils.icons import get_icon, get_iconsize
+from gwhat.utils.qthelpers import create_toolbutton
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.projet.reader_waterlvl import WLDataset
@@ -52,7 +52,7 @@ class DataManager(QWidget):
         self._wxdset = None
 
         self.setWindowFlags(Qt.Window)
-        self.setWindowIcon(icons.get_icon('master'))
+        self.setWindowIcon(get_icon('master'))
         self.setMinimumWidth(250)
 
         self.weather_avg_graph = None
@@ -98,13 +98,23 @@ class DataManager(QWidget):
         self.wldsets_cbox = QComboBox()
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
-        self.btn_load_wl = QToolButtonSmall(icons.get_icon('importFile'))
-        self.btn_load_wl.setToolTip('Import a new water level dataset...')
-        self.btn_load_wl.clicked.connect(self.select_wldatasets)
+        self.btn_load_wl = create_toolbutton(
+            self,
+            icon='importFile',
+            iconsize='small',
+            text='Import Dataset',
+            tip='Import a new water level dataset...',
+            triggered=self.select_wldatasets
+            )
 
-        self.btn_del_wldset = QToolButtonSmall('delete_data')
-        self.btn_del_wldset.setToolTip('Delete current dataset.')
-        self.btn_del_wldset.clicked.connect(self.del_current_wldset)
+        self.btn_del_wldset = create_toolbutton(
+            self,
+            icon='delete_data',
+            iconsize='small',
+            text='Delete Dataset',
+            tip='Delete current water level dataset.',
+            triggered=self.del_current_wldset
+            )
 
         wl_toolbar = ToolBarWidget()
         for widg in [self.btn_load_wl, self.btn_del_wldset]:
@@ -132,26 +142,45 @@ class DataManager(QWidget):
         self.wxdsets_cbox = QComboBox()
         self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
 
-        self.btn_load_meteo = QToolButtonSmall(icons.get_icon('importFile'))
-        self.btn_load_meteo.setToolTip('Import a new weather dataset...')
-        self.btn_load_meteo.clicked.connect(self.select_wxdatasets)
+        self.btn_load_meteo = create_toolbutton(
+            self,
+            icon='importFile',
+            iconsize='small',
+            text='Import Dataset',
+            tip='Import a new weather dataset...',
+            triggered=self.select_wxdatasets
+            )
 
-        self.btn_del_wxdset = QToolButtonSmall('delete_data')
-        self.btn_del_wxdset.setToolTip('Delete current dataset.')
-        self.btn_del_wxdset.clicked.connect(self.del_current_wxdset)
+        self.btn_del_wxdset = create_toolbutton(
+            self,
+            icon='delete_data',
+            iconsize='small',
+            text='Delete Dataset',
+            tip='Delete current weather dataset.',
+            triggered=self.del_current_wxdset
+            )
 
-        btn_closest_meteo = QToolButtonSmall(icons.get_icon('closest_meteo'))
-        btn_closest_meteo.setToolTip('<p>Select the weather station closest'
-                                     ' from the observation well.</p>')
-        btn_closest_meteo.clicked.connect(self.set_closest_wxdset)
+        btn_closest_meteo = create_toolbutton(
+            self,
+            icon='closest_meteo',
+            iconsize='small',
+            text='Select Closest',
+            tip=('Select the weather station closest '
+                 'to the observation well.'),
+            triggered=self.set_closest_wxdset
+            )
 
-        btn_weather_normals = QToolButtonSmall(icons.get_icon('meteo'))
-        btn_weather_normals.setToolTip(
-            "Show the normals for the current weather dataset.")
-        btn_weather_normals.clicked.connect(self.show_weather_normals)
+        btn_weather_normals = create_toolbutton(
+            self,
+            icon='meteo',
+            iconsize='small',
+            text='Show Normals',
+            tip='Show the normals for the current weather dataset.',
+            triggered=self.show_weather_normals
+            )
 
         self.btn_export_weather = ExportWeatherButton()
-        self.btn_export_weather.setIconSize(icons.get_iconsize('small'))
+        self.btn_export_weather.setIconSize(get_iconsize('small'))
 
         wx_toolbar = ToolBarWidget()
         for widg in [self.btn_load_meteo,
@@ -507,7 +536,7 @@ class NewDatasetDialog(QDialog):
         self._datatype = datatype.lower()
 
         self.setWindowTitle('Import {} Datasets'.format(datatype.title()))
-        self.setWindowIcon(icons.get_icon('master'))
+        self.setWindowIcon(get_icon('master'))
         self.setWindowFlags(Qt.Window |
                             Qt.CustomizeWindowHint |
                             Qt.WindowCloseButtonHint)
@@ -526,9 +555,14 @@ class NewDatasetDialog(QDialog):
         self.directory.setReadOnly(True)
         self.directory.setMinimumWidth(400)
 
-        self.btn_browse = QToolButtonSmall(icons.get_icon('folder_open'))
-        self.btn_browse.setToolTip('Select a datafile...')
-        self.btn_browse.clicked.connect(self.select_dataset)
+        self.btn_browse = create_toolbutton(
+            self,
+            icon='folder_open',
+            iconsize='small',
+            text='Select',
+            tip='Select a datafile...',
+            triggered=self.select_dataset
+            )
 
         url_i = "https://gwhat.readthedocs.io/en/latest/manage_data.html"
         msg = ("<font color=red size=2><i>"
@@ -861,13 +895,8 @@ class NewDatasetDialog(QDialog):
 if __name__ == '__main__':
     import sys
     from gwhat.projet.reader_projet import ProjetReader
-
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(11)
-    app.setFont(ft)
+    from gwhat.utils.qthelpers import create_qapplication
+    app = create_qapplication(ft_ptsize=10, ft_family='Segoe UI')
 
     dm = DataManager(projet=ProjetReader(
         "C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt"))

@@ -39,9 +39,9 @@ from gwhat.widgets.buttons import OnOffPushButton
 from gwhat.widgets.layout import HSep
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal, get_icon
+from gwhat.utils.icons import get_icon, get_iconsize
 from gwhat.utils.dates import qdatetime_from_xldate
-from gwhat.utils.qthelpers import create_toolbar_stretcher
+from gwhat.utils.qthelpers import create_toolbar_stretcher, create_toolbutton
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
 from gwhat.brf_mod.kgs_plot import BRFFigure
@@ -187,7 +187,7 @@ class BRFManager(WLCalcTool):
         self._link_lags_button = QToolButton()
         self._link_lags_button.setAutoRaise(True)
         self._link_lags_button.setFixedWidth(24)
-        self._link_lags_button.setIconSize(icons.get_iconsize('normal'))
+        self._link_lags_button.setIconSize(get_iconsize('normal'))
         self._link_lags_button.clicked.connect(
             lambda checked: self.toggle_link_bp_and_et_lags(
                 not self._bp_and_et_lags_are_linked))
@@ -494,7 +494,7 @@ class BRFManager(WLCalcTool):
         Toggle on or off the linking of the BP and ET lags values.
         """
         self._bp_and_et_lags_are_linked = toggle
-        self._link_lags_button.setIcon(icons.get_icon(
+        self._link_lags_button.setIcon(get_icon(
             'link' if toggle else 'link_off'))
         if toggle is True:
             self._handle_lag_value_changed(self.baro_spinbox)
@@ -652,7 +652,7 @@ class BRFViewer(QDialog):
         self.__save_ddir = None
 
         self.setWindowTitle('BRF Results Viewer')
-        self.setWindowIcon(icons.get_icon('master'))
+        self.setWindowIcon(get_icon('master'))
         self.setWindowFlags(
             Qt.Window | Qt.CustomizeWindowHint | Qt.WindowCloseButtonHint)
 
@@ -661,11 +661,13 @@ class BRFViewer(QDialog):
 
     def __initGUI__(self):
         # Setup the navigation buttons and widgets.
-        self.btn_prev = QToolButtonNormal(icons.get_icon('go_previous'))
-        self.btn_prev.clicked.connect(self.navigate_brf)
+        self.btn_prev = create_toolbutton(
+            self, icon='go_previous',
+            triggered=self.navigate_brf)
 
-        self.btn_next = QToolButtonNormal(icons.get_icon('go_next'))
-        self.btn_next.clicked.connect(self.navigate_brf)
+        self.btn_next = create_toolbutton(
+            self, icon='go_next',
+            triggered=self.navigate_brf)
 
         self.current_brf = QSpinBox()
         self.current_brf.setRange(0, 99)
@@ -679,38 +681,64 @@ class BRFViewer(QDialog):
         self.total_brf = QLabel(' / 0')
 
         # Generate the toolbar buttons.
-        self.btn_del = QToolButtonNormal(icons.get_icon('delete_data'))
-        self.btn_del.setToolTip('Delete current BRF results')
-        self.btn_del.clicked.connect(self.del_brf)
+        self.btn_del = create_toolbutton(
+            self,
+            icon='delete_data',
+            text='Delete Results',
+            tip='Delete current BRF results.',
+            triggered=self.del_brf
+            )
 
-        self.btn_del_all = QToolButtonNormal(icons.get_icon('close_all'))
-        self.btn_del_all.setToolTip(
-            'Delete all BRF results for the current water level dataset.')
-        self.btn_del_all.clicked.connect(self.del_all_brf)
+        self.btn_del_all = create_toolbutton(
+            self,
+            icon='close_all',
+            text='Close All',
+            tip='Delete all BRF results for the current water level dataset.',
+            triggered=self.del_all_brf
+            )
 
-        self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
-        btn_save.setToolTip('Save current BRF graph as...')
-        btn_save.clicked.connect(self.select_savefig_path)
+        self.btn_save = btn_save = create_toolbutton(
+            self,
+            icon='save',
+            text='Save Graph',
+            tip='Save current BRF graph as...',
+            triggered=self.select_savefig_path
+            )
 
-        self.btn_export = QToolButtonNormal(icons.get_icon('export_data'))
-        self.btn_export.setToolTip('Export data to file.')
-        self.btn_export.clicked.connect(self.select_export_brfdata_filepath)
+        self.btn_export = create_toolbutton(
+            self,
+            icon='export_data',
+            text='Export Data',
+            tip='Export data to file.',
+            triggered=self.select_export_brfdata_filepath
+            )
 
-        self.btn_copy = QToolButtonNormal('copy_clipboard')
-        self.btn_copy.setToolTip('Copy figure to clipboard as image.')
-        self.btn_copy.clicked.connect(self.copyfig_to_clipboard)
+        self.btn_copy = create_toolbutton(
+            self,
+            icon='copy_clipboard',
+            text='Copy Figure',
+            tip='Copy figure to clipboard as image.',
+            triggered=self.copyfig_to_clipboard
+            )
 
-        self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
-        self.btn_setp.setToolTip('Show graph layout parameters...')
-        self.btn_setp.clicked.connect(self.toggle_graphpannel)
+        self.btn_setp = create_toolbutton(
+            self,
+            icon='page_setup',
+            text='Graph Layout',
+            tip='Show graph layout parameters...',
+            triggered=self.toggle_graphpannel
+            )
 
-        self.import_params_in_manager_btn = QToolButtonNormal(
-            icons.get_icon('content_duplicate'))
-        self.import_params_in_manager_btn.setToolTip(
-            'Set the parameters of the BRF tool to the values that were '
-            'used to calculate the BRF currently displayed in this viewer.')
-        self.import_params_in_manager_btn.clicked.connect(
-            lambda _: self.sig_import_params_in_manager_request.emit())
+        self.import_params_in_manager_btn = create_toolbutton(
+            self,
+            icon='content_duplicate',
+            text='Import Parameters',
+            tip=('Set the parameters of the BRF tool to the values that were '
+                 'used to calculate the BRF currently displayed in this '
+                 'viewer.'),
+            triggered=lambda _:
+                self.sig_import_params_in_manager_request.emit()
+            )
 
         # Setup the toolbar.
         self.toolbar = QToolBar()
@@ -1171,6 +1199,7 @@ class BRFOptionsPanel(QWidget):
 
 
 if __name__ == "__main__":
+    from gwhat.utils.qthelpers import create_qapplication
     import gwhat.projet.reader_projet as prd
     import sys
     # projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/Projects/Example/"
@@ -1179,12 +1208,7 @@ if __name__ == "__main__":
                               "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
     wldset = projet.get_wldset(projet.wldsets[0])
 
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setPointSize(11)
-    ft.setFamily('Segoe UI')
-    app.setFont(ft)
+    app = create_qapplication(ft_ptsize=10, ft_family='Segoe UI')
 
     brfwin = BRFManager(None)
     brfwin.show()

@@ -51,15 +51,10 @@ class ProjetManager(QWidget):
             self.load_project(projet)
 
     def __initGUI__(self):
-        ft = QApplication.instance().font()
-        ft.setPointSize(ft.pointSize()-1)
-
         self.project_selector = ProjectSelector(
             parent=self,
             recent_projects=CONF.get('project', 'recent_projects', None),
             recent_projects_icon=icons.get_icon('folder_open'))
-        self.project_selector.setFont(ft)
-        self.project_selector.menu.setFont(ft)
 
         self.project_selector.sig_request_new_project.connect(
             self.show_newproject_dialog)

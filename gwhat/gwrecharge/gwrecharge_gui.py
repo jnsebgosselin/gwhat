@@ -25,7 +25,7 @@ from gwhat.common.widgets import QDoubleSpinBox
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
-from gwhat.utils.icons import QToolButtonSmall, get_iconsize, get_icon
+from gwhat.utils.icons import get_iconsize
 from gwhat.utils.qthelpers import create_toolbutton
 
 
@@ -330,9 +330,14 @@ class RechgEvalWidget(QFrame):
         self.calc_rechg_btn = QPushButton('Compute Recharge')
         self.calc_rechg_btn.clicked.connect(self.btn_calibrate_isClicked)
 
-        self.btn_show_result = QToolButtonSmall(get_icon('search'))
-        self.btn_show_result.clicked.connect(self.figstack.show)
-        self.btn_show_result.setToolTip("Show GLUE results.")
+        self.btn_show_result = create_toolbutton(
+            self,
+            text='Show Results',
+            icon='search',
+            iconsize='small',
+            triggered=self.figstack.show,
+            tip="Show GLUE results."
+            )
 
         self.btn_save_glue = ExportGLUEButton(self.wxdset)
 

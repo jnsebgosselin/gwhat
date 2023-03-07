@@ -319,7 +319,7 @@ def except_hook(cls, exception, traceback):
 
 if __name__ == '__main__':
     from gwhat.utils.qthelpers import create_qapplication
-    app = create_qapplication()
+    app = create_qapplication(ft_ptsize=10, ft_family='Segoe UI')
 
     from gwhat.widgets.splash import SplashScrn
     splash = SplashScrn()

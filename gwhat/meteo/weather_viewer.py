@@ -22,7 +22,7 @@ from matplotlib.figure import Figure as MplFigure
 from matplotlib.transforms import ScaledTranslation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
@@ -34,7 +34,7 @@ from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.utils import icons
 from gwhat.config.gui import FRAME_SYLE
-from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.common.utils import save_content_to_file
 from gwhat.meteo.weather_reader import WXDataFrameBase
@@ -72,23 +72,34 @@ class WeatherViewer(QDialog):
         menu_save.addAction('Save normals graph as...', self.save_graph)
         menu_save.addAction('Save normals table as...', self.save_normals)
 
-        btn_save = QToolButtonNormal('save')
-        btn_save.setToolTip('Save normals')
+        btn_save = create_toolbutton(
+            self,
+            icon='save',
+            text='Save',
+            tip='Save weather normals graph or table.'
+            )
         btn_save.setMenu(menu_save)
         btn_save.setPopupMode(QToolButton.InstantPopup)
         btn_save.setStyleSheet("QToolButton::menu-indicator {image: none;}")
 
-        self.btn_copy = QToolButtonNormal('copy_clipboard')
-        self.btn_copy.setToolTip('Copy figure to clipboard as image.')
-        self.btn_copy.clicked.connect(self.copyfig_figure_to_clipboard)
+        self.btn_copy = create_toolbutton(
+            self,
+            icon='copy_clipboard',
+            text='Copy',
+            tip='Copy figure to clipboard as image.',
+            triggered=self.copyfig_figure_to_clipboard
+            )
 
         self.btn_export = ExportWeatherButton()
         self.btn_export.setIconSize(icons.get_iconsize('normal'))
 
-        btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
-        btn_showStats.setToolTip(
-            "Show the monthly weather normals data table.")
-        btn_showStats.clicked.connect(self.show_monthly_grid)
+        btn_showStats = create_toolbutton(
+            self,
+            icon='showGrid',
+            text='Show Grid',
+            tip="Show the monthly weather normals data table.",
+            triggered=self.show_monthly_grid
+            )
 
         self.btn_language = LangToolButton()
         self.btn_language.setToolTip(
@@ -102,9 +113,14 @@ class WeatherViewer(QDialog):
         self.year_rng.setRange(1800, datetime.now().year)
         self.year_rng.sig_range_changed.connect(self.update_normals)
 
-        btn_expand = QToolButtonVRectSmall(icons.get_icon('expand_range_vert'))
-        btn_expand.clicked.connect(self.expands_year_range)
-        btn_expand.setToolTip("Set the maximal possible year range.")
+        btn_expand = create_toolbutton(
+            self,
+            text='Max Range',
+            icon='expand_range_vert',
+            iconsize=QSize(8, 20),
+            triggered=self.expands_year_range,
+            tip="Set the maximal possible year range."
+            )
 
         lay_expand = QGridLayout()
         lay_expand.addWidget(self.year_rng.spb_upper, 0, 0)
@@ -802,12 +818,8 @@ class ExportWeatherButton(ExportDataButton):
 
 if __name__ == '__main__':
     from gwhat.projet.reader_projet import ProjetReader
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(11)
-    app.setFont(ft)
+    from gwhat.utils.qthelpers import create_qapplication
+    app = create_qapplication(ft_ptsize=10, ft_family='Segoe UI')
 
     fname = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
     project = ProjetReader(fname)
