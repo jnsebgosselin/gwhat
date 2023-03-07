@@ -22,7 +22,7 @@ from matplotlib.figure import Figure as MplFigure
 from matplotlib.transforms import ScaledTranslation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
@@ -34,7 +34,8 @@ from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.utils import icons
 from gwhat.config.gui import FRAME_SYLE
-from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
+from gwhat.utils.icons import QToolButtonNormal
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.common.utils import save_content_to_file
 from gwhat.meteo.weather_reader import WXDataFrameBase
@@ -102,9 +103,14 @@ class WeatherViewer(QDialog):
         self.year_rng.setRange(1800, datetime.now().year)
         self.year_rng.sig_range_changed.connect(self.update_normals)
 
-        btn_expand = QToolButtonVRectSmall(icons.get_icon('expand_range_vert'))
-        btn_expand.clicked.connect(self.expands_year_range)
-        btn_expand.setToolTip("Set the maximal possible year range.")
+        btn_expand = create_toolbutton(
+            self,
+            text='Max Range',
+            icon='expand_range_vert',
+            iconsize=QSize(8, 20),
+            triggered=self.expands_year_range,
+            tip="Set the maximal possible year range."
+            )
 
         lay_expand = QGridLayout()
         lay_expand.addWidget(self.year_rng.spb_upper, 0, 0)
