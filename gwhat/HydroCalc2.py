@@ -350,7 +350,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self.btn_del_select = create_action(
             self, icon='erase_data',
-            text='Clear Selected',
+            text='Delete Selected',
             tip='Remove the selected water level data from the dataset.',
             triggered=self.delete_selected_wl
             )
