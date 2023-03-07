@@ -45,10 +45,8 @@ from gwhat.brf_mod import BRFManager
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-from gwhat.utils.qthelpers import (
-    create_toolbutton, create_action, get_shortcuts_native_text)
-from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal, get_iconsize
+from gwhat.utils.qthelpers import create_action, get_shortcuts_native_text
+from gwhat.utils.icons import get_iconsize
 from gwhat.widgets.buttons import OnOffToolButton, OnOffPushButton
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
@@ -240,7 +238,7 @@ class WLCalc(QWidget, SaveFileMixin):
         """Setup the main toolbar of the water level calc tool."""
 
         # Save and copy.
-        self.btn_copy_to_clipboard = create_toolbutton(
+        self.btn_copy_to_clipboard = create_action(
             self, icon='copy_clipboard',
             text="Copy",
             tip="Put a copy of the figure on the Clipboard.",
@@ -251,10 +249,12 @@ class WLCalc(QWidget, SaveFileMixin):
         self._navig_toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self._navig_toolbar.hide()
 
-        self.btn_fit_waterlevels = QToolButtonNormal('expand_all')
-        self.btn_fit_waterlevels.setToolTip(
-            "<p>Best fit the water level data along the x and y axis.</p>")
-        self.btn_fit_waterlevels.clicked.connect(self.setup_axis_range)
+        self.btn_fit_waterlevels = create_action(
+            self, icon='expand_all',
+            text='Expand All',
+            tip='Best fit the water level data along the x and y axis.',
+            triggered=self.setup_axis_range
+            )
 
         self.btn_pan = OnOffToolButton('pan', size='normal')
         self.btn_pan.setToolTip(
@@ -341,31 +341,43 @@ class WLCalc(QWidget, SaveFileMixin):
             self.rect_select_is_active_changed)
         self.register_navig_and_select_tool(self.btn_rect_select)
 
-        self.btn_clear_select = QToolButtonNormal('rect_select_clear')
-        self.btn_clear_select.setToolTip("Clear selected water levels.")
-        self.btn_clear_select.clicked.connect(
-            lambda: self.clear_selected_wl(draw=True))
+        self.btn_clear_select = create_action(
+            self, icon='rect_select_clear',
+            text='Clear Selected',
+            tip='Clear selected water levels.',
+            triggered=lambda: self.clear_selected_wl(draw=True)
+            )
 
-        self.btn_del_select = QToolButtonNormal('erase_data')
-        self.btn_del_select.setToolTip(
-            "Remove the selected water level data from the dataset.")
-        self.btn_del_select.clicked.connect(self.delete_selected_wl)
+        self.btn_del_select = create_action(
+            self, icon='erase_data',
+            text='Clear Selected',
+            tip='Remove the selected water level data from the dataset.',
+            triggered=self.delete_selected_wl
+            )
 
-        self.btn_undo_changes = QToolButtonNormal('undo_changes')
-        self.btn_undo_changes.setToolTip(
-            "Undo the last changes made to the water level data.")
+        self.btn_undo_changes = create_action(
+            self, icon='undo_changes',
+            text='Undo Changes',
+            tip="Undo the last changes made to the water level data.",
+            triggered=self.undo_wl_changes
+            )
         self.btn_undo_changes.setEnabled(False)
-        self.btn_undo_changes.clicked.connect(self.undo_wl_changes)
 
-        self.btn_clear_changes = QToolButtonNormal('clear_changes')
-        self.btn_clear_changes.setToolTip(
-            "Clear all changes made to the water level data since the last "
-            "commit.")
-        self.btn_clear_changes.clicked.connect(self.clear_all_changes)
+        self.btn_clear_changes = create_action(
+            self, icon='clear_changes',
+            text='Undo All Changes',
+            tip=("Clear all changes made to the water level data since "
+                 "the last commit."),
+            triggered=self.clear_all_changes
+            )
         self.btn_clear_changes.setEnabled(False)
 
-        self.btn_commit_changes = QToolButtonNormal('commit_changes')
-        self.btn_commit_changes.clicked.connect(self.commit_wl_changes)
+        self.btn_commit_changes = create_action(
+            self, icon='commit_changes',
+            text='Commit Changes',
+            tip='Save all changes made to the data in the project.',
+            triggered=self.commit_wl_changes
+            )
         self.btn_commit_changes.setEnabled(False)
 
         # Setup the layout.
