@@ -77,18 +77,6 @@ apputils.icons.LOCAL_ICONS.update({
     key: osp.join(DIRNAME, val) for key, val in GWHAT_ICONS.items()})
 
 apputils.icons.QTA_ICONS.update({
-    'arrow_left': [
-        ('mdi.arrow-left-thick',),
-        {'scale_factor': 1.2}],
-    'arrow_right': [
-        ('mdi.arrow-right-thick',),
-        {'scale_factor': 1.2}],
-    'arrow_up': [
-        ('mdi.arrow-up-thick',),
-        {'scale_factor': 1.2}],
-    'arrow_down': [
-        ('mdi.arrow-down-thick',),
-        {'scale_factor': 1.2}],
     'calendar': [
         ('mdi.calendar-question',),
         {'scale_factor': 1.3}],
