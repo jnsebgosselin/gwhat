@@ -194,9 +194,3 @@ class QToolButtonNormal(QToolButtonBase):
     def __init__(self, Qicon, *args, **kargs):
         super(QToolButtonNormal, self).__init__(Qicon, *args, **kargs)
         self.setIconSize(get_iconsize('normal'))
-
-
-class QToolButtonSmall(QToolButtonBase):
-    def __init__(self, Qicon, *args, **kargs):
-        super(QToolButtonSmall, self).__init__(Qicon, *args, **kargs)
-        self.setIconSize(get_iconsize('small'))
