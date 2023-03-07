@@ -173,6 +173,7 @@ class DataManager(QWidget):
         btn_weather_normals = create_toolbutton(
             self,
             icon='meteo',
+            iconsize='small',
             text='Show Normals',
             tip='Show the normals for the current weather dataset.',
             triggered=self.show_weather_normals
