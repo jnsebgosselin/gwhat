@@ -14,7 +14,7 @@ import os.path as osp
 from apputils.icons import *
 import apputils.icons
 from apputils.colors import DEFAULT_ICON_COLOR
-from gwhat.config.gui import GREEN
+from gwhat.config.gui import GREEN, RED
 
 # ---- Local imports
 from gwhat import __rootdir__
@@ -83,7 +83,7 @@ apputils.icons.QTA_ICONS.update({
         {'scale_factor': 1.3}],
     'clear_changes': [
         ('mdi.close-circle-outline',),
-        {'scale_factor': 1.3}],
+        {'color': RED, 'scale_factor': 1.3}],
     'close': [
         ('mdi.close-thick',),
         {'scale_factor': 1.3}],
