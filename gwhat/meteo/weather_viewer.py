@@ -34,7 +34,6 @@ from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.utils import icons
 from gwhat.config.gui import FRAME_SYLE
-from gwhat.utils.icons import QToolButtonNormal
 from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.common.utils import save_content_to_file
@@ -73,23 +72,34 @@ class WeatherViewer(QDialog):
         menu_save.addAction('Save normals graph as...', self.save_graph)
         menu_save.addAction('Save normals table as...', self.save_normals)
 
-        btn_save = QToolButtonNormal('save')
-        btn_save.setToolTip('Save normals')
+        btn_save = create_toolbutton(
+            self,
+            icon='save',
+            text='Save',
+            tip='Save weather normals graph or table.'
+            )
         btn_save.setMenu(menu_save)
         btn_save.setPopupMode(QToolButton.InstantPopup)
         btn_save.setStyleSheet("QToolButton::menu-indicator {image: none;}")
 
-        self.btn_copy = QToolButtonNormal('copy_clipboard')
-        self.btn_copy.setToolTip('Copy figure to clipboard as image.')
-        self.btn_copy.clicked.connect(self.copyfig_figure_to_clipboard)
+        self.btn_copy = create_toolbutton(
+            self,
+            icon='copy_clipboard',
+            text='Copy',
+            tip='Copy figure to clipboard as image.',
+            triggered=self.copyfig_figure_to_clipboard
+            )
 
         self.btn_export = ExportWeatherButton()
         self.btn_export.setIconSize(icons.get_iconsize('normal'))
 
-        btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
-        btn_showStats.setToolTip(
-            "Show the monthly weather normals data table.")
-        btn_showStats.clicked.connect(self.show_monthly_grid)
+        btn_showStats = create_toolbutton(
+            self,
+            icon='showGrid',
+            text='Show Grid',
+            tip="Show the monthly weather normals data table.",
+            triggered=self.show_monthly_grid
+            )
 
         self.btn_language = LangToolButton()
         self.btn_language.setToolTip(

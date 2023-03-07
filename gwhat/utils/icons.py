@@ -188,9 +188,3 @@ class QToolButtonBase(QToolButton):
         ttip = ttip if ttip.startswith('<p>') else '<p>' + ttip
         ttip = ttip if ttip.endswith('</p>') else ttip + '</p>'
         super().setToolTip(ttip)
-
-
-class QToolButtonNormal(QToolButtonBase):
-    def __init__(self, Qicon, *args, **kargs):
-        super(QToolButtonNormal, self).__init__(Qicon, *args, **kargs)
-        self.setIconSize(get_iconsize('normal'))
