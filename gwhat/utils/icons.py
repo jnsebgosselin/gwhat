@@ -9,18 +9,14 @@
 
 # ---- Standard library imports
 import os
+import os.path as osp
 
-# ---- Third party imports
-from qtpy.QtCore import QSize, Qt
-from qtpy.QtGui import QIcon
-from qtpy.QtWidgets import QStyle, QApplication, QToolButton
-import qtawesome as qta
+from apputils.icons import *
+import apputils.icons
+from apputils.colors import DEFAULT_ICON_COLOR, GREEN
 
 # ---- Local imports
 from gwhat import __rootdir__
-from gwhat.config.gui import GREEN, RED, CSS4_COLORS
-from gwhat.config.gui import ICON_COLOR as COLOR
-
 
 DIRNAME = os.path.join(__rootdir__, 'ressources', 'icons_png')
 GWHAT_ICONS = {
@@ -77,229 +73,115 @@ GWHAT_ICONS = {
     'rect_select': 'rect_select',
     'rect_select_clear': 'rect_select_clear'
     }
+apputils.icons.LOCAL_ICONS.update({
+    key: osp.join(DIRNAME, val) for key, val in GWHAT_ICONS.items()})
 
-
-FA_ICONS = {
+apputils.icons.QTA_ICONS.update({
     'arrow_left': [
         ('mdi.arrow-left-thick',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'arrow_right': [
         ('mdi.arrow-right-thick',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'arrow_up': [
         ('mdi.arrow-up-thick',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'arrow_down': [
         ('mdi.arrow-down-thick',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'calendar': [
         ('mdi.calendar-question',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'clear_changes': [
         ('mdi.close-circle-outline',),
-        {'color': RED, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'close': [
         ('mdi.close-thick',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'close_all': [
         ('fa.close', 'fa.close', 'fa.close'),
         {'options': [{'scale_factor': 0.6,
                       'offset': (0.3, -0.3),
-                      'color': COLOR},
+                      'color': DEFAULT_ICON_COLOR},
                      {'scale_factor': 0.6,
                       'offset': (-0.3, -0.3),
-                      'color': COLOR},
+                      'color': DEFAULT_ICON_COLOR},
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
-                      'color': COLOR}]}],
+                      'color': DEFAULT_ICON_COLOR}]}],
     'console': [
         ('mdi.console',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'content_duplicate': [
         ('mdi.content-duplicate',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'commit_changes': [
         ('mdi.check-circle-outline',),
         {'color': GREEN, 'scale_factor': 1.3}],
     'copy_clipboard': [
         ('mdi.content-copy',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'delete_data': [
         ('mdi.delete-forever',),
-        {'color': COLOR, 'scale_factor': 1.4}],
+        {'scale_factor': 1.4}],
     'erase_data': [
         ('mdi.eraser',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'expand_all': [
         ('mdi.arrow-expand-all',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'folder_open': [
         ('mdi.folder-open',),
-        {'color': COLOR, 'scale_factor': 1.3}],
-    'home': [
-        ('mdi.home',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'info': [
         ('mdi.information-outline',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'information': [
         ('mdi.information-variant',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'language': [
         ('mdi.web',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'link': [
         ('mdi.link',),
-        {'color': COLOR, 'scale_factor': 1, 'rotated': 90}],
+        {'rotated': 90}],
     'link_off': [
         ('mdi.link-off',),
-        {'color': COLOR, 'scale_factor': 1, 'rotated': 90}],
+        {'rotated': 90}],
     'pencil_add': [
         ('mdi.pencil-plus',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'pencil_del': [
         ('mdi.pencil-minus',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'pan': [
         ('mdi.pan',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'play_start': [
         ('mdi.play',),
         {'color': GREEN, 'scale_factor': 1.5}],
     'report_bug': [
         ('mdi.bug',),
-        {'color': COLOR, 'scale_factor': 1.4}],
-    'save': [
-        ('fa.save',),
-        {'color': COLOR, 'scale_factor': 1.3}],
-    'search': [
-        ('fa5s.search',),
-        {'color': COLOR, 'scale_factor': 1.0}],
+        {'scale_factor': 1.4}],
     'square': [
         ('mdi.square-outline',),
-        {}
         ],
     'tria_down': [
         ('mdi.triangle-outline',),
         {'rotated': 180}],
     'tria_up': [
         ('mdi.triangle-outline',),
-        {}
         ],
     'undo_changes': [
         ('mdi.undo-variant',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'scale_factor': 1.3}],
     'zoom_in': [
         ('mdi.plus-circle-outline',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'zoom_out': [
         ('mdi.minus-circle-outline',),
-        {'color': COLOR, 'scale_factor': 1.2}],
+        {'scale_factor': 1.2}],
     'zoom_to_rect': [
         ('mdi.selection-search',),
-        {'color': COLOR, 'scale_factor': 1.2}],
-    }
-
-ICON_SIZES = {'large': (32, 32),
-              'normal': (24, 24),
-              'small': (20, 20)}
-
-
-def get_icon(name, color: str = None):
-    """Return a QIcon from a specified icon name."""
-    if name in FA_ICONS:
-        args, kwargs = FA_ICONS[name]
-        if color is not None:
-            if color in CSS4_COLORS:
-                kwargs['color'] = CSS4_COLORS[color]
-            else:
-                kwargs['color'] = color
-        elif color is None and 'color' not in kwargs:
-            kwargs['color'] = COLOR
-        return qta.icon(*args, **kwargs)
-    elif name in GWHAT_ICONS:
-        return QIcon(os.path.join(DIRNAME, GWHAT_ICONS[name]))
-    else:
-        return QIcon()
-
-
-def get_iconsize(size):
-    return QSize(*ICON_SIZES[size])
-
-
-def get_standard_icon(constant):
-    """
-    Return a QIcon of a standard pixmap.
-
-    See the link below for a list of valid constants:
-    https://srinikom.github.io/pyside-docs/PySide/QtGui/QStyle.html
-    """
-    constant = getattr(QStyle, constant)
-    style = QApplication.instance().style()
-    return style.standardIcon(constant)
-
-
-def get_standard_iconsize(constant):
-    """
-    Return the standard size of various component of the gui.
-
-    https://srinikom.github.io/pyside-docs/PySide/QtGui/QStyle
-    """
-    style = QApplication.instance().style()
-    if constant == 'messagebox':
-        return style.pixelMetric(QStyle.PM_MessageBoxIconSize)
-    elif constant == 'small':
-        return style.pixelMetric(QStyle.PM_SmallIconSize)
-
-
-class QToolButtonBase(QToolButton):
-    """A basic tool button."""
-
-    def __init__(self, icon, *args, **kargs):
-        super(QToolButtonBase, self).__init__(*args, **kargs)
-        icon = get_icon(icon) if isinstance(icon, str) else icon
-        self.setIcon(icon)
-        self.setAutoRaise(True)
-        self.setFocusPolicy(Qt.NoFocus)
-
-    def setToolTip(self, ttip):
-        """
-        Qt method override to ensure tooltips are enclosed in <p></p> so
-        that they wraps correctly.
-        """
-        ttip = ttip if ttip.startswith('<p>') else '<p>' + ttip
-        ttip = ttip if ttip.endswith('</p>') else ttip + '</p>'
-        super().setToolTip(ttip)
-
-
-class QToolButtonNormal(QToolButtonBase):
-    def __init__(self, Qicon, *args, **kargs):
-        super(QToolButtonNormal, self).__init__(Qicon, *args, **kargs)
-        self.setIconSize(get_iconsize('normal'))
-
-
-class QToolButtonSmall(QToolButtonBase):
-    def __init__(self, Qicon, *args, **kargs):
-        super(QToolButtonSmall, self).__init__(Qicon, *args, **kargs)
-        self.setIconSize(get_iconsize('small'))
-
-
-class QToolButtonVRectSmall(QToolButtonBase):
-    def __init__(self, Qicon, *args, **kargs):
-        super(QToolButtonVRectSmall, self).__init__(Qicon, *args, **kargs)
-        self.setIconSize(QSize(8, 20))
-
-
-if __name__ == '__main__':
-    import sys
-    from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout
-
-    app = QApplication(sys.argv)
-
-    window = QWidget()
-    layout = QGridLayout(window)
-    layout.addWidget(QToolButtonNormal(get_icon('download')), 0, 0)
-    layout.addWidget(QToolButtonNormal(get_icon('close_all')), 0, 1)
-    window.show()
-
-    sys.exit(app.exec_())
+        {'scale_factor': 1.2}],
+    })
