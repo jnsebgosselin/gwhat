@@ -10,3 +10,4 @@
 """Extension of the Qt helpers module."""
 
 from apputils.qthelpers import *
+import gwhat.utils.icons
