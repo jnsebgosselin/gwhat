@@ -9,8 +9,8 @@
 
 """Extension of the Qt helpers module."""
 
-from apputils.qthelpers import *
+from qtapputils.qthelpers import *
 
 # We need to import the 'icons' module here so that the list of
-# avail icons in 'apputils.icons' get expanded correctly.
+# avail icons in 'qtapputils.icons' get expanded correctly.
 import gwhat.utils.icons

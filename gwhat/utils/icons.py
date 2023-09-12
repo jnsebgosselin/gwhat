@@ -11,9 +11,9 @@
 import os
 import os.path as osp
 
-from apputils.icons import *
-import apputils.icons
-from apputils.colors import DEFAULT_ICON_COLOR
+from qtapputils.icons import *
+import qtapputils.icons
+from qtapputils.colors import DEFAULT_ICON_COLOR
 from gwhat.config.gui import GREEN, RED
 
 # ---- Local imports
@@ -74,10 +74,10 @@ GWHAT_ICONS = {
     'rect_select': 'rect_select',
     'rect_select_clear': 'rect_select_clear'
     }
-apputils.icons.LOCAL_ICONS.update({
+qtapputils.icons.LOCAL_ICONS.update({
     key: osp.join(DIRNAME, val) for key, val in GWHAT_ICONS.items()})
 
-apputils.icons.QTA_ICONS.update({
+qtapputils.icons.QTA_ICONS.update({
     'calendar': [
         ('mdi.calendar-question',),
         {'scale_factor': 1.3}],
