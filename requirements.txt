@@ -5,7 +5,7 @@ xlsxwriter
 xlrd
 xlwt
 cython >= 0.25.2
-numpy == 1.21.*
+numpy == 1.22.*
 matplotlib == 3.4.*
 requests
 h5py>=3
