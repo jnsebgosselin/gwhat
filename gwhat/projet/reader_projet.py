@@ -213,7 +213,7 @@ class ProjetReader(object):
         self.db['wldsets'].attrs['last_opened'] = name
         self.db.flush()
 
-    def get_wldset(self, name):
+    def get_wldset(self, name: str):
         """
         Return the water level dataset corresponding to the provided name.
         """
