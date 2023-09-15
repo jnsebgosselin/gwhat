@@ -11,9 +11,8 @@
 import os
 import os.path as osp
 
-from apputils.icons import *
-import apputils.icons
-from apputils.colors import DEFAULT_ICON_COLOR
+from qtapputils.icons import IconManager
+from qtapputils.colors import DEFAULT_ICON_COLOR
 from gwhat.config.gui import GREEN, RED
 
 # ---- Local imports
@@ -74,10 +73,23 @@ GWHAT_ICONS = {
     'rect_select': 'rect_select',
     'rect_select_clear': 'rect_select_clear'
     }
-apputils.icons.LOCAL_ICONS.update({
-    key: osp.join(DIRNAME, val) for key, val in GWHAT_ICONS.items()})
 
-apputils.icons.QTA_ICONS.update({
+LOCAL_ICONS = {
+    key: osp.join(DIRNAME, val) for key, val in GWHAT_ICONS.items()}
+
+QTA_ICONS = {
+    'arrow_left': [
+        ('mdi.arrow-left-thick',),
+        {'scale_factor': 1.2}],
+    'arrow_right': [
+        ('mdi.arrow-right-thick',),
+        {'scale_factor': 1.2}],
+    'arrow_up': [
+        ('mdi.arrow-up-thick',),
+        {'scale_factor': 1.2}],
+    'arrow_down': [
+        ('mdi.arrow-down-thick',),
+        {'scale_factor': 1.2}],
     'calendar': [
         ('mdi.calendar-question',),
         {'scale_factor': 1.3}],
@@ -98,6 +110,9 @@ apputils.icons.QTA_ICONS.update({
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
                       'color': DEFAULT_ICON_COLOR}]}],
+    'console': [
+        ('mdi.console',),
+        {'scale_factor': 1.3}],
     'content_duplicate': [
         ('mdi.content-duplicate',),
         {'scale_factor': 1.2}],
@@ -118,6 +133,9 @@ apputils.icons.QTA_ICONS.update({
         {'scale_factor': 1.3}],
     'folder_open': [
         ('mdi.folder-open',),
+        {'scale_factor': 1.3}],
+    'home': [
+        ('mdi.home',),
         {'scale_factor': 1.3}],
     'info': [
         ('mdi.information-outline',),
@@ -146,6 +164,14 @@ apputils.icons.QTA_ICONS.update({
     'play_start': [
         ('mdi.play',),
         {'color': GREEN, 'scale_factor': 1.5}],
+    'report_bug': [
+        ('mdi.bug',),
+        {'scale_factor': 1.4}],
+    'save': [
+        ('fa.save',),
+        {'scale_factor': 1.3}],
+    'search': [
+        ('fa5s.search',)],
     'square': [
         ('mdi.square-outline',),
         ],
@@ -167,4 +193,11 @@ apputils.icons.QTA_ICONS.update({
     'zoom_to_rect': [
         ('mdi.selection-search',),
         {'scale_factor': 1.2}],
-    })
+    }
+
+ICOM = IconManager(qta_icons=QTA_ICONS, local_icons=LOCAL_ICONS)
+
+get_icon = ICOM.get_icon
+get_iconsize = ICOM.get_iconsize
+get_standard_icon = ICOM.get_standard_icon
+get_standard_iconsize = ICOM.get_standard_iconsize
