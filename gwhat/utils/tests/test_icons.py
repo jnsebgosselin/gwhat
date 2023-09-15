@@ -20,7 +20,7 @@ import pytest
 from qtpy.QtGui import QIcon
 
 # Local imports
-from sardes.config.icons import LOCAL_ICONS, FA_ICONS, get_icon
+from gwhat.utils.icons import ICOM
 
 
 def test_icon_mapping(qtbot):
@@ -30,12 +30,12 @@ def test_icon_mapping(qtbot):
     """
 
     # Check each entry of the dict and try to get the respective icon
-    for name in FA_ICONS.keys():
-        icon = get_icon(name)
+    for name in ICOM._qta_icons.keys():
+        icon = ICOM.get_icon(name)
         assert isinstance(icon, QIcon), name
         assert not icon.isNull(), name
-    for name in LOCAL_ICONS.keys():
-        icon = get_icon(name)
+    for name in ICOM._local_icons.keys():
+        icon = ICOM.get_icon(name)
         assert isinstance(icon, QIcon), name
         assert not icon.isNull(), name
 
